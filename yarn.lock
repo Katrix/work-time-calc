@@ -1034,6 +1034,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"astronomia@npm:^4.1.0, astronomia@npm:^4.1.1":
+  version: 4.1.1
+  resolution: "astronomia@npm:4.1.1"
+  checksum: ec80faf6e0195f82e434e1822eddf98eb85e99e4d42a426a7eb09c17c1063456ddf3cbe38bbe4cfa3f778e57b2654fd2994cc6bc06be3cee597ddd7c5949e2f9
+  languageName: node
+  linkType: hard
+
 "autoprefixer@npm:^10.4.15":
   version: 10.4.15
   resolution: "autoprefixer@npm:10.4.15"
@@ -1169,6 +1176,15 @@ __metadata:
     tar: ^6.1.11
     unique-filename: ^3.0.0
   checksum: b7751df756656954a51201335addced8f63fc53266fa56392c9f5ae83c8d27debffb4458ac2d168a744a4517ec3f2163af05c20097f93d17bdc2dc8a385e14a6
+  languageName: node
+  linkType: hard
+
+"caldate@npm:^2.0.5":
+  version: 2.0.5
+  resolution: "caldate@npm:2.0.5"
+  dependencies:
+    moment-timezone: ^0.5.43
+  checksum: ebf233d1ff3346969a98a809e7cdd2174f834f0d22a8f1466c1d1eb8f4260808f28440cde0412b31b630b352381c4d24513ec8b2d9f76d33a2c4cd4873c00601
   languageName: node
   linkType: hard
 
@@ -1345,6 +1361,60 @@ __metadata:
   languageName: node
   linkType: hard
 
+"date-bengali-revised@npm:^2.0.2":
+  version: 2.0.2
+  resolution: "date-bengali-revised@npm:2.0.2"
+  checksum: 23f5e03b20a2334de5e8b7c42925ff4ebf24db3404e1ec272c66b0deab6bfc3cbc1fb9581d06ab72a0c3fe338c618b1f94062147a74c4544217e9a7fc70a62aa
+  languageName: node
+  linkType: hard
+
+"date-chinese@npm:^2.1.4":
+  version: 2.1.4
+  resolution: "date-chinese@npm:2.1.4"
+  dependencies:
+    astronomia: ^4.1.0
+  checksum: 1f1957f5a61d136a98342f56ba8ceb49a6663d9411c850157af0a41c2396b3201ac08069c7a2ce7ba14a7f6a0183e3a2d50547c698830443d19950355f4ece21
+  languageName: node
+  linkType: hard
+
+"date-easter@npm:^1.0.2":
+  version: 1.0.2
+  resolution: "date-easter@npm:1.0.2"
+  checksum: 62409168c79ded4ee7be8f365aa825d058a1371c7579dabdd2202dd5a606f0e327d7db3d88505d9a0cc91be8f6dc958194170e944e70818816d692f67ed6c225
+  languageName: node
+  linkType: hard
+
+"date-holidays-parser@npm:^3.4.4":
+  version: 3.4.4
+  resolution: "date-holidays-parser@npm:3.4.4"
+  dependencies:
+    astronomia: ^4.1.1
+    caldate: ^2.0.5
+    date-bengali-revised: ^2.0.2
+    date-chinese: ^2.1.4
+    date-easter: ^1.0.2
+    deepmerge: ^4.3.1
+    jalaali-js: ^1.2.6
+    moment-timezone: ^0.5.43
+  checksum: d6b19680a4325b9018fc6b14d93f6aa71b3c91c20625e22bfd5dc5c3919cb480ac19866284d98d16d94e9dc51eb90a71248454893546da010f9c219a34d1090d
+  languageName: node
+  linkType: hard
+
+"date-holidays@npm:^3.22.0":
+  version: 3.22.0
+  resolution: "date-holidays@npm:3.22.0"
+  dependencies:
+    date-holidays-parser: ^3.4.4
+    js-yaml: ^4.1.0
+    lodash.omit: ^4.5.0
+    lodash.pick: ^4.4.0
+    prepin: ^1.0.3
+  bin:
+    holidays2json: scripts/holidays2json.cjs
+  checksum: 94f180ecbc0cfe7fd0d6186b85f614c9641c23214ac9e65b22537dacc879a816dbe8cfd03d6c8ac5ee06f17e70b9ba22a3267e5a304ff8ab4f69a5ad21739d30
+  languageName: node
+  linkType: hard
+
 "de-indent@npm:^1.0.2":
   version: 1.0.2
   resolution: "de-indent@npm:1.0.2"
@@ -1377,6 +1447,13 @@ __metadata:
   version: 0.1.4
   resolution: "deep-is@npm:0.1.4"
   checksum: edb65dd0d7d1b9c40b2f50219aef30e116cedd6fc79290e740972c132c09106d2e80aa0bc8826673dd5a00222d4179c84b36a790eef63a4c4bca75a37ef90804
+  languageName: node
+  linkType: hard
+
+"deepmerge@npm:^4.3.1":
+  version: 4.3.1
+  resolution: "deepmerge@npm:4.3.1"
+  checksum: 2024c6a980a1b7128084170c4cf56b0fd58a63f2da1660dcfe977415f27b17dbe5888668b59d0b063753f3220719d5e400b7f113609489c90160bb9a5518d052
   languageName: node
   linkType: hard
 
@@ -2713,6 +2790,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"jalaali-js@npm:^1.2.6":
+  version: 1.2.6
+  resolution: "jalaali-js@npm:1.2.6"
+  checksum: 586083f23c59c2ce08bcf0309a86ef81980d1aa862fc2c86615183772cbd20e95f6712081a5f5d451068a9e24fce6a2fe630c715f3b7dec6b856bf88fc29588d
+  languageName: node
+  linkType: hard
+
 "js-yaml@npm:^4.1.0":
   version: 4.1.0
   resolution: "js-yaml@npm:4.1.0"
@@ -2814,6 +2898,20 @@ __metadata:
   version: 4.6.2
   resolution: "lodash.merge@npm:4.6.2"
   checksum: ad580b4bdbb7ca1f7abf7e1bce63a9a0b98e370cf40194b03380a46b4ed799c9573029599caebc1b14e3f24b111aef72b96674a56cfa105e0f5ac70546cdc005
+  languageName: node
+  linkType: hard
+
+"lodash.omit@npm:^4.5.0":
+  version: 4.5.0
+  resolution: "lodash.omit@npm:4.5.0"
+  checksum: 434645e49fe84ab315719bd5a9a3a585a0f624aa4160bc09157dd041a414bcc287c15840365c1379476a3f3eda41fbe838976c3f7bdecbbf4c5478e86c471a30
+  languageName: node
+  linkType: hard
+
+"lodash.pick@npm:^4.4.0":
+  version: 4.4.0
+  resolution: "lodash.pick@npm:4.4.0"
+  checksum: 2c36cab7da6b999a20bd3373b40e31a3ef81fa264f34a6979c852c5bc8ac039379686b27380f0cb8e3781610844fafec6949c6fbbebc059c98f8fa8570e3675f
   languageName: node
   linkType: hard
 
@@ -3018,6 +3116,22 @@ __metadata:
   bin:
     mkdirp: bin/cmd.js
   checksum: a96865108c6c3b1b8e1d5e9f11843de1e077e57737602de1b82030815f311be11f96f09cce59bd5b903d0b29834733e5313f9301e3ed6d6f6fba2eae0df4298f
+  languageName: node
+  linkType: hard
+
+"moment-timezone@npm:^0.5.43":
+  version: 0.5.43
+  resolution: "moment-timezone@npm:0.5.43"
+  dependencies:
+    moment: ^2.29.4
+  checksum: 8075c897ed8a044f992ef26fe8cdbcad80caf974251db424cae157473cca03be2830de8c74d99341b76edae59f148c9d9d19c1c1d9363259085688ec1cf508d0
+  languageName: node
+  linkType: hard
+
+"moment@npm:^2.29.4":
+  version: 2.29.4
+  resolution: "moment@npm:2.29.4"
+  checksum: 0ec3f9c2bcba38dc2451b1daed5daded747f17610b92427bebe1d08d48d8b7bdd8d9197500b072d14e326dd0ccf3e326b9e3d07c5895d3d49e39b6803b76e80e
   languageName: node
   linkType: hard
 
@@ -3438,6 +3552,15 @@ __metadata:
   version: 1.2.1
   resolution: "prelude-ls@npm:1.2.1"
   checksum: cd192ec0d0a8e4c6da3bb80e4f62afe336df3f76271ac6deb0e6a36187133b6073a19e9727a1ff108cd8b9982e4768850d413baa71214dd80c7979617dca827a
+  languageName: node
+  linkType: hard
+
+"prepin@npm:^1.0.3":
+  version: 1.0.3
+  resolution: "prepin@npm:1.0.3"
+  bin:
+    prepin: ./bin/prepin.js
+  checksum: b43f1e3b5f0d7da5e97ef707e6eebf44f88e54bbac7d87ad011c01e03f7e5ce40e02288c4df0d7853570aa3d492e10bb3c885502f9db99a905635c2f1733cd5c
   languageName: node
   linkType: hard
 
@@ -4382,6 +4505,7 @@ __metadata:
     autoprefixer: ^10.4.15
     bootstrap: ^5.3.1
     bootstrap-vue-next: ^0.12.0
+    date-holidays: ^3.22.0
     eslint: ^8.48.0
     eslint-config-prettier: ^8.10.0
     eslint-config-standard: ^17.1.0

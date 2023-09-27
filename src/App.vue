@@ -4,41 +4,57 @@
 
     <BForm>
       <div class="row">
-        <label class="col-lg-1 col-form-label" for="savedUpTimeInput">Saved up time:</label>
         <div class="col-lg-1">
+          <label for="savedUpTimeInput">Saved up time:</label>
           <BFormInput id="savedUpTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="savedUp"></BFormInput>
         </div>
 
-        <label class="col-lg-1 col-form-label" for="workTimeInput">Work time:</label>
         <div class="col-lg-1">
+          <label for="workTimeInput">Work time:<br />&nbsp;</label>
           <BFormInput id="workTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="workTime"></BFormInput>
         </div>
 
-        <label class="col-lg-1 col-form-label" for="defaultWorkFromInput">Default work from:</label>
         <div class="col-lg-1">
+          <label for="defaultWorkFromInput">Default work from:</label>
           <BFormInput id="defaultWorkFromInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultFrom"></BFormInput>
         </div>
 
-        <label class="col-lg-1 col-form-label" for="defaultWorkToInput">Default work to:</label>
         <div class="col-lg-1">
+          <label for="defaultWorkToInput">Default work to:</label>
           <BFormInput id="defaultWorkToInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultTo"></BFormInput>
         </div>
 
         <div class="col-lg-3">
+          <div class="row">
+            <label class="col">Input:<br />&nbsp;</label>
+            <BButtonGroup class="col-6 mb-2">
+              <BButton type="button" @click="load">Load</BButton>
+              <BButton type="button" @click="save">Save</BButton>
+            </BButtonGroup>
+          </div>
+
           <BFormFile accept="application/json" v-model="saveFile"></BFormFile>
         </div>
 
-        <BButtonGroup class="col-lg-1">
-          <BButton type="button" variant="danger" @click="clear"> Clear </BButton>
-          <BButton type="button" @click="load"> Load </BButton>
-          <BButton type="button" @click="save"> Save </BButton>
-        </BButtonGroup>
+        <BButtonToolbar class="col-lg-1">
+          <BButtonGroup>
+            <BButton type="button" variant="danger" @click="clear">Clear</BButton>
+            <BButton type="button" variant="danger" @click="fillWorkdays">Fill workdays</BButton>
+            <BButton type="button" @click="fillRemainingWorkdays">Add remaining workdays</BButton>
+          </BButtonGroup>
+        </BButtonToolbar>
       </div>
     </BForm>
 
     <hr />
 
-    <BTableLite :fields="tableFields" :items="computedTableItems" dark="true" striped="true" :tbody-tr-class="bodyTrClasses">
+    <BTableLite
+      :fields="tableFields"
+      :items="computedTableItems"
+      dark="true"
+      striped="true"
+      :tbody-tr-class="bodyTrClasses"
+    >
       <template #cell(day)="{ value, index }">
         <BFormInput
           :model-value="value as string"
@@ -71,7 +87,7 @@
         <b-button @click="addRowAfter(index)">
           <font-awesome-icon :icon="['fas', 'plus']" />
         </b-button>
-        <b-button v-if="index != 0" @click="removeRow(index)">
+        <b-button v-if="workDays.length > 1" @click="removeRow(index)">
           <font-awesome-icon :icon="['fas', 'minus']" />
         </b-button>
       </template>
@@ -81,34 +97,42 @@
 
 <script setup lang="ts">
 import {
-  BFormInput,
-  BFormFile,
-  BTableLite,
   BButton,
   BButtonGroup,
+  BButtonToolbar,
   BContainer,
-  type TableField, type TableItem
-} from "bootstrap-vue-next";
+  BForm,
+  BFormFile,
+  BFormInput,
+  BTableLite,
+  type TableField,
+  type TableItem,
+} from 'bootstrap-vue-next'
 import { ref, watchSyncEffect } from 'vue'
 
 import { computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
+import Holidays from 'date-holidays'
 
 const savedUp = ref('00:00')
 const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
 const defaultTo = ref('18:00')
 
-function currentDate() {
-  const isoStr = new Date().toISOString()
+function dateToString(d: Date) {
+  const isoStr = d.toISOString()
   return isoStr.substring(0, isoStr.search('T'))
 }
 
-const workDays = ref<(WorkRange & { day: string })[]>([{ day: currentDate(), from: defaultFrom.value, to: defaultTo.value }])
+function currentDate() {
+  return dateToString(new Date())
+}
+
+const workDays = ref<(WorkRange & { day: string })[]>([{ day: currentDate(), from: null, to: null }])
 
 function addRowAfter(idx: number) {
   const prevDay = workDays.value[idx]
   const day = prevDay ? prevDay.day : currentDate()
-  workDays.value.splice(idx + 1, 0, { day, from: defaultFrom.value, to: defaultTo.value })
+  workDays.value.splice(idx + 1, 0, { day, from: defaultFrom.value, to: null })
 }
 
 function removeRow(idx: number) {
@@ -119,64 +143,95 @@ function clear() {
   workDays.value = [{ day: currentDate(), from: defaultFrom.value, to: defaultTo.value }]
 }
 
+function fillWorkdaysBase(start: Date) {
+  const hd = new Holidays('DK')
+
+  const monthDates: Date[] = []
+  let date = new Date(start)
+  let i = 0
+  while (date.getMonth() === start.getMonth()) {
+    monthDates.push(new Date(date))
+    date.setDate(date.getDate() + 1)
+    i += 1
+    if (i > 31) {
+      console.error(date)
+      throw new Error('Did not stop when expected')
+    }
+  }
+
+  return monthDates.filter((d) => !hd.isHoliday(d) && d.getDay() !== 0 && d.getDay() !== 6)
+}
+
+function fillWorkdays() {
+  const dates = fillWorkdaysBase(new Date(workDays.value[0].day))
+  workDays.value = dates.map((d) => ({ day: dateToString(d), from: null, to: null }))
+}
+
+function fillRemainingWorkdays() {
+  const start = new Date(workDays.value[workDays.value.length - 1].day)
+  start.setDate(start.getDate() + 1)
+  const dates = fillWorkdaysBase(start)
+  workDays.value.push(...dates.map((d) => ({ day: dateToString(d), from: null, to: null })))
+}
+
 const tableFields: TableField[] = [
   {
     key: 'day',
     label: 'Day',
-    thStyle: 'min-width: 130px'
+    thStyle: 'min-width: 130px',
   },
   {
     key: 'arrived',
     label: 'Arrived',
-    thStyle: 'min-width: 80px'
+    thStyle: 'min-width: 80px',
   },
   {
     key: 'left',
     label: 'Left',
-    thStyle: 'min-width: 80px'
+    thStyle: 'min-width: 80px',
   },
   {
     key: 'worked_time',
     label: 'Worked time',
-    thStyle: 'min-width: 80px'
+    thStyle: 'min-width: 80px',
   },
   {
     key: 'extra_time',
     label: 'Extra time',
-    thStyle: 'min-width: 80px'
+    thStyle: 'min-width: 80px',
   },
   {
     key: 'lost_time',
     label: 'Lost time',
-    thStyle: 'min-width: 80px'
+    thStyle: 'min-width: 80px',
   },
   {
     key: 'estimate',
     label: 'Is estimate',
-    thStyle: 'min-width: 90px'
+    thStyle: 'min-width: 90px',
   },
   {
     key: 'subtracted_time',
     label: 'Subtracted time',
-    thStyle: 'min-width: 80px'
+    thStyle: 'min-width: 80px',
   },
   {
     key: 'notes',
     label: 'Notes',
-    thStyle: 'min-width: 300px'
+    thStyle: 'min-width: 300px',
   },
   {
     key: 'add_sub',
     label: 'Add/Remove row',
-    thStyle: 'min-width: 70px'
+    thStyle: 'min-width: 70px',
   },
 ]
 
 const computedTableItems = ref<
   {
     day: string
-    arrived: string
-    left: string
+    arrived: string | null
+    left: string | null
     worked_time: string
     extra_time: string
     lost_time: string
@@ -223,14 +278,14 @@ watchSyncEffect(() => {
   }
 })
 
-function bodyTrClasses(item: TableItem, type: string) {
-  if (type === 'row') {
+function bodyTrClasses(item: TableItem | null, type: string) {
+  if (type === 'row' && item) {
     const day = item.day as string
-    const idx = workDays.value.findIndex(v => v.day === day)
+    const idx = workDays.value.findIndex((v) => v.day === day)
     if (idx > 0) {
       const prevDay = workDays.value[idx - 1].day
       if (new Date(day).getDate() - new Date(prevDay).getDate() > 1) {
-        return "table-group-divider"
+        return 'table-group-divider'
       }
     }
   }

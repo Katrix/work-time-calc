@@ -12,8 +12,8 @@ export type WorkDays = { [day: string]: WorkRange[] }
 
 export interface ComputedWorkEntries {
     day: string
-    from: string
-    to: string
+    from: string | null
+    to: string | null
     workedTime: string
     extraTime: string
     lostTime: string
@@ -52,8 +52,8 @@ export function computeWorkTime(workDays: WorkDays, leftoverTime: string, defaul
 
             workEntriesComputed.push({
                 day,
-                from: entry.from ?? defaultFrom,
-                to: entry.to ?? defaultTo,
+                from: entry.from,
+                to: entry.to,
                 workedTime: fromMinutes(workedTime),
                 extraTime: fromMinutes(timeDiff > 0 ? timeDiff : 0),
                 lostTime: fromMinutes(timeDiff < 0 ? Math.abs(timeDiff) : 0),
