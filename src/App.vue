@@ -24,19 +24,19 @@
           <BFormInput id="defaultWorkToInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultTo"></BFormInput>
         </div>
 
-        <div class="col-lg-3">
-          <div class="row">
-            <label class="col">Input:<br />&nbsp;</label>
-            <BButtonGroup class="col-6 mb-2">
+        <div class="col-lg-4">
+          <label class="col" for="inputFile">Input:<br />&nbsp;</label>
+          <BInputGroup>
+            <BFormFile id="inputFile" accept="application/json" v-model="saveFile"></BFormFile>
+            <template #append>
               <BButton type="button" @click="load">Load</BButton>
               <BButton type="button" @click="save">Save</BButton>
-            </BButtonGroup>
-          </div>
-
-          <BFormFile accept="application/json" v-model="saveFile"></BFormFile>
+            </template>
+          </BInputGroup>
         </div>
 
-        <BButtonToolbar class="col-lg-1">
+        <BButtonToolbar class="col-lg-4">
+          <span>Actions:<br />&nbsp;</span>
           <BButtonGroup>
             <BButton type="button" variant="danger" @click="clear">Clear</BButton>
             <BButton type="button" variant="danger" @click="fillWorkdays">Fill workdays</BButton>
@@ -104,6 +104,7 @@ import {
   BForm,
   BFormFile,
   BFormInput,
+  BInputGroup,
   BTableLite,
   type TableField,
   type TableItem,
@@ -317,7 +318,7 @@ function save() {
     workDays: workDays.value,
   }
 
-  //https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
+  // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
   const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
   const a = document.createElement('a')
   const url = URL.createObjectURL(blob)

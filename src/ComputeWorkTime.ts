@@ -1,6 +1,6 @@
-// noinspection ES6UnusedImports
 // @ts-ignore
-import {Temporal, Intl, toTemporalInstant} from "@js-temporal/polyfill";
+// noinspection ES6UnusedImports
+import {Intl, Temporal, toTemporalInstant} from "@js-temporal/polyfill";
 
 export interface WorkRange {
     from: string | null
@@ -23,20 +23,18 @@ export interface ComputedWorkEntries {
 }
 
 function toMinutes(str: string): number {
-    return Temporal.PlainTime.from(str).since('00:00').total({unit: 'minutes'})
+    const [hours, minutes] = str.split(':', 2)
+
+    return Temporal.Duration.from({hours: Number(hours), minutes: Number(minutes)}).total({unit: 'minutes'})
 }
 
 function fromMinutes(minutes: number): string {
-    const dur = Temporal.Duration.from({minutes}).round({smallestUnit: "minutes", largestUnit: 'days'})
+    const dur = Temporal.Duration.from({minutes}).round({smallestUnit: "minutes", largestUnit: 'hours'})
 
-    const days = dur.days
     const hours = dur.hours
     const balancedMinutes = dur.minutes
 
-    const hourMinutes = `${hours.toString().padStart(2, '0')}:${balancedMinutes.toString().padStart(2, '0')}`
-
-    if (days > 0) return `${days} days, ${hourMinutes}`
-    else return hourMinutes
+    return `${hours.toString().padStart(2, '0')}:${balancedMinutes.toString().padStart(2, '0')}`
 }
 
 export function computeWorkTime(workDays: WorkDays, leftoverTime: string, defaultFrom: string, defaultTo: string, workTime: string): ComputedWorkEntries[] {
