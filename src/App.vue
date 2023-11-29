@@ -29,8 +29,8 @@
           <BInputGroup>
             <BFormFile id="inputFile" accept="application/json" v-model="saveFile"></BFormFile>
             <template #append>
-              <BButton type="button" @click="load">Load</BButton>
-              <BButton type="button" @click="save">Save</BButton>
+              <BButton type="button" @click="load" :disabled="!saveFile">Load</BButton>
+              <BButton type="button" @click="save" :disabled="!saveFile">Save</BButton>
             </template>
           </BInputGroup>
         </div>
@@ -63,17 +63,31 @@
       </template>
 
       <template #cell(arrived)="{ value, index }">
-        <BFormInput
-          :model-value="value as string"
-          @update:model-value="(val) => (workDays[index].from = val.length ? val : null)"
-        ></BFormInput>
+        <BInputGroup>
+          <BFormInput
+            :model-value="value as string"
+            @update:model-value="(val) => (workDays[index].from = val.length ? val : null)"
+          ></BFormInput>
+          <template #append>
+            <BButton @click="workDays[index].from = currentTime()"
+              ><font-awesome-icon :icon="['fas', 'clock']"
+            /></BButton>
+          </template>
+        </BInputGroup>
       </template>
 
       <template #cell(left)="{ value, index }">
-        <BFormInput
-          :model-value="value as string"
-          @update:model-value="(val) => (workDays[index].to = val.length ? val : null)"
-        ></BFormInput>
+        <BInputGroup>
+          <BFormInput
+            :model-value="value as string"
+            @update:model-value="(val) => (workDays[index].to = val.length ? val : null)"
+          ></BFormInput>
+          <template #append>
+            <BButton @click="workDays[index].to = currentTime()"
+              ><font-awesome-icon :icon="['fas', 'clock']"
+            /></BButton>
+          </template>
+        </BInputGroup>
       </template>
 
       <template #cell(notes)="{ value, index }">
@@ -117,23 +131,35 @@ import Holidays from 'date-holidays'
 const savedUp = ref('00:00')
 const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
-const defaultTo = ref('18:00')
+const defaultTo = ref('17:00')
 
-function dateToString(d: Date) {
+function dateToDateString(d: Date) {
   const isoStr = d.toISOString()
   return isoStr.substring(0, isoStr.search('T'))
 }
 
+function datetoTimeString(d: Date) {
+  const hours = d.getHours()
+  const minutes = d.getMinutes()
+  return `${hours}:${minutes}`
+}
+
 function currentDate() {
-  return dateToString(new Date())
+  return dateToDateString(new Date())
+}
+
+function currentTime() {
+  console.log(datetoTimeString(new Date()))
+  return datetoTimeString(new Date())
 }
 
 const workDays = ref<(WorkRange & { day: string })[]>([{ day: currentDate(), from: null, to: null }])
 
 function addRowAfter(idx: number) {
   const prevDay = workDays.value[idx]
-  const day = prevDay ? prevDay.day : currentDate()
-  workDays.value.splice(idx + 1, 0, { day, from: defaultFrom.value, to: null })
+  const day = new Date(prevDay ? prevDay.day : currentDate())
+  day.setDate(day.getDate() + 1)
+  workDays.value.splice(idx + 1, 0, { day: dateToDateString(day), from: defaultFrom.value, to: null })
 }
 
 function removeRow(idx: number) {
@@ -165,56 +191,56 @@ function fillWorkdaysBase(start: Date) {
 
 function fillWorkdays() {
   const dates = fillWorkdaysBase(new Date(workDays.value[0].day))
-  workDays.value = dates.map((d) => ({ day: dateToString(d), from: null, to: null }))
+  workDays.value = dates.map((d) => ({ day: dateToDateString(d), from: null, to: null }))
 }
 
 function fillRemainingWorkdays() {
   const start = new Date(workDays.value[workDays.value.length - 1].day)
   start.setDate(start.getDate() + 1)
   const dates = fillWorkdaysBase(start)
-  workDays.value.push(...dates.map((d) => ({ day: dateToString(d), from: null, to: null })))
+  workDays.value.push(...dates.map((d) => ({ day: dateToDateString(d), from: null, to: null })))
 }
 
 const tableFields: TableField[] = [
   {
     key: 'day',
     label: 'Day',
-    thStyle: 'min-width: 130px',
+    thStyle: 'min-width: 120px',
   },
   {
     key: 'arrived',
     label: 'Arrived',
-    thStyle: 'min-width: 80px',
+    thStyle: 'min-width: 130px',
   },
   {
     key: 'left',
     label: 'Left',
-    thStyle: 'min-width: 80px',
+    thStyle: 'min-width: 130px',
   },
   {
     key: 'worked_time',
     label: 'Worked time',
-    thStyle: 'min-width: 80px',
+    thStyle: 'min-width: 60px',
   },
   {
     key: 'extra_time',
     label: 'Extra time',
-    thStyle: 'min-width: 80px',
+    thStyle: 'min-width: 60px',
   },
   {
     key: 'lost_time',
     label: 'Lost time',
-    thStyle: 'min-width: 80px',
+    thStyle: 'min-width: 60px',
   },
   {
     key: 'estimate',
     label: 'Is estimate',
-    thStyle: 'min-width: 90px',
+    thStyle: 'min-width: 60px',
   },
   {
     key: 'subtracted_time',
     label: 'Subtracted time',
-    thStyle: 'min-width: 80px',
+    thStyle: 'min-width: 60px',
   },
   {
     key: 'notes',
