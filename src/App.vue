@@ -6,31 +6,31 @@
       <div class="row">
         <div class="col-lg-1">
           <label for="savedUpTimeInput">Saved up time:</label>
-          <BFormInput id="savedUpTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="savedUp"></BFormInput>
+          <BFormInput id="savedUpTimeInput" v-model="savedUp" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
         </div>
 
         <div class="col-lg-1">
           <label for="workTimeInput">Work time:<br />&nbsp;</label>
-          <BFormInput id="workTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="workTime"></BFormInput>
+          <BFormInput id="workTimeInput" v-model="workTime" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
         </div>
 
         <div class="col-lg-1">
           <label for="defaultWorkFromInput">Default work from:</label>
-          <BFormInput id="defaultWorkFromInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultFrom"></BFormInput>
+          <BFormInput id="defaultWorkFromInput" v-model="defaultFrom" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
         </div>
 
         <div class="col-lg-1">
           <label for="defaultWorkToInput">Default work to:</label>
-          <BFormInput id="defaultWorkToInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultTo"></BFormInput>
+          <BFormInput id="defaultWorkToInput" v-model="defaultTo" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
         </div>
 
         <div class="col-lg-4">
           <label class="col" for="inputFile">Input:<br />&nbsp;</label>
           <BInputGroup>
-            <BFormFile id="inputFile" accept="application/json" v-model="saveFile"></BFormFile>
+            <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
             <template #append>
-              <BButton type="button" @click="load" :disabled="!saveFile">Load</BButton>
-              <BButton type="button" @click="save" :disabled="!saveFile">Save</BButton>
+              <BButton type="button" :disabled="!saveFile" @click="load">Load</BButton>
+              <BButton type="button" :disabled="!saveFile" @click="save">Save</BButton>
             </template>
           </BInputGroup>
         </div>
@@ -90,6 +90,34 @@
         </BInputGroup>
       </template>
 
+      <template #cell(subtracted_time)="{ value, index }">
+        <BInputGroup>
+          <BFormInput
+            :disabled="!workDays[index].customSubtractedTime"
+            :model-value="value as string"
+            @update:model-value="(val) => (workDays[index].subtractedTime = val.length ? val : null)"
+          ></BFormInput>
+
+          <template #prepend>
+            <BButton @click="toggleSubtractedTime(index)">
+              <font-awesome-layers fixed-width>
+                <font-awesome-icon
+                  v-if="!workDays[index].customSubtractedTime"
+                  :icon="['fas', 'slash']"
+                  transform="down-1 left-1"
+                />
+                <font-awesome-icon
+                  v-if="!workDays[index].customSubtractedTime"
+                  :icon="['fas', 'slash']"
+                  :mask="['fas', 'pen-to-square']"
+                />
+                <font-awesome-icon v-if="workDays[index].customSubtractedTime" :icon="['fas', 'pen-to-square']" />
+              </font-awesome-layers>
+            </BButton>
+          </template>
+        </BInputGroup>
+      </template>
+
       <template #cell(notes)="{ value, index }">
         <BFormInput
           :model-value="value as string"
@@ -125,8 +153,8 @@ import {
 } from 'bootstrap-vue-next'
 import { ref, watchSyncEffect } from 'vue'
 
-import { computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
 import Holidays from 'date-holidays'
+import { computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
 
 const savedUp = ref('00:00')
 const workTime = ref('08:00')
@@ -138,7 +166,7 @@ function dateToDateString(d: Date) {
   return isoStr.substring(0, isoStr.search('T'))
 }
 
-function datetoTimeString(d: Date) {
+function dateToTimeString(d: Date) {
   const hours = d.getHours()
   const minutes = d.getMinutes()
   return `${hours}:${minutes}`
@@ -149,17 +177,32 @@ function currentDate() {
 }
 
 function currentTime() {
-  console.log(datetoTimeString(new Date()))
-  return datetoTimeString(new Date())
+  return dateToTimeString(new Date())
 }
 
-const workDays = ref<(WorkRange & { day: string })[]>([{ day: currentDate(), from: null, to: null }])
+const workDays = ref<(WorkRange & { day: string; customSubtractedTime: boolean })[]>([
+  { day: currentDate(), from: null, to: null, subtractedTime: null, customSubtractedTime: false },
+])
+
+function toggleSubtractedTime(idx: number) {
+  workDays.value[idx].customSubtractedTime = !workDays.value[idx].customSubtractedTime
+
+  if (!workDays.value[idx].customSubtractedTime) {
+    workDays.value[idx].subtractedTime = null
+  }
+}
 
 function addRowAfter(idx: number) {
   const prevDay = workDays.value[idx]
   const day = new Date(prevDay ? prevDay.day : currentDate())
   day.setDate(day.getDate() + 1)
-  workDays.value.splice(idx + 1, 0, { day: dateToDateString(day), from: defaultFrom.value, to: null })
+  workDays.value.splice(idx + 1, 0, {
+    day: dateToDateString(day),
+    from: defaultFrom.value,
+    to: null,
+    subtractedTime: null,
+    customSubtractedTime: false,
+  })
 }
 
 function removeRow(idx: number) {
@@ -167,14 +210,22 @@ function removeRow(idx: number) {
 }
 
 function clear() {
-  workDays.value = [{ day: currentDate(), from: defaultFrom.value, to: defaultTo.value }]
+  workDays.value = [
+    {
+      day: currentDate(),
+      from: defaultFrom.value,
+      to: defaultTo.value,
+      subtractedTime: null,
+      customSubtractedTime: false,
+    },
+  ]
 }
 
 function fillWorkdaysBase(start: Date) {
   const hd = new Holidays('DK')
 
   const monthDates: Date[] = []
-  let date = new Date(start)
+  const date = new Date(start)
   let i = 0
   while (date.getMonth() === start.getMonth()) {
     monthDates.push(new Date(date))
@@ -191,14 +242,28 @@ function fillWorkdaysBase(start: Date) {
 
 function fillWorkdays() {
   const dates = fillWorkdaysBase(new Date(workDays.value[0].day))
-  workDays.value = dates.map((d) => ({ day: dateToDateString(d), from: null, to: null }))
+  workDays.value = dates.map((d) => ({
+    day: dateToDateString(d),
+    from: null,
+    to: null,
+    subtractedTime: null,
+    customSubtractedTime: false,
+  }))
 }
 
 function fillRemainingWorkdays() {
   const start = new Date(workDays.value[workDays.value.length - 1].day)
   start.setDate(start.getDate() + 1)
   const dates = fillWorkdaysBase(start)
-  workDays.value.push(...dates.map((d) => ({ day: dateToDateString(d), from: null, to: null })))
+  workDays.value.push(
+    ...dates.map((d) => ({
+      day: dateToDateString(d),
+      from: null,
+      to: null,
+      subtractedTime: null,
+      customSubtractedTime: false,
+    })),
+  )
 }
 
 const tableFields: TableField[] = [
@@ -250,7 +315,7 @@ const tableFields: TableField[] = [
   {
     key: 'add_sub',
     label: 'Add/Remove row',
-    thStyle: 'min-width: 70px',
+    thStyle: 'min-width: 80px',
   },
 ]
 
@@ -301,7 +366,7 @@ watchSyncEffect(() => {
       add_sub: '',
     }))
   } catch (e) {
-    //Ignored
+    // Ignored
   }
 })
 

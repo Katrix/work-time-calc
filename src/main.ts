@@ -1,5 +1,5 @@
 import { createApp } from 'vue'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { FontAwesomeIcon, FontAwesomeLayers, FontAwesomeLayersText } from '@fortawesome/vue-fontawesome'
 
 import App from '@/App.vue'
 
@@ -10,4 +10,6 @@ import '@/fontAwesomeLibrary'
 
 const app = createApp(App)
 app.component('FontAwesomeIcon', FontAwesomeIcon)
+app.component('FontAwesomeLayers', FontAwesomeLayers)
+app.component('FontAwesomeLayersText', FontAwesomeLayersText)
 app.mount('#app')
