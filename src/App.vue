@@ -1,31 +1,31 @@
 <template>
-  <b-container>
+  <b-container fluid="xl" class="wider-container">
     <h1>Work time calc</h1>
 
     <BForm>
-      <div class="row">
-        <div class="col-lg-1">
-          <label for="savedUpTimeInput">Saved up time:</label>
-          <BFormInput id="savedUpTimeInput" v-model="savedUp" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
+      <div class="settings">
+        <label class="setting-description" style="--setting-index: 1" for="savedUpTimeInput">Saved up time:</label>
+        <div class="setting-content" style="--setting-index: 1">
+          <BFormInput id="savedUpTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="savedUp"></BFormInput>
         </div>
 
-        <div class="col-lg-1">
-          <label for="workTimeInput">Work time:<br />&nbsp;</label>
-          <BFormInput id="workTimeInput" v-model="workTime" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
+        <label class="setting-description" style="--setting-index: 2" for="workTimeInput">Work time:</label>
+        <div class="setting-content" style="--setting-index: 2">
+          <BFormInput id="workTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="workTime"></BFormInput>
         </div>
 
-        <div class="col-lg-1">
-          <label for="defaultWorkFromInput">Default work from:</label>
-          <BFormInput id="defaultWorkFromInput" v-model="defaultFrom" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
+        <label class="setting-description" style="--setting-index: 3" for="defaultWorkFromInput">Default work from:</label>
+        <div class="setting-content" style="--setting-index: 3">
+          <BFormInput id="defaultWorkFromInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultFrom"></BFormInput>
         </div>
 
-        <div class="col-lg-1">
-          <label for="defaultWorkToInput">Default work to:</label>
-          <BFormInput id="defaultWorkToInput" v-model="defaultTo" class="mb-2 me-sm-2 mb-sm-0"></BFormInput>
+        <label class="setting-description" style="--setting-index: 4" for="defaultWorkToInput">Default work to:</label>
+        <div class="setting-content" style="--setting-index: 4">
+          <BFormInput id="defaultWorkToInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultTo"></BFormInput>
         </div>
 
-        <div class="col-lg-4">
-          <label class="col" for="inputFile">Input:<br />&nbsp;</label>
+        <label class="setting-description" style="--setting-index: 5" for="inputFile">Input:</label>
+        <div class="setting-content" style="--setting-index: 5">
           <BInputGroup>
             <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
             <template #append>
@@ -35,8 +35,8 @@
           </BInputGroup>
         </div>
 
-        <BButtonToolbar class="col-lg-4">
-          <span>Actions:<br />&nbsp;</span>
+        <span class="setting-description" style="--setting-index: 6">Actions:</span>
+        <BButtonToolbar class="setting-content" style="--setting-index: 6">
           <BButtonGroup>
             <BButton type="button" variant="danger" @click="clear">Clear</BButton>
             <BButton type="button" variant="danger" @click="fillWorkdays">Fill workdays</BButton>
@@ -270,17 +270,17 @@ const tableFields: TableField[] = [
   {
     key: 'day',
     label: 'Day',
-    thStyle: 'min-width: 120px',
+    thStyle: 'min-width: 130px',
   },
   {
     key: 'arrived',
     label: 'Arrived',
-    thStyle: 'min-width: 130px',
+    thStyle: 'min-width: 120px',
   },
   {
     key: 'left',
     label: 'Left',
-    thStyle: 'min-width: 130px',
+    thStyle: 'min-width: 120px',
   },
   {
     key: 'worked_time',
