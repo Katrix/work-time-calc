@@ -16,6 +16,7 @@ export interface ComputedWorkEntries {
   from: string | null
   to: string | null
   workedTime: string
+  timeDiff: string
   extraTime: string
   lostTime: string
   estimate: boolean
@@ -24,18 +25,31 @@ export interface ComputedWorkEntries {
 }
 
 function toMinutes(str: string): number {
+  let sign = 1
+  if (str.startsWith('-')) {
+    str = str.substring(1)
+    sign = -1
+  }
+
   const [hours, minutes] = str.split(':', 2)
 
-  return Temporal.Duration.from({ hours: Number(hours), minutes: Number(minutes) }).total({ unit: 'minutes' })
+  return sign * Temporal.Duration.from({ hours: Number(hours), minutes: Number(minutes) }).total({ unit: 'minutes' })
 }
 
 function fromMinutes(minutes: number): string {
+  let negative = false
+  if (minutes < 0) {
+    minutes = Math.abs(minutes)
+    negative = true
+  }
+
   const dur = Temporal.Duration.from({ minutes }).round({ smallestUnit: 'minutes', largestUnit: 'hours' })
 
   const hours = dur.hours
   const balancedMinutes = dur.minutes
 
-  return `${hours.toString().padStart(2, '0')}:${balancedMinutes.toString().padStart(2, '0')}`
+  const res = `${hours.toString().padStart(2, '0')}:${balancedMinutes.toString().padStart(2, '0')}`
+  return negative ? `-${res}` : res
 }
 
 export function computeWorkTime(
@@ -63,6 +77,7 @@ export function computeWorkTime(
         from: entry.from,
         to: entry.to,
         workedTime: fromMinutes(workedTime),
+        timeDiff: fromMinutes(timeDiff),
         extraTime: fromMinutes(timeDiff > 0 ? timeDiff : 0),
         lostTime: fromMinutes(timeDiff < 0 ? Math.abs(timeDiff) : 0),
         estimate: entry.from === null || entry.to === null,

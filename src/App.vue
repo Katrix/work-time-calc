@@ -4,28 +4,33 @@
 
     <BForm>
       <div class="settings">
-        <label class="setting-description" style="--setting-index: 1" for="savedUpTimeInput">Saved up time:</label>
-        <div class="setting-content" style="--setting-index: 1">
-          <BFormInput id="savedUpTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="savedUp"></BFormInput>
+        <label style="grid-area: saved-up-time-description" for="savedUpTimeInput">Saved up time:</label>
+        <div style="grid-area: saved-up-time-content">
+          <BFormInput id="savedUpTimeInput" v-model="savedUpTime"></BFormInput>
         </div>
 
-        <label class="setting-description" style="--setting-index: 2" for="workTimeInput">Work time:</label>
-        <div class="setting-content" style="--setting-index: 2">
-          <BFormInput id="workTimeInput" class="mb-2 me-sm-2 mb-sm-0" v-model="workTime"></BFormInput>
+        <label style="grid-area: saved-up-vacation-description">Saved up vacation days:</label>
+        <div style="grid-area: saved-up-vacation-content">
+          <BFormInput id="savedUpVacationInput" v-model="savedUpVacation"></BFormInput>
         </div>
 
-        <label class="setting-description" style="--setting-index: 3" for="defaultWorkFromInput">Default work from:</label>
-        <div class="setting-content" style="--setting-index: 3">
-          <BFormInput id="defaultWorkFromInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultFrom"></BFormInput>
+        <label style="grid-area: work-time-description" for="workTimeInput">Work time:</label>
+        <div style="grid-area: work-time-content">
+          <BFormInput id="workTimeInput" v-model="workTime"></BFormInput>
         </div>
 
-        <label class="setting-description" style="--setting-index: 4" for="defaultWorkToInput">Default work to:</label>
-        <div class="setting-content" style="--setting-index: 4">
-          <BFormInput id="defaultWorkToInput" class="mb-2 me-sm-2 mb-sm-0" v-model="defaultTo"></BFormInput>
+        <label style="grid-area: default-work-from-description" for="defaultWorkFromInput">Default work from:</label>
+        <div style="grid-area: default-work-from-content">
+          <BFormInput id="defaultWorkFromInput" v-model="defaultFrom"></BFormInput>
         </div>
 
-        <label class="setting-description" style="--setting-index: 5" for="inputFile">Input:</label>
-        <div class="setting-content" style="--setting-index: 5">
+        <label style="grid-area: default-work-to-description" for="defaultWorkToInput">Default work to:</label>
+        <div style="grid-area: default-work-to-content">
+          <BFormInput id="defaultWorkToInput" v-model="defaultTo"></BFormInput>
+        </div>
+
+        <label style="grid-area: input-file-description" for="inputFile">Input:</label>
+        <div style="grid-area: input-file-content">
           <BInputGroup>
             <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
             <template #append>
@@ -35,8 +40,8 @@
           </BInputGroup>
         </div>
 
-        <span class="setting-description" style="--setting-index: 6">Actions:</span>
-        <BButtonToolbar class="setting-content" style="--setting-index: 6">
+        <span style="grid-area: actions-description">Actions:</span>
+        <BButtonToolbar style="grid-area: actions-content">
           <BButtonGroup>
             <BButton type="button" variant="danger" @click="clear">Clear</BButton>
             <BButton type="button" variant="danger" @click="fillWorkdays">Fill workdays</BButton>
@@ -48,92 +53,188 @@
 
     <hr />
 
-    <BTableLite
-      :fields="tableFields"
-      :items="computedTableItems"
-      dark="true"
-      striped="true"
-      :tbody-tr-class="bodyTrClasses"
-    >
-      <template #cell(day)="{ value, index }">
-        <BFormInput
-          :model-value="value as string"
-          @update:model-value="(val) => (workDays[index].day = val)"
-        ></BFormInput>
-      </template>
-
-      <template #cell(arrived)="{ value, index }">
-        <BInputGroup>
+    <div class="d-none d-lg-block" style="overflow-x: scroll">
+      <BTableLite
+        :fields="tableFields"
+        :items="computedTableItems"
+        dark="true"
+        striped="true"
+        :tbody-tr-class="bodyTrClasses"
+      >
+        <template #cell(day)="{ value, index }">
           <BFormInput
             :model-value="value as string"
-            @update:model-value="(val) => (workDays[index].from = val.length ? val : null)"
+            @update:model-value="(val) => (workDays[index].day = val)"
           ></BFormInput>
-          <template #append>
-            <BButton @click="workDays[index].from = currentTime()"
-              ><font-awesome-icon :icon="['fas', 'clock']"
-            /></BButton>
-          </template>
-        </BInputGroup>
-      </template>
+        </template>
 
-      <template #cell(left)="{ value, index }">
-        <BInputGroup>
+        <template #cell(arrived)="{ value, index }">
+          <BInputGroup>
+            <BFormInput
+              :model-value="value as string"
+              @update:model-value="(val) => (workDays[index].from = val.length ? val : null)"
+            ></BFormInput>
+            <template #append>
+              <BButton @click="workDays[index].from = currentTime()"
+                ><font-awesome-icon :icon="['fas', 'clock']"
+              /></BButton>
+            </template>
+          </BInputGroup>
+        </template>
+
+        <template #cell(left)="{ value, index }">
+          <BInputGroup>
+            <BFormInput
+              :model-value="value as string"
+              @update:model-value="(val) => (workDays[index].to = val.length ? val : null)"
+            ></BFormInput>
+            <template #append>
+              <BButton @click="workDays[index].to = currentTime()"
+                ><font-awesome-icon :icon="['fas', 'clock']"
+              /></BButton>
+            </template>
+          </BInputGroup>
+        </template>
+
+        <template #cell(subtracted_time)="{ value, index }">
+          <BInputGroup>
+            <BFormInput
+              :disabled="!workDays[index].customSubtractedTime"
+              :model-value="value as string"
+              @update:model-value="(val) => (workDays[index].subtractedTime = val.length ? val : null)"
+            ></BFormInput>
+
+            <template #prepend>
+              <BButton @click="toggleSubtractedTime(index)">
+                <font-awesome-layers fixed-width>
+                  <font-awesome-icon
+                    v-if="!workDays[index].customSubtractedTime"
+                    :icon="['fas', 'slash']"
+                    transform="down-1 left-1"
+                  />
+                  <font-awesome-icon
+                    v-if="!workDays[index].customSubtractedTime"
+                    :icon="['fas', 'slash']"
+                    :mask="['fas', 'pen-to-square']"
+                  />
+                  <font-awesome-icon v-if="workDays[index].customSubtractedTime" :icon="['fas', 'pen-to-square']" />
+                </font-awesome-layers>
+              </BButton>
+            </template>
+          </BInputGroup>
+        </template>
+
+        <template #cell(notes)="{ value, index }">
           <BFormInput
             :model-value="value as string"
-            @update:model-value="(val) => (workDays[index].to = val.length ? val : null)"
+            @update:model-value="(val) => (workDays[index].notes = val.length ? val : null)"
           ></BFormInput>
-          <template #append>
-            <BButton @click="workDays[index].to = currentTime()"
-              ><font-awesome-icon :icon="['fas', 'clock']"
-            /></BButton>
-          </template>
-        </BInputGroup>
-      </template>
+        </template>
 
-      <template #cell(subtracted_time)="{ value, index }">
-        <BInputGroup>
-          <BFormInput
-            :disabled="!workDays[index].customSubtractedTime"
-            :model-value="value as string"
-            @update:model-value="(val) => (workDays[index].subtractedTime = val.length ? val : null)"
-          ></BFormInput>
+        <template #cell(add_sub)="{ index }">
+          <b-button @click="addRowAfter(index)">
+            <font-awesome-icon :icon="['fas', 'plus']" />
+          </b-button>
+          <b-button v-if="workDays.length > 1" @click="removeRow(index)">
+            <font-awesome-icon :icon="['fas', 'minus']" />
+          </b-button>
+        </template>
+      </BTableLite>
+    </div>
+    <div class="d-lg-none">
+      <BCard v-for="(item, index) in computedTableItems" class="mb-4">
+        <template #header>
+          <BFormInput :model-value="item.day" @update:model-value="(val) => (workDays[index].day = val)"></BFormInput>
+        </template>
 
-          <template #prepend>
-            <BButton @click="toggleSubtractedTime(index)">
-              <font-awesome-layers fixed-width>
-                <font-awesome-icon
-                  v-if="!workDays[index].customSubtractedTime"
-                  :icon="['fas', 'slash']"
-                  transform="down-1 left-1"
-                />
-                <font-awesome-icon
-                  v-if="!workDays[index].customSubtractedTime"
-                  :icon="['fas', 'slash']"
-                  :mask="['fas', 'pen-to-square']"
-                />
-                <font-awesome-icon v-if="workDays[index].customSubtractedTime" :icon="['fas', 'pen-to-square']" />
-              </font-awesome-layers>
-            </BButton>
-          </template>
-        </BInputGroup>
-      </template>
+        <BCardText>
+          <BFormGroup label="Arrived:">
+            <BInputGroup>
+              <BFormInput
+                :model-value="item.arrived"
+                @update:model-value="(val) => (workDays[index].from = val.length ? val : null)"
+              >
+              </BFormInput>
+              <template #append>
+                <BButton @click="workDays[index].from = currentTime()"
+                  ><font-awesome-icon :icon="['fas', 'clock']"
+                /></BButton>
+              </template>
+            </BInputGroup>
+          </BFormGroup>
 
-      <template #cell(notes)="{ value, index }">
-        <BFormInput
-          :model-value="value as string"
-          @update:model-value="(val) => (workDays[index].notes = val.length ? val : null)"
-        ></BFormInput>
-      </template>
+          <BFormGroup label="Left:" class="mb-2">
+            <BInputGroup>
+              <BFormInput
+                :model-value="item.left"
+                @update:model-value="(val) => (workDays[index].to = val.length ? val : null)"
+              >
+              </BFormInput>
+              <template #append>
+                <BButton @click="workDays[index].to = currentTime()"
+                  ><font-awesome-icon :icon="['fas', 'clock']"
+                /></BButton>
+              </template>
+            </BInputGroup>
+          </BFormGroup>
 
-      <template #cell(add_sub)="{ index }">
-        <b-button @click="addRowAfter(index)">
-          <font-awesome-icon :icon="['fas', 'plus']" />
-        </b-button>
-        <b-button v-if="workDays.length > 1" @click="removeRow(index)">
-          <font-awesome-icon :icon="['fas', 'minus']" />
-        </b-button>
-      </template>
-    </BTableLite>
+          <dl class="row">
+            <dt class="col-5">Worked time:</dt>
+            <dd class="col-7">{{ item.worked_time }}</dd>
+            <dt class="col-5">Extra time:</dt>
+            <dd class="col-7">{{ item.extra_time }}</dd>
+            <dt class="col-5">Lost time:</dt>
+            <dd class="col-7">{{ item.lost_time }}</dd>
+            <dt class="col-5">Estimate?:</dt>
+            <dd class="col-7">{{ item.estimate }}</dd>
+          </dl>
+
+          <BFormGroup label="Subtracted time:">
+            <BInputGroup>
+              <BFormInput
+                :disabled="!workDays[index].customSubtractedTime"
+                :model-value="item.subtracted_time"
+                @update:model-value="(val) => (workDays[index].subtractedTime = val.length ? val : null)"
+              ></BFormInput>
+
+              <template #prepend>
+                <BButton @click="toggleSubtractedTime(index)">
+                  <font-awesome-layers fixed-width>
+                    <font-awesome-icon
+                      v-if="!workDays[index].customSubtractedTime"
+                      :icon="['fas', 'slash']"
+                      transform="down-1 left-1"
+                    />
+                    <font-awesome-icon
+                      v-if="!workDays[index].customSubtractedTime"
+                      :icon="['fas', 'slash']"
+                      :mask="['fas', 'pen-to-square']"
+                    />
+                    <font-awesome-icon v-if="workDays[index].customSubtractedTime" :icon="['fas', 'pen-to-square']" />
+                  </font-awesome-layers>
+                </BButton>
+              </template>
+            </BInputGroup>
+          </BFormGroup>
+
+          <BFormGroup label="Notes:">
+            <BFormInput
+              :model-value="item.notes"
+              @update:model-value="(val) => (workDays[index].notes = val.length ? val : null)"
+            ></BFormInput>
+          </BFormGroup>
+        </BCardText>
+
+        <template #footer>
+          <b-button @click="addRowAfter(index)">
+            <font-awesome-icon :icon="['fas', 'plus']" />
+          </b-button>
+          <b-button v-if="workDays.length > 1" @click="removeRow(index)">
+            <font-awesome-icon :icon="['fas', 'minus']" />
+          </b-button>
+        </template>
+      </BCard>
+    </div>
   </b-container>
 </template>
 
@@ -144,10 +245,12 @@ import {
   BButtonToolbar,
   BContainer,
   BForm,
+  BFormGroup,
   BFormFile,
   BFormInput,
   BInputGroup,
   BTableLite,
+  BCard,
   type TableField,
   type TableItem,
 } from 'bootstrap-vue-next'
@@ -156,7 +259,8 @@ import { ref, watchSyncEffect } from 'vue'
 import Holidays from 'date-holidays'
 import { computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
 
-const savedUp = ref('00:00')
+const savedUpTime = ref('00:00')
+const savedUpVacation = ref('0')
 const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
 const defaultTo = ref('17:00')
@@ -299,18 +403,18 @@ const tableFields: TableField[] = [
   },
   {
     key: 'estimate',
-    label: 'Is estimate',
-    thStyle: 'min-width: 60px',
+    label: 'Estimate?',
+    thStyle: 'min-width: 40px',
   },
   {
     key: 'subtracted_time',
     label: 'Subtracted time',
-    thStyle: 'min-width: 60px',
+    thStyle: 'min-width: 125px',
   },
   {
     key: 'notes',
     label: 'Notes',
-    thStyle: 'min-width: 300px',
+    thStyle: 'min-width: 200px',
   },
   {
     key: 'add_sub',
@@ -347,7 +451,7 @@ watchSyncEffect(() => {
   try {
     const computedWorkDays = computeWorkTime(
       workDaysObj,
-      savedUp.value,
+      savedUpTime.value,
       defaultFrom.value,
       defaultTo.value,
       workTime.value,
@@ -358,6 +462,7 @@ watchSyncEffect(() => {
       arrived: entry.from,
       left: entry.to,
       worked_time: entry.workedTime,
+      //time_diff: entry.timeDiff,
       extra_time: entry.extraTime,
       lost_time: entry.lostTime,
       estimate: entry.estimate,
@@ -392,7 +497,8 @@ async function load() {
   if (file) {
     const text = await file.text()
     const json = JSON.parse(text)
-    savedUp.value = json.savedUp
+    savedUpTime.value = json.savedUpTime ?? json.savedUp
+    savedUpVacation.value = json.savedUpVacation ?? '0'
     workTime.value = json.workTime
     defaultFrom.value = json.defaultFrom
     defaultTo.value = json.defaultTo
@@ -402,7 +508,8 @@ async function load() {
 
 function save() {
   const data = {
-    savedUp: savedUp.value,
+    savedUpTime: savedUpTime.value,
+    savedUpVacation: savedUpVacation.value,
     workTime: workTime.value,
     defaultFrom: defaultFrom.value,
     defaultTo: defaultTo.value,

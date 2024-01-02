@@ -23,38 +23,56 @@ $enable-cssgrid: true;
 
 .settings {
   display: grid;
-  grid-template-rows: repeat(6, 1fr);
-  grid-template-columns: 2fr 10fr;
+  grid-template-rows: repeat(8, auto);
+  grid-template-columns: auto 1fr;
+  grid-template-areas:
+    'saved-up-time-description     saved-up-time-content'
+    'saved-up-vacation-description saved-up-vacation-content'
+    'work-time-description         work-time-content'
+    'default-work-from-description default-work-from-content'
+    'default-work-to-description   default-work-to-content'
+    'input-file-description        input-file-description'
+    'input-file-content            input-file-content'
+    'actions-description           actions-description'
+    'actions-content               actions-content';
+
   column-gap: 1rem;
   row-gap: 0.5rem;
 }
 
-.setting-description {
-  grid-column: 1;
-  grid-row: var(--setting-index);
+@include media-breakpoint-up(sm) {
+  .settings {
+    grid-template-rows: repeat(6, 1fr);
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      'saved-up-time-description     saved-up-time-content'
+      'saved-up-vacation-description saved-up-vacation-content'
+      'work-time-description         work-time-content'
+      'default-work-from-description default-work-from-content'
+      'default-work-to-description   default-work-to-content'
+      'input-file-description        input-file-content'
+      'actions-description           actions-content';
+  }
 }
 
-.setting-content {
-  grid-column: 2;
-  grid-row: var(--setting-index);
+@include media-breakpoint-up(md) {
+  .settings {
+    grid-template-rows: auto 2fr auto 2.32fr;
+    grid-template-columns: 1fr 1fr 1fr 3fr;
+    grid-template-areas:
+      'saved-up-time-description     default-work-from-description work-time-description input-file-description'
+      'saved-up-time-content         default-work-from-content     work-time-content     input-file-content'
+      'saved-up-vacation-description default-work-to-description   actions-description   actions-description'
+      'saved-up-vacation-content     default-work-to-content       actions-content       actions-content';
+  }
 }
 
 @include media-breakpoint-up(xl) {
   .settings {
-    display: grid;
-    grid-template-rows: 1fr 1fr;
-    grid-template-columns: 1fr 1fr 1fr 1fr 4fr 4fr;
-    column-gap: 1rem;
-    row-gap: 0.5rem;
-  }
-
-  .setting-description {
-    grid-row: 1;
-    grid-column: var(--setting-index);
-  }
-
-  .setting-content {
-    grid-row: 2;
-    grid-column: var(--setting-index);
+    grid-template-rows: auto 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr 4fr 4fr;
+    grid-template-areas:
+      'saved-up-time-description saved-up-vacation-description work-time-description default-work-from-description default-work-to-description input-file-description actions-description'
+      'saved-up-time-content     saved-up-vacation-content     work-time-content     default-work-from-content     default-work-to-content     input-file-content     actions-content';
   }
 }
