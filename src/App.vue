@@ -2,8 +2,8 @@
   <b-container fluid="xl" class="wider-container">
     <h1>Work time calc</h1>
 
-    <BForm>
-      <div class="settings">
+    <BForm v-if="mode === 'hours'">
+      <div class="hours-settings">
         <label style="grid-area: saved-up-time-description" for="savedUpTimeInput">Saved up time:</label>
         <div style="grid-area: saved-up-time-content">
           <BFormInput id="savedUpTimeInput" v-model="savedUpTime"></BFormInput>
@@ -36,18 +36,49 @@
             <template #append>
               <BButton type="button" :disabled="!saveFile" @click="load">Load</BButton>
               <BButton type="button" :disabled="!saveFile" @click="save">Save</BButton>
+              <BButton type="button" :disabled="!saveFile" @click="saveCSV">SaveCSV</BButton>
             </template>
           </BInputGroup>
         </div>
 
         <span style="grid-area: actions-description">Actions:</span>
-        <BButtonToolbar style="grid-area: actions-content">
-          <BButtonGroup>
-            <BButton type="button" variant="danger" @click="clear">Clear</BButton>
-            <BButton type="button" variant="danger" @click="fillWorkdays">Fill workdays</BButton>
-            <BButton type="button" @click="fillRemainingWorkdays">Add remaining workdays</BButton>
-          </BButtonGroup>
-        </BButtonToolbar>
+        <div style="grid-area: actions-content" class="d-flex justify-content-between">
+          <BButtonToolbar>
+            <BButtonGroup>
+              <BButton type="button" variant="danger" @click="clear">Clear</BButton>
+              <BButton type="button" variant="danger" @click="fillWorkdays">Fill workdays</BButton>
+              <BButton type="button" @click="fillRemainingWorkdays">Add remaining workdays</BButton>
+            </BButtonGroup>
+          </BButtonToolbar>
+
+          <BFormCheckbox :modelValue="true" @update:model-value="setModeTasks()" switch>Hours</BFormCheckbox>
+        </div>
+      </div>
+    </BForm>
+    <BForm v-else-if="mode === 'tasks'">
+      <div class="tasks-settings">
+        <label style="grid-area: input-file-description" for="inputFile">Input:</label>
+        <div style="grid-area: input-file-content">
+          <BInputGroup>
+            <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
+            <template #append>
+              <BButton type="button" :disabled="!saveFile" @click="load">Load</BButton>
+              <BButton type="button" :disabled="!saveFile" @click="save">Save</BButton>
+              <BButton type="button" :disabled="!saveFile" @click="saveCSV">SaveCSV</BButton>
+            </template>
+          </BInputGroup>
+        </div>
+
+        <span style="grid-area: actions-description">Actions:</span>
+        <div style="grid-area: actions-content" class="d-flex justify-content-between">
+          <BButtonToolbar>
+            <BButtonGroup>
+              <BButton type="button" variant="danger" @click="clear">Clear</BButton>
+            </BButtonGroup>
+          </BButtonToolbar>
+
+          <BFormCheckbox :modelValue="false" @update:model-value="setModeHours()" switch>Tasks</BFormCheckbox>
+        </div>
       </div>
     </BForm>
 
@@ -75,9 +106,9 @@
               @update:model-value="(val) => (workDays[index].from = val.length ? val : null)"
             ></BFormInput>
             <template #append>
-              <BButton @click="workDays[index].from = currentTime()"
-                ><font-awesome-icon :icon="['fas', 'clock']"
-              /></BButton>
+              <BButton @click="workDays[index].from = currentTime()">
+                <font-awesome-icon :icon="['fas', 'clock']" />
+              </BButton>
             </template>
           </BInputGroup>
         </template>
@@ -89,9 +120,9 @@
               @update:model-value="(val) => (workDays[index].to = val.length ? val : null)"
             ></BFormInput>
             <template #append>
-              <BButton @click="workDays[index].to = currentTime()"
-                ><font-awesome-icon :icon="['fas', 'clock']"
-              /></BButton>
+              <BButton @click="workDays[index].to = currentTime()">
+                <font-awesome-icon :icon="['fas', 'clock']" />
+              </BButton>
             </template>
           </BInputGroup>
         </template>
@@ -156,9 +187,9 @@
               >
               </BFormInput>
               <template #append>
-                <BButton @click="workDays[index].from = currentTime()"
-                  ><font-awesome-icon :icon="['fas', 'clock']"
-                /></BButton>
+                <BButton @click="workDays[index].from = currentTime()">
+                  <font-awesome-icon :icon="['fas', 'clock']" />
+                </BButton>
               </template>
             </BInputGroup>
           </BFormGroup>
@@ -171,9 +202,9 @@
               >
               </BFormInput>
               <template #append>
-                <BButton @click="workDays[index].to = currentTime()"
-                  ><font-awesome-icon :icon="['fas', 'clock']"
-                /></BButton>
+                <BButton @click="workDays[index].to = currentTime()">
+                  <font-awesome-icon :icon="['fas', 'clock']" />
+                </BButton>
               </template>
             </BInputGroup>
           </BFormGroup>
@@ -248,36 +279,59 @@ import {
   BFormGroup,
   BFormFile,
   BFormInput,
+  BFormCheckbox,
   BInputGroup,
   BTableLite,
   BCard,
+  BCardText,
   type TableField,
   type TableItem,
 } from 'bootstrap-vue-next'
-import { ref, watchSyncEffect } from 'vue'
+import { computed, ref, watchSyncEffect } from "vue";
+import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 
 import Holidays from 'date-holidays'
 import { computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
+import type { ComputedRef } from "@vue/reactivity";
 
+const mode = ref<'hours' | 'tasks'>('hours')
 const savedUpTime = ref('00:00')
 const savedUpVacation = ref('0')
 const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
 const defaultTo = ref('17:00')
 
+function setModeHours() {
+  mode.value = 'hours'
+  workTime.value = '08:00'
+  defaultFrom.value = '08:45'
+  defaultTo.value = '17:00'
+}
+
+function setModeTasks() {
+  mode.value = 'tasks'
+  workTime.value = '00:00'
+  defaultFrom.value = '00:00'
+  defaultTo.value = '00:00'
+}
+
 function dateToDateString(d: Date) {
-  const isoStr = d.toISOString()
-  return isoStr.substring(0, isoStr.search('T'))
+  try {
+    const isoStr = d.toISOString()
+    return isoStr.substring(0, isoStr.search('T'))
+  } catch (e) {
+    return null
+  }
 }
 
 function dateToTimeString(d: Date) {
   const hours = d.getHours()
   const minutes = d.getMinutes()
-  return `${hours}:${minutes}`
+  return `${hours}:${minutes.toString(10).padStart(2, '0')}`
 }
 
 function currentDate() {
-  return dateToDateString(new Date())
+  return dateToDateString(new Date()) as string
 }
 
 function currentTime() {
@@ -301,7 +355,7 @@ function addRowAfter(idx: number) {
   const day = new Date(prevDay ? prevDay.day : currentDate())
   day.setDate(day.getDate() + 1)
   workDays.value.splice(idx + 1, 0, {
-    day: dateToDateString(day),
+    day: dateToDateString(day) ?? '',
     from: defaultFrom.value,
     to: null,
     subtractedTime: null,
@@ -347,7 +401,7 @@ function fillWorkdaysBase(start: Date) {
 function fillWorkdays() {
   const dates = fillWorkdaysBase(new Date(workDays.value[0].day))
   workDays.value = dates.map((d) => ({
-    day: dateToDateString(d),
+    day: dateToDateString(d) ?? '',
     from: null,
     to: null,
     subtractedTime: null,
@@ -361,7 +415,7 @@ function fillRemainingWorkdays() {
   const dates = fillWorkdaysBase(start)
   workDays.value.push(
     ...dates.map((d) => ({
-      day: dateToDateString(d),
+      day: dateToDateString(d) ?? '',
       from: null,
       to: null,
       subtractedTime: null,
@@ -370,58 +424,105 @@ function fillRemainingWorkdays() {
   )
 }
 
-const tableFields: TableField[] = [
-  {
-    key: 'day',
-    label: 'Day',
-    thStyle: 'min-width: 130px',
-  },
-  {
-    key: 'arrived',
-    label: 'Arrived',
-    thStyle: 'min-width: 120px',
-  },
-  {
-    key: 'left',
-    label: 'Left',
-    thStyle: 'min-width: 120px',
-  },
-  {
-    key: 'worked_time',
-    label: 'Worked time',
-    thStyle: 'min-width: 60px',
-  },
-  {
-    key: 'extra_time',
-    label: 'Extra time',
-    thStyle: 'min-width: 60px',
-  },
-  {
-    key: 'lost_time',
-    label: 'Lost time',
-    thStyle: 'min-width: 60px',
-  },
-  {
-    key: 'estimate',
-    label: 'Estimate?',
-    thStyle: 'min-width: 40px',
-  },
-  {
-    key: 'subtracted_time',
-    label: 'Subtracted time',
-    thStyle: 'min-width: 125px',
-  },
-  {
-    key: 'notes',
-    label: 'Notes',
-    thStyle: 'min-width: 200px',
-  },
-  {
-    key: 'add_sub',
-    label: 'Add/Remove row',
-    thStyle: 'min-width: 80px',
-  },
-]
+const tableFields: ComputedRef<TableField[]> = computed(() => {
+  if (mode.value === 'hours') {
+    return [
+      {
+        key: 'day',
+        label: 'Day',
+        thStyle: 'min-width: 130px',
+      },
+      {
+        key: 'arrived',
+        label: 'Arrived',
+        thStyle: 'min-width: 120px',
+      },
+      {
+        key: 'left',
+        label: 'Left',
+        thStyle: 'min-width: 120px',
+      },
+      {
+        key: 'worked_time',
+        label: 'Worked time',
+        thStyle: 'min-width: 60px',
+      },
+      {
+        key: 'extra_time',
+        label: 'Extra time',
+        thStyle: 'min-width: 60px',
+      },
+      {
+        key: 'lost_time',
+        label: 'Lost time',
+        thStyle: 'min-width: 60px',
+      },
+      {
+        key: 'estimate',
+        label: 'Estimate?',
+        thStyle: 'min-width: 40px',
+      },
+      {
+        key: 'subtracted_time',
+        label: 'Subtracted time',
+        thStyle: 'min-width: 125px',
+      },
+      {
+        key: 'notes',
+        label: 'Notes',
+        thStyle: 'min-width: 200px',
+      },
+      {
+        key: 'add_sub',
+        label: 'Add/Remove row',
+        thStyle: 'min-width: 80px',
+      },
+    ]
+  } else {
+    return [
+      {
+        key: 'day',
+        label: 'Task',
+        thStyle: 'min-width: 130px',
+      },
+      {
+        key: 'arrived',
+        label: 'From',
+        thStyle: 'min-width: 120px',
+      },
+      {
+        key: 'left',
+        label: 'To',
+        thStyle: 'min-width: 120px',
+      },
+      {
+        key: 'worked_time',
+        label: 'Worked time',
+        thStyle: 'min-width: 60px',
+      },
+      {
+        key: 'extra_time',
+        label: 'Extra time',
+        thStyle: 'min-width: 60px',
+      },
+      {
+        key: 'subtracted_time',
+        label: 'Subtracted time',
+        thStyle: 'min-width: 125px',
+      },
+      {
+        key: 'notes',
+        label: 'Notes',
+        thStyle: 'min-width: 200px',
+      },
+      {
+        key: 'add_sub',
+        label: 'Add/Remove row',
+        thStyle: 'min-width: 80px',
+      },
+    ]
+  }
+})
 
 const computedTableItems = ref<
   {
@@ -522,6 +623,64 @@ function save() {
   const url = URL.createObjectURL(blob)
   a.href = url
   a.download = saveFile.value?.name ?? 'data.json'
+  document.body.appendChild(a)
+  a.click()
+  setTimeout(() => {
+    document.body.removeChild(a)
+    URL.revokeObjectURL(url)
+  }, 0)
+}
+
+function saveCSV() {
+  const workDaysObj: WorkDays = {}
+  for (const workDay of workDays.value) {
+    if (workDay) {
+      if (!workDaysObj[workDay.day]) {
+        workDaysObj[workDay.day] = []
+      }
+      workDaysObj[workDay.day].push(workDay)
+    }
+  }
+
+  const computedWorkDays = computeWorkTime(
+    workDaysObj,
+    savedUpTime.value,
+    defaultFrom.value,
+    defaultTo.value,
+    workTime.value,
+  ).map((item) => {
+    if (mode.value === 'hours') {
+      return {
+        day: item.day,
+        from: item.from,
+        to: item.to,
+        workedTime: item.workedTime,
+        extraTime: item.extraTime,
+        lostTime: item.lostTime,
+        subtractedTime: item.subtractedTime,
+        notes: item.notes,
+      }
+    } else if (mode.value === 'tasks') {
+      return {
+        task: item.day,
+        from: item.from,
+        to: item.to,
+        workedTime: item.workedTime,
+        totalTime: item.extraTime,
+        subtractedTime: item.subtractedTime,
+        notes: item.notes,
+      }
+    }
+  })
+
+  const str = csvStringify(computedWorkDays, { header: true })
+
+  // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
+  const blob = new Blob([str], { type: 'text/csv' })
+  const a = document.createElement('a')
+  const url = URL.createObjectURL(blob)
+  a.href = url
+  a.download = 'data.csv'
   document.body.appendChild(a)
   a.click()
   setTimeout(() => {
