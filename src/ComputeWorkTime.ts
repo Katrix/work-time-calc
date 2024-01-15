@@ -7,6 +7,7 @@ export interface WorkRange {
   to: string | null
   subtractedTime: string | null
   notes?: string
+  idx?: number
 }
 
 export type WorkDays = { [day: string]: WorkRange[] }
@@ -22,6 +23,7 @@ export interface ComputedWorkEntries {
   estimate: boolean
   subtractedTime: string
   notes: string
+  idx?: number
 }
 
 function toMinutes(str: string): number {
@@ -83,6 +85,7 @@ export function computeWorkTime(
         estimate: entry.from === null || entry.to === null,
         subtractedTime: fromMinutes(subtractedTime),
         notes: entry.notes ?? '',
+        idx: entry.idx
       })
     }
   }

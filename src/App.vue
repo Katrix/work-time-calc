@@ -352,10 +352,15 @@ function toggleSubtractedTime(idx: number) {
 
 function addRowAfter(idx: number) {
   const prevDay = workDays.value[idx]
-  const day = new Date(prevDay ? prevDay.day : currentDate())
-  day.setDate(day.getDate() + 1)
+  let day: Date | string = new Date(prevDay ? prevDay.day : currentDate())
+  if (isNaN(day.valueOf())) {
+    day = prevDay.day
+  } else {
+    day.setDate(day.getDate() + 1)
+  }
+
   workDays.value.splice(idx + 1, 0, {
-    day: dateToDateString(day) ?? '',
+    day: day instanceof Date ? dateToDateString(day) ?? '' : day,
     from: defaultFrom.value,
     to: null,
     subtractedTime: null,
@@ -502,7 +507,7 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
       },
       {
         key: 'extra_time',
-        label: 'Extra time',
+        label: 'Total time',
         thStyle: 'min-width: 60px',
       },
       {
@@ -540,12 +545,15 @@ const computedTableItems = ref<
 >([])
 watchSyncEffect(() => {
   const workDaysObj: WorkDays = {}
-  for (const workDay of workDays.value) {
+  for (const [idx, workDay] of workDays.value.entries()) {
     if (workDay) {
       if (!workDaysObj[workDay.day]) {
         workDaysObj[workDay.day] = []
       }
-      workDaysObj[workDay.day].push(workDay)
+      workDaysObj[workDay.day].push({
+        ...workDay,
+        idx
+      })
     }
   }
 
@@ -556,7 +564,7 @@ watchSyncEffect(() => {
       defaultFrom.value,
       defaultTo.value,
       workTime.value,
-    )
+    ).sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
 
     computedTableItems.value = computedWorkDays.map((entry) => ({
       day: entry.day,
