@@ -123,6 +123,18 @@
               <BButton @click="workDays[index].to = currentTime()">
                 <font-awesome-icon :icon="['fas', 'clock']" />
               </BButton>
+              <BButton
+                v-if="!tracking[index] && (workDays[index].to ?? '') === ''"
+                @click="updateTracking(index, true)"
+              >
+                <font-awesome-icon :icon="['fas', 'hourglass-start']" />
+              </BButton>
+              <BButton v-else-if="tracking[index]" @click="updateTracking(index, false)" variant="primary">
+                <font-awesome-icon :icon="['fas', 'hourglass-half']" />
+              </BButton>
+              <BButton v-else disabled>
+                <font-awesome-icon :icon="['fas', 'hourglass-end']" />
+              </BButton>
             </template>
           </BInputGroup>
         </template>
@@ -287,12 +299,12 @@ import {
   type TableField,
   type TableItem,
 } from 'bootstrap-vue-next'
-import { computed, ref, watchSyncEffect } from "vue";
+import { computed, onMounted, onUnmounted, ref, watchSyncEffect } from 'vue'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 
 import Holidays from 'date-holidays'
 import { computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
-import type { ComputedRef } from "@vue/reactivity";
+import type { ComputedRef } from '@vue/reactivity'
 
 const mode = ref<'hours' | 'tasks'>('hours')
 const savedUpTime = ref('00:00')
@@ -300,6 +312,7 @@ const savedUpVacation = ref('0')
 const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
 const defaultTo = ref('17:00')
+const tracking = ref<{ [idx: number]: boolean }>({})
 
 function setModeHours() {
   mode.value = 'hours'
@@ -341,6 +354,29 @@ function currentTime() {
 const workDays = ref<(WorkRange & { day: string; customSubtractedTime: boolean })[]>([
   { day: currentDate(), from: null, to: null, subtractedTime: null, customSubtractedTime: false },
 ])
+
+const trackingFunId = ref<number>()
+
+function updateTracking(idx: number, value: boolean) {
+  tracking.value[idx] = value
+  workDays.value[idx].to = currentTime()
+}
+
+onMounted(() => {
+  trackingFunId.value = setInterval(() => {
+    const t = currentTime()
+
+    for (const [idxStr, isTracked] of Object.entries(tracking.value)) {
+      if (isTracked) {
+        workDays.value[Number(idxStr)].to = t
+      }
+    }
+  }, 5000)
+})
+
+onUnmounted(() => {
+  clearInterval(trackingFunId.value)
+})
 
 function toggleSubtractedTime(idx: number) {
   workDays.value[idx].customSubtractedTime = !workDays.value[idx].customSubtractedTime
@@ -552,7 +588,7 @@ watchSyncEffect(() => {
       }
       workDaysObj[workDay.day].push({
         ...workDay,
-        idx
+        idx,
       })
     }
   }
