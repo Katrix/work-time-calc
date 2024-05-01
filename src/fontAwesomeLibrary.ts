@@ -6,11 +6,13 @@ import {
   faPenToSquare,
   faSlash,
   faHourglassStart,
-  faHourglassHalf, faHourglassEnd
-} from "@fortawesome/free-solid-svg-icons";
+  faHourglassHalf,
+  faHourglassEnd,
+  faTimes
+} from '@fortawesome/free-solid-svg-icons'
 
 import '@fortawesome/fontawesome-svg-core/styles.css'
 
-library.add(faPlus, faMinus, faClock, faPenToSquare, faSlash, faHourglassStart, faHourglassHalf, faHourglassEnd)
+library.add(faPlus, faMinus, faClock, faPenToSquare, faSlash, faHourglassStart, faHourglassHalf, faHourglassEnd, faTimes)
 
 dom.watch()
