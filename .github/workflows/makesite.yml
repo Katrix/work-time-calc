@@ -1,0 +1,27 @@
+name: Make site
+on:
+  push:
+    branches: ["main"]
+    tags: ["*"]
+jobs:
+  makesite:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set Node.js 22.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: 22.x
+          cache: 'yarn'
+
+      - run: yarn install
+      - run: yarn build
+
+      - name: Push site
+        uses: s0/git-publish-subdir-action@v2.6.0
+        env:
+          REPO: self
+          BRANCH: gh-pages
+          FOLDER: dist
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
