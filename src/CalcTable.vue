@@ -2,14 +2,14 @@
   <BTableLite
     :fields="tableFields"
     :items="computedTableItems"
-    dark="true"
-    striped="true"
+    :dark="true"
+    :striped="true"
     :tbody-tr-class="bodyTrClasses"
   >
     <template #cell(day)="{ value, index }">
       <BFormInput
         :model-value="value as string"
-        @update:model-value="(val) => $emit('update:workDays-day', index, val)"
+        @update:model-value="(val) => $emit('update:workDays-day', index, String(val))"
       ></BFormInput>
     </template>
 
@@ -17,7 +17,9 @@
       <BInputGroup>
         <BFormInput
           :model-value="value as string"
-          @update:model-value="(val) => $emit('update:workDays-from', index, val.length ? val : null)"
+          @update:model-value="
+            (val) => $emit('update:workDays-from', index, typeof val === 'string' && val.length ? val : null)
+          "
         ></BFormInput>
         <template #append>
           <BButton @click="$emit('update:workDays-from', index, currentTime())">
@@ -32,7 +34,9 @@
         <BFormInput
           :model-value="value as string"
           :disabled="tracking[index]"
-          @update:model-value="(val) => $emit('update:workDays-to', index, val.length ? val : null)"
+          @update:model-value="
+            (val) => $emit('update:workDays-to', index, typeof val === 'string' && val.length ? val : null)
+          "
         ></BFormInput>
         <template #append>
           <BButton @click="$emit('update:workDays-to', index, currentTime())">
@@ -68,7 +72,9 @@
         <BFormInput
           :disabled="!customSubtractedTime[index]"
           :model-value="value as string"
-          @update:model-value="(val) => $emit('update:workDays-subtractedTime', index, val.length ? val : null)"
+          @update:model-value="
+            (val) => $emit('update:workDays-subtractedTime', index, typeof val === 'string' && val.length ? val : null)
+          "
         ></BFormInput>
 
         <template #prepend>
@@ -94,7 +100,9 @@
     <template #cell(notes)="{ value, index }">
       <BFormInput
         :model-value="value as string"
-        @update:model-value="(val) => $emit('update:workDays-notes', index, val.length ? val : null)"
+        @update:model-value="
+          (val) => $emit('update:workDays-notes', index, typeof val === 'string' && val.length ? val : null)
+        "
       ></BFormInput>
     </template>
 
@@ -110,7 +118,15 @@
 </template>
 
 <script setup lang="ts">
-import { BButton, BFormInput, BInputGroup, BTableLite, type TableField, type TableItem } from 'bootstrap-vue-next'
+import {
+  BButton,
+  BFormInput,
+  BInputGroup,
+  BTableLite,
+  type TableField,
+  type TableRowType,
+  type TableStrictClassValue
+} from 'bootstrap-vue-next'
 import { computed, type ComputedRef, type PropType, ref, watchSyncEffect } from 'vue'
 import type { ComputedWorkEntries } from '@/ComputeWorkTime'
 
@@ -134,15 +150,15 @@ const props = defineProps({
 })
 
 defineEmits<{
-  'update:workDays-day': [number, string]
-  'update:workDays-from': [number, string | null]
-  'update:workDays-to': [number, string | null]
-  'update:workDays-subtractedTime': [number, string | null]
-  'update:workDays-notes': [number, string | null]
-  'update:workDays-tracking': [number, boolean]
-  addRowAfter: [number]
-  removeRow: [number]
-  toggleCustomSubtractedTime: [number]
+  (e: 'update:workDays-day', idx: number, day: string): void
+  (e: 'update:workDays-from', idx: number, from: string | null): void
+  (e: 'update:workDays-to', idx: number, to: string | null): void
+  (e: 'update:workDays-subtractedTime', idx: number, subtractedTime: string | null): void
+  (e: 'update:workDays-notes', idx: number, notes: string | null): void
+  (e: 'update:workDays-tracking', idx: number, tracking: boolean): void
+  (e: 'addRowAfter', idx: number): void
+  (e: 'removeRow', idx: number): void
+  (e: 'toggleCustomSubtractedTime', idx: number): void
 }>()
 
 const tableFields: ComputedRef<TableField[]> = computed(() => {
@@ -245,7 +261,20 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
   }
 })
 
-function bodyTrClasses(item: TableItem | null, type: string) {
+interface TableItem {
+  day: string
+  arrived: string | undefined
+  left: string | undefined
+  worked_time: string
+  extra_time: string
+  lost_time: string
+  estimate: boolean
+  subtracted_time: string
+  notes: string
+  add_sub: string
+}
+
+function bodyTrClasses(item: TableItem | null, type: TableRowType): TableStrictClassValue {
   if (type === 'row' && item) {
     const day = item.day as string
     const idx = props.computedWorkDays.findIndex((v) => v.day === day)
@@ -257,7 +286,7 @@ function bodyTrClasses(item: TableItem | null, type: string) {
     }
   }
 
-  return null
+  return {}
 }
 
 const computedTableItems = ref<

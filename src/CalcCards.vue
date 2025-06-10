@@ -12,7 +12,9 @@
         <BInputGroup>
           <BFormInput
             :model-value="item.from"
-            @update:model-value="(val) => $emit('update:workDays-from', index, val.length ? val : null)"
+            @update:model-value="
+              (val) => $emit('update:workDays-from', index, typeof val === 'string' && val.length ? val : null)
+            "
           >
           </BFormInput>
           <template #append>
@@ -27,7 +29,7 @@
         <BInputGroup>
           <BFormInput
             :model-value="item.to"
-            @update:model-value="(val) => $emit('update:workDays-to', index, val.length ? val : null)"
+            @update:model-value="(val) => $emit('update:workDays-to', index, typeof val === 'string' && val.length ? val : null)"
           >
           </BFormInput>
           <template #append>
@@ -75,7 +77,7 @@
           <BFormInput
             :disabled="!customSubtractedTime[index]"
             :model-value="item.subtractedTime"
-            @update:model-value="(val) => $emit('update:workDays-subtractedTime', index, val.length ? val : null)"
+            @update:model-value="(val) => $emit('update:workDays-subtractedTime', index, typeof val === 'string' && val.length ? val : null)"
           ></BFormInput>
 
           <template #prepend>
@@ -101,7 +103,7 @@
       <BFormGroup label="Notes:">
         <BFormTextarea
           :model-value="item.notes"
-          @update:model-value="(val) => $emit('update:workDays-notes', index, val.length ? val : null)"
+          @update:model-value="(val) => $emit('update:workDays-notes', index, typeof val === 'string' && val.length ? val : null)"
         ></BFormTextarea>
       </BFormGroup>
     </BCardText>
@@ -142,15 +144,15 @@ defineProps({
 })
 
 defineEmits<{
-  'update:workDays-day': [number, string]
-  'update:workDays-from': [number, string | null]
-  'update:workDays-to': [number, string | null]
-  'update:workDays-subtractedTime': [number, string | null]
-  'update:workDays-notes': [number, string | null]
-  'update:workDays-tracking': [number, boolean]
-  addRowAfter: [number]
-  removeRow: [number]
-  toggleCustomSubtractedTime: [number]
+  (e: 'update:workDays-day', idx: number, day: string): void
+  (e: 'update:workDays-from', idx: number, from: string | null): void
+  (e: 'update:workDays-to', idx: number, to: string | null): void
+  (e: 'update:workDays-subtractedTime', idx: number, subtractedTime: string | null): void
+  (e: 'update:workDays-notes', idx: number, notes: string | null): void
+  (e: 'update:workDays-tracking', idx: number, tracking: boolean): void
+  (e: 'addRowAfter', idx: number): void
+  (e: 'removeRow', idx: number): void
+  (e: 'toggleCustomSubtractedTime', idx: number): void
 }>()
 
 function dateToTimeString(d: Date) {

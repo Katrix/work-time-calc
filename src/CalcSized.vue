@@ -61,14 +61,14 @@ defineProps({
 })
 
 defineEmits<{
-  'update:workDays-day': [number, string]
-  'update:workDays-from': [number, string | null]
-  'update:workDays-to': [number, string | null]
-  'update:workDays-subtractedTime': [number, string | null]
-  'update:workDays-notes': [number, string | null]
-  'update:workDays-tracking': [number, boolean]
-  addRowAfter: [number]
-  removeRow: [number]
-  toggleCustomSubtractedTime: [number]
+  (e: 'update:workDays-day', idx: number, day: string): void
+  (e: 'update:workDays-from', idx: number, from: string | null): void
+  (e: 'update:workDays-to', idx: number, to: string | null): void
+  (e: 'update:workDays-subtractedTime', idx: number, subtractedTime: string | null): void
+  (e: 'update:workDays-notes', idx: number, notes: string | null): void
+  (e: 'update:workDays-tracking', idx: number, tracking: boolean): void
+  (e: 'addRowAfter', idx: number): void
+  (e: 'removeRow', idx: number): void
+  (e: 'toggleCustomSubtractedTime', idx: number): void
 }>()
 </script>

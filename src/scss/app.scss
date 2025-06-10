@@ -33,6 +33,7 @@ $enable-cssgrid: true;
     'work-time-description         work-time-content'
     'default-work-from-description default-work-from-content'
     'default-work-to-description   default-work-to-content'
+    'granularity-description       granularity-content'
     'input-file-description        input-file-description'
     'input-file-content            input-file-content'
     'actions-description           actions-description'
@@ -49,6 +50,7 @@ $enable-cssgrid: true;
   grid-template-areas:
     'name-description              name-content'
     'mode-switch                   mode-switch'
+    'granularity-description       granularity-content'
     'input-file-description        input-file-description'
     'input-file-content            input-file-content'
     'actions-description           actions-description'
@@ -70,16 +72,18 @@ $enable-cssgrid: true;
       'work-time-description         work-time-content'
       'default-work-from-description default-work-from-content'
       'default-work-to-description   default-work-to-content'
+      'granularity-description       granularity-content'
       'input-file-description        input-file-content'
       'actions-description           actions-content';
   }
 
   .tasks-settings {
-    grid-template-rows: repeat(4, 1fr);
+    grid-template-rows: repeat(5, 1fr);
     grid-template-columns: auto 1fr;
     grid-template-areas:
       'name-description              name-content'
       'mode-switch                   mode-switch'
+      'granularity-description       granularity-content'
       'input-file-description        input-file-content'
       'actions-description           actions-content';
   }
@@ -111,9 +115,9 @@ $enable-cssgrid: true;
     grid-template-rows: auto auto 1fr;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 4fr 4fr;
     grid-template-areas:
-      'name-description          name-content                  name-content          mode-switch                   input-file-description      input-file-content  input-file-content'
-      'saved-up-time-description saved-up-vacation-description work-time-description default-work-from-description default-work-to-description actions-description actions-description'
-      'saved-up-time-content     saved-up-vacation-content     work-time-content     default-work-from-content     default-work-to-content     actions-content     actions-content';
+      'name-description          name-content                  granularity-description granularity-content           mode-switch                 input-file-description  input-file-content'
+      'saved-up-time-description saved-up-vacation-description work-time-description   default-work-from-description default-work-to-description actions-description     actions-description'
+      'saved-up-time-content     saved-up-vacation-content     work-time-content       default-work-from-content     default-work-to-content     actions-content         actions-content';
   }
 }
 
@@ -122,8 +126,8 @@ $enable-cssgrid: true;
     grid-template-rows: auto auto 1fr;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr 4fr 4fr;
     grid-template-areas:
-      'name-description          name-content                  name-content          name-content                  name-content                mode-switch            mode-switch'
-      'saved-up-time-description saved-up-vacation-description work-time-description default-work-from-description default-work-to-description input-file-description actions-description'
-      'saved-up-time-content     saved-up-vacation-content     work-time-content     default-work-from-content     default-work-to-content     input-file-content     actions-content';
+      'name-description          name-content                  name-content          name-content                  mode-switch                 granularity-description granularity-content'
+      'saved-up-time-description saved-up-vacation-description work-time-description default-work-from-description default-work-to-description input-file-description  actions-description'
+      'saved-up-time-content     saved-up-vacation-content     work-time-content     default-work-from-content     default-work-to-content     input-file-content      actions-content';
   }
 }

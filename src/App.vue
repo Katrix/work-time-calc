@@ -2,19 +2,17 @@
   <BContainer fluid="xl" class="wider-container">
     <h1>Work time calc</h1>
 
-    <BTabs v-model="active">
-      <template v-for="(id, idx) in calcs">
-        <BTab>
-          <template #title>
-            {{ calcName(idx, id) }}
-            <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click="removeCalc(idx)">
-              <font-awesome-icon :icon="['fas', 'times']"></font-awesome-icon>
-            </BButton>
-          </template>
+    <BTabs v-model:index="active">
+      <BTab v-for="(id, idx) in calcs" :key="id">
+        <template #title>
+          {{ calcName(idx, id) }}
+          <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click.stop="removeCalc(idx)">
+            <font-awesome-icon :icon="['fas', 'times']"></font-awesome-icon>
+          </BButton>
+        </template>
 
-          <WorkCalc ref="calcObs" class="mt-2"></WorkCalc>
-        </BTab>
-      </template>
+        <WorkCalc ref="calcObs" class="mt-2"></WorkCalc>
+      </BTab>
 
       <template #tabs-end>
         <BNavItem role="presentation" href="#" @click.prevent="addCalc()">
@@ -30,7 +28,7 @@ import { BContainer, BTabs, BTab, BButton, BNavItem } from 'bootstrap-vue-next'
 import { computed, ref } from 'vue'
 import WorkCalc from '@/WorkCalc.vue'
 
-const calcs = ref<string[]>(["0"])
+const calcs = ref<string[]>(['0'])
 const nextId = ref(1)
 const calcObs = ref<InstanceType<typeof WorkCalc>[] | null>(null)
 const active = ref(0)

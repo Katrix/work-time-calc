@@ -49,8 +49,8 @@
           <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
           <template #append>
             <BButton type="button" :disabled="!saveFile" @click="$emit('load', saveFile as File)">Load</BButton>
-            <BButton type="button" :disabled="!saveFile" @click="$emit('save', saveFile as File)">Save</BButton>
-            <BButton type="button" :disabled="!saveFile" @click="$emit('saveCsv', saveFile as File)">Save CSV</BButton>
+            <BButton type="button" :disabled="!saveFile && !nameInput" @click="$emit('save', saveFile as File)">Save</BButton>
+            <BButton type="button" :disabled="!saveFile && !nameInput" @click="$emit('saveCsv', saveFile as File)">Save CSV</BButton>
           </template>
         </BInputGroup>
       </div>
@@ -68,6 +68,11 @@
             </BButton>
           </BButtonGroup>
         </BButtonToolbar>
+      </div>
+
+      <label style="grid-area: granularity-description" for="granularityInput">Granularity (minutes)</label>
+      <div style="grid-area: granularity-content">
+        <BFormInput id="granularityInput" v-model="granularity" type="number" />
       </div>
     </div>
   </BForm>
@@ -94,6 +99,7 @@ const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
 const defaultTo = ref('17:00')
 const saveFile = ref<null | File>(null)
+const granularity = ref(5)
 
 defineEmits<{
   load: [File]
@@ -132,6 +138,7 @@ defineExpose({
   defaultTo,
   saveFile,
   loadData,
+  granularity
 })
 
 function setModeHours() {

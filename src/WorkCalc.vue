@@ -14,7 +14,7 @@
 
     <CalcSized
       :custom-subtracted-time="workDays.map((d) => d.customSubtractedTime)"
-      :tracking="workDays.map((d) => d.isTracking)"
+      :tracking="workDays.map((d) => d.isTracking ?? false)"
       :computed-work-days="computedWorkDays"
       :mode="settings?.mode ?? 'hours'"
       @update:work-days-day="(idx, value) => (workDays[idx].day = value)"
