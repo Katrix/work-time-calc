@@ -22,7 +22,7 @@
           "
         ></BFormInput>
         <template #append>
-          <BButton @click="$emit('update:workDays-from', index, currentTime())">
+          <BButton @click="$emit('update:workDays-from', index, currentTime(precision))">
             <font-awesome-icon :icon="['fas', 'clock']" />
           </BButton>
         </template>
@@ -39,14 +39,14 @@
           "
         ></BFormInput>
         <template #append>
-          <BButton @click="$emit('update:workDays-to', index, currentTime())">
+          <BButton @click="$emit('update:workDays-to', index, currentTime(precision))">
             <font-awesome-icon :icon="['fas', 'clock']" />
           </BButton>
           <BButton
             v-if="!tracking[index] && (computedWorkDays[index].to ?? '') === ''"
             @click="
               () => {
-                $emit('update:workDays-to', index, currentTime())
+                $emit('update:workDays-to', index, currentTime(precision))
                 $emit('update:workDays-tracking', index, true)
               }
             "
@@ -128,7 +128,7 @@ import {
   type TableStrictClassValue
 } from 'bootstrap-vue-next'
 import { computed, type ComputedRef, type PropType, ref, watchSyncEffect } from 'vue'
-import type { ComputedWorkEntries } from '@/ComputeWorkTime'
+import { type ComputedWorkEntries, currentTime } from '@/ComputeWorkTime'
 
 const props = defineProps({
   mode: {
@@ -146,6 +146,10 @@ const props = defineProps({
   tracking: {
     type: Array as PropType<boolean[]>,
     required: true,
+  },
+  precision: {
+    type: Number,
+    required: true
   }
 })
 
@@ -322,14 +326,4 @@ watchSyncEffect(() => {
     // Ignored
   }
 })
-
-function dateToTimeString(d: Date) {
-  const hours = d.getHours().toString(10).padStart(2, '0')
-  const minutes = d.getMinutes().toString(10).padStart(2, '0')
-  return `${hours}:${minutes}`
-}
-
-function currentTime() {
-  return dateToTimeString(new Date())
-}
 </script>

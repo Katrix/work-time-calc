@@ -5,6 +5,7 @@
       :tracking="tracking"
       :computed-work-days="computedWorkDays"
       :mode="mode"
+      :precision="precision"
       @update:work-days-day="(idx, value) => $emit('update:workDays-day', idx, value)"
       @update:work-days-from="(idx, value) => $emit('update:workDays-from', idx, value)"
       @update:work-days-to="(idx, value) => $emit('update:workDays-to', idx, value)"
@@ -22,6 +23,7 @@
       :tracking="tracking"
       :computed-work-days="computedWorkDays"
       :mode="mode"
+      :precision="precision"
       @update:work-days-day="(idx, value) => $emit('update:workDays-day', idx, value)"
       @update:work-days-from="(idx, value) => $emit('update:workDays-from', idx, value)"
       @update:work-days-to="(idx, value) => $emit('update:workDays-to', idx, value)"
@@ -58,6 +60,10 @@ defineProps({
     type: Array as PropType<boolean[]>,
     required: true,
   },
+  precision: {
+    type: Number,
+    required: true
+  }
 })
 
 defineEmits<{

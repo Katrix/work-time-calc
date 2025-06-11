@@ -43,7 +43,7 @@
         <BFormInput id="defaultWorkToInput" v-model="defaultTo"></BFormInput>
       </div>
 
-      <label style="grid-area: input-file-description" for="inputFile">Input:</label>
+      <label class="sr-only" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
           <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
@@ -55,7 +55,7 @@
         </BInputGroup>
       </div>
 
-      <span style="grid-area: actions-description">Actions:</span>
+      <span class="sr-only">Actions:</span>
       <div style="grid-area: actions-content" class="d-flex justify-content-between">
         <BButtonToolbar>
           <BButtonGroup>
@@ -70,9 +70,9 @@
         </BButtonToolbar>
       </div>
 
-      <label style="grid-area: granularity-description" for="granularityInput">Granularity (minutes)</label>
-      <div style="grid-area: granularity-content">
-        <BFormInput id="granularityInput" v-model="granularity" type="number" />
+      <label style="grid-area: precision-description" for="precisionInput">Precision (minutes)</label>
+      <div style="grid-area: precision-content">
+        <BFormInput id="precisionInput" v-model="precision" type="number" />
       </div>
     </div>
   </BForm>
@@ -99,7 +99,7 @@ const workTime = ref('08:00')
 const defaultFrom = ref('08:45')
 const defaultTo = ref('17:00')
 const saveFile = ref<null | File>(null)
-const granularity = ref(5)
+const precision = ref(5)
 
 defineEmits<{
   load: [File]
@@ -138,7 +138,7 @@ defineExpose({
   defaultTo,
   saveFile,
   loadData,
-  granularity
+  precision
 })
 
 function setModeHours() {

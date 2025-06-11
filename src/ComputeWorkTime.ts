@@ -92,3 +92,23 @@ export function computeWorkTime(
 
   return workEntriesComputed
 }
+
+function dateToTimeString(d: Date, precision: number) {
+  const hours = d.getHours()
+  const minutes = d.getMinutes()
+
+  const totalMinutes = hours * 60 + minutes
+
+  const roundedTotalMinutes = Math.round(totalMinutes / precision) * precision
+  const roundedHours = Math.floor(roundedTotalMinutes / 60)
+  const roundedMinutes = roundedTotalMinutes - roundedHours * 60
+
+  const roundedHoursStr = roundedHours.toString(10).padStart(2, '0')
+  const roundedMinutesStr = roundedMinutes.toString(10).padStart(2, '0')
+
+  return `${roundedHoursStr}:${roundedMinutesStr}`
+}
+
+export function currentTime(precision: number) {
+  return dateToTimeString(new Date(), precision)
+}

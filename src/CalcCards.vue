@@ -18,7 +18,7 @@
           >
           </BFormInput>
           <template #append>
-            <BButton @click="$emit('update:workDays-from', index, currentTime())">
+            <BButton @click="$emit('update:workDays-from', index, currentTime(precision))">
               <font-awesome-icon :icon="['fas', 'clock']" />
             </BButton>
           </template>
@@ -33,14 +33,14 @@
           >
           </BFormInput>
           <template #append>
-            <BButton @click="$emit('update:workDays-to', index, currentTime())">
+            <BButton @click="$emit('update:workDays-to', index, currentTime(precision))">
               <font-awesome-icon :icon="['fas', 'clock']" />
             </BButton>
             <BButton
               v-if="!tracking[index] && (computedWorkDays[index].to ?? '') === ''"
               @click="
                 () => {
-                  $emit('update:workDays-to', index, currentTime())
+                  $emit('update:workDays-to', index, currentTime(precision))
                   $emit('update:workDays-tracking', index, true)
                 }
               "
@@ -122,7 +122,7 @@
 <script setup lang="ts">
 import { BButton, BCard, BCardText, BFormGroup, BFormInput, BInputGroup, BFormTextarea } from 'bootstrap-vue-next'
 import type { PropType } from 'vue'
-import type { ComputedWorkEntries } from '@/ComputeWorkTime'
+import { type ComputedWorkEntries, currentTime } from '@/ComputeWorkTime'
 
 defineProps({
   mode: {
@@ -141,6 +141,10 @@ defineProps({
     type: Array as PropType<boolean[]>,
     required: true,
   },
+  precision: {
+    type: Number,
+    required: true
+  }
 })
 
 defineEmits<{
@@ -154,14 +158,4 @@ defineEmits<{
   (e: 'removeRow', idx: number): void
   (e: 'toggleCustomSubtractedTime', idx: number): void
 }>()
-
-function dateToTimeString(d: Date) {
-  const hours = d.getHours().toString(10).padStart(2, '0')
-  const minutes = d.getMinutes().toString(10).padStart(2, '0')
-  return `${hours}:${minutes}`
-}
-
-function currentTime() {
-  return dateToTimeString(new Date())
-}
 </script>

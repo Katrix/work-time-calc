@@ -17,6 +17,7 @@
       :tracking="workDays.map((d) => d.isTracking ?? false)"
       :computed-work-days="computedWorkDays"
       :mode="settings?.mode ?? 'hours'"
+      :precision="Number(settings?.precision) ?? 1"
       @update:work-days-day="(idx, value) => (workDays[idx].day = value)"
       @update:work-days-from="(idx, value) => (workDays[idx].from = value)"
       @update:work-days-to="(idx, value) => (workDays[idx].to = value)"
@@ -35,7 +36,13 @@ import { computed, onMounted, onUnmounted, ref, watchSyncEffect } from 'vue'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
 
 import Holidays from 'date-holidays'
-import { type ComputedWorkEntries, computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime'
+import {
+  type ComputedWorkEntries,
+  computeWorkTime,
+  currentTime,
+  type WorkDays,
+  type WorkRange
+} from '@/ComputeWorkTime'
 import CalcSettings from '@/CalcSettings.vue'
 import CalcSized from '@/CalcSized.vue'
 
@@ -59,23 +66,13 @@ function dateToDateString(d: Date) {
   }
 }
 
-function dateToTimeString(d: Date) {
-  const hours = d.getHours().toString(10).padStart(2, '0')
-  const minutes = d.getMinutes().toString(10).padStart(2, '0')
-  return `${hours}:${minutes}`
-}
-
 function currentDate() {
   return dateToDateString(new Date()) as string
 }
 
-function currentTime() {
-  return dateToTimeString(new Date())
-}
-
 onMounted(() => {
   trackingFunId.value = setInterval(() => {
-    const t = currentTime()
+    const t = currentTime(settings.value?.precision ?? 1)
     for (const workDay of workDays.value) {
       if (workDay.isTracking) {
         workDay.to = t
