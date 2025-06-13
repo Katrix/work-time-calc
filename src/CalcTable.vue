@@ -247,11 +247,6 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
         thStyle: 'min-width: 60px',
       },
       {
-        key: 'subtracted_time',
-        label: 'Subtracted time',
-        thStyle: 'min-width: 125px',
-      },
-      {
         key: 'notes',
         label: 'Notes',
         thStyle: 'min-width: 200px',

@@ -72,7 +72,7 @@
         <dd class="col-7">{{ item.estimate }}</dd>
       </dl>
 
-      <BFormGroup label="Subtracted time:">
+      <BFormGroup v-if="mode !== 'tasks'" label="Subtracted time:">
         <BInputGroup>
           <BFormInput
             :disabled="!customSubtractedTime[index]"
