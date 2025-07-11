@@ -8,10 +8,12 @@ import '@/scss/app.scss'
 import 'bootstrap-vue-next/dist/bootstrap-vue-next.css'
 
 import '@/fontAwesomeLibrary'
+import { createPinia } from 'pinia'
 
 const app = createApp(App)
 app.component('FontAwesomeIcon', FontAwesomeIcon)
 app.component('FontAwesomeLayers', FontAwesomeLayers)
 app.component('FontAwesomeLayersText', FontAwesomeLayersText)
 app.use(createBootstrap())
+app.use(createPinia())
 app.mount('#app')

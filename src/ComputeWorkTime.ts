@@ -3,6 +3,7 @@
 import { Intl, Temporal, toTemporalInstant } from '@js-temporal/polyfill'
 
 export interface WorkRange {
+  day: string
   from: string | null
   to: string | null
   subtractedTime: string | null
@@ -10,7 +11,7 @@ export interface WorkRange {
   idx?: number
 }
 
-export type WorkDays = { [day: string]: WorkRange[] }
+export type WorkDays = { [group: string]: WorkRange[] }
 
 export interface ComputedWorkEntries {
   day: string
@@ -63,29 +64,47 @@ export function computeWorkTime(
 ): ComputedWorkEntries[] {
   const workEntriesComputed: ComputedWorkEntries[] = []
   let timeDiff = toMinutes(leftoverTime)
-  for (const [day, entries] of Object.entries(workDays)) {
-    for (const [idx, entry] of entries.entries()) {
-      const workedTime = toMinutes(entry.to ?? defaultTo) - toMinutes(entry.from ?? defaultFrom)
-      timeDiff += workedTime
+  for (const [, entries] of Object.entries(workDays)) {
+    const preEntries = entries.map((entry, idx) => {
+      const from = toMinutes(entry.from ?? defaultFrom)
+      const to = toMinutes(entry.to ?? defaultTo)
+      return {
+        from,
+        to,
+        workedTime: to - from,
+        subtracted:
+          ((entry.subtractedTime ? toMinutes(entry.subtractedTime) : null) ?? idx === entries.length - 1)
+            ? toMinutes(workTime)
+            : 0,
+      }
+    })
+    for (let i = preEntries.length - 1; i >= 0; i--) {
+      const preEntry = preEntries[i]
+      for (let j = i - 1; j >= 0; j--) {
+        const preEntry2 = preEntries[j]
+        if (preEntry2.from <= preEntry.from && preEntry2.to >= preEntry.to) {
+          preEntry2.workedTime -= preEntry.workedTime
+        }
+      }
+    }
 
-      const subtractedTime =
-        (entry.subtractedTime ? toMinutes(entry.subtractedTime) : null) ?? idx === entries.length - 1
-          ? toMinutes(workTime)
-          : 0
-      timeDiff -= subtractedTime
+    for (const [idx, preEntry] of preEntries.entries()) {
+      const entry = entries[idx]
+      timeDiff += preEntry.workedTime
+      timeDiff -= preEntry.subtracted
 
       workEntriesComputed.push({
-        day,
+        day: entry.day,
         from: entry.from,
         to: entry.to,
-        workedTime: fromMinutes(workedTime),
+        workedTime: fromMinutes(preEntry.workedTime),
         timeDiff: fromMinutes(timeDiff),
         extraTime: fromMinutes(timeDiff > 0 ? timeDiff : 0),
         lostTime: fromMinutes(timeDiff < 0 ? Math.abs(timeDiff) : 0),
         estimate: entry.from === null || entry.to === null,
-        subtractedTime: fromMinutes(subtractedTime),
+        subtractedTime: fromMinutes(preEntry.subtracted),
         notes: entry.notes ?? '',
-        idx: entry.idx
+        idx: entry.idx,
       })
     }
   }

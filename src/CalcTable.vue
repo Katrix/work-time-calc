@@ -6,113 +6,101 @@
     :striped="true"
     :tbody-tr-class="bodyTrClasses"
   >
-    <template #cell(day)="{ value, index }">
-      <BFormInput
-        :model-value="value as string"
-        @update:model-value="(val) => $emit('update:workDays-day', index, String(val))"
-      ></BFormInput>
+    <template #cell(day)="{ index }">
+      <BFormInput v-model="entriesStore.entries[index].day"></BFormInput>
     </template>
 
-    <template #cell(arrived)="{ value, index }">
+    <template #cell(arrived)="{ index }">
       <BInputGroup>
-        <BFormInput
-          :model-value="value as string"
-          @update:model-value="
-            (val) => $emit('update:workDays-from', index, typeof val === 'string' && val.length ? val : null)
-          "
-        ></BFormInput>
+        <BFormInput v-model="entriesStore.entries[index].from" />
         <template #append>
-          <BButton @click="$emit('update:workDays-from', index, currentTime(precision))">
-            <font-awesome-icon :icon="['fas', 'clock']" />
+          <BButton @click="entriesStore.entries[index].from = currentTime(settingsStore.precision)">
+            <FontAwesomeIcon :icon="['fas', 'clock']" />
           </BButton>
         </template>
       </BInputGroup>
     </template>
 
-    <template #cell(left)="{ value, index }">
+    <template #cell(left)="{ index }">
       <BInputGroup>
-        <BFormInput
-          :model-value="value as string"
-          :disabled="tracking[index]"
-          @update:model-value="
-            (val) => $emit('update:workDays-to', index, typeof val === 'string' && val.length ? val : null)
-          "
-        ></BFormInput>
+        <BFormInput v-model="entriesStore.entries[index].to" :disabled="entriesStore.entries[index].isTracking" />
         <template #append>
-          <BButton @click="$emit('update:workDays-to', index, currentTime(precision))">
-            <font-awesome-icon :icon="['fas', 'clock']" />
+          <BButton @click="entriesStore.entries[index].to = currentTime(settingsStore.precision)">
+            <FontAwesomeIcon :icon="['fas', 'clock']" />
           </BButton>
           <BButton
-            v-if="!tracking[index] && (computedWorkDays[index].to ?? '') === ''"
+            v-if="!entriesStore.entries[index].isTracking && (entriesStore.entries[index].to ?? '') === ''"
             @click="
               () => {
-                $emit('update:workDays-to', index, currentTime(precision))
-                $emit('update:workDays-tracking', index, true)
+                entriesStore.entries[index].to = currentTime(settingsStore.precision)
+                entriesStore.entries[index].isTracking = true
               }
             "
           >
-            <font-awesome-icon :icon="['fas', 'hourglass-start']" />
+            <FontAwesomeIcon :icon="['fas', 'hourglass-start']" />
           </BButton>
           <BButton
-            v-else-if="tracking[index]"
+            v-else-if="entriesStore.entries[index].isTracking"
             variant="primary"
-            @click="$emit('update:workDays-tracking', index, false)"
+            @click="entriesStore.entries[index].isTracking = false"
           >
-            <font-awesome-icon :icon="['fas', 'hourglass-half']" />
+            <FontAwesomeIcon :icon="['fas', 'hourglass-half']" />
           </BButton>
           <BButton v-else disabled>
-            <font-awesome-icon :icon="['fas', 'hourglass-end']" />
+            <FontAwesomeIcon :icon="['fas', 'hourglass-end']" />
           </BButton>
         </template>
       </BInputGroup>
     </template>
 
-    <template #cell(subtracted_time)="{ value, index }">
+    <template #cell(subtracted_time)="{ index }">
       <BInputGroup>
         <BFormInput
-          :disabled="!customSubtractedTime[index]"
-          :model-value="value as string"
-          @update:model-value="
-            (val) => $emit('update:workDays-subtractedTime', index, typeof val === 'string' && val.length ? val : null)
-          "
-        ></BFormInput>
+          :disabled="!entriesStore.entries[index].customSubtractedTime"
+          v-model="entriesStore.entries[index].subtractedTime"
+        />
 
         <template #prepend>
-          <BButton @click="$emit('toggleCustomSubtractedTime', index)">
-            <font-awesome-layers fixed-width>
-              <font-awesome-icon
-                v-if="!customSubtractedTime[index]"
+          <BButton
+            @click="
+              () => {
+                entriesStore.entries[index].customSubtractedTime = !entriesStore.entries[index].customSubtractedTime
+                entriesStore.entries[index].subtractedTime = null
+              }
+            "
+          >
+            <FontAwesomeLayers fixed-width>
+              <FontAwesomeIcon
+                v-if="!entriesStore.entries[index].customSubtractedTime"
                 :icon="['fas', 'slash']"
                 transform="down-1 left-1"
               />
-              <font-awesome-icon
-                v-if="!customSubtractedTime[index]"
+              <FontAwesomeIcon
+                v-if="!entriesStore.entries[index].customSubtractedTime"
                 :icon="['fas', 'slash']"
                 :mask="['fas', 'pen-to-square']"
               />
-              <font-awesome-icon v-if="customSubtractedTime[index]" :icon="['fas', 'pen-to-square']" />
-            </font-awesome-layers>
+              <FontAwesomeIcon
+                v-if="entriesStore.entries[index].customSubtractedTime"
+                :icon="['fas', 'pen-to-square']"
+              />
+            </FontAwesomeLayers>
           </BButton>
         </template>
       </BInputGroup>
     </template>
 
-    <template #cell(notes)="{ value, index }">
-      <BFormInput
-        :model-value="value as string"
-        @update:model-value="
-          (val) => $emit('update:workDays-notes', index, typeof val === 'string' && val.length ? val : null)
-        "
-      ></BFormInput>
+    <template #cell(notes)="{ index }">
+      <BFormInput v-model="entriesStore.entries[index].notes" />
     </template>
 
     <template #cell(add_sub)="{ index }">
-      <b-button @click="$emit('addRowAfter', index)">
-        <font-awesome-icon :icon="['fas', 'plus']" />
-      </b-button>
-      <b-button v-if="computedWorkDays.length > 1" @click="$emit('removeRow', index)">
-        <font-awesome-icon :icon="['fas', 'minus']" />
-      </b-button>
+      <BButton @click="entriesStore.addRowAfter(index)">
+        <FontAwesomeIcon :icon="['fas', 'plus']" />
+      </BButton>
+      <BButton v-if="entriesStore.entries.length > 1" @click="entriesStore.removeRow(index)">
+        <FontAwesomeIcon :icon="['fas', 'minus']" />
+      </BButton>
     </template>
   </BTableLite>
 </template>
@@ -125,48 +113,21 @@ import {
   BTableLite,
   type TableField,
   type TableRowType,
-  type TableStrictClassValue
+  type TableStrictClassValue,
 } from 'bootstrap-vue-next'
-import { computed, type ComputedRef, type PropType, ref, watchSyncEffect } from 'vue'
-import { type ComputedWorkEntries, currentTime } from '@/ComputeWorkTime'
+import { computed, type ComputedRef, ref, watchSyncEffect } from 'vue'
+import { currentTime } from '@/ComputeWorkTime'
+import { useEntriesStore } from '@/entriesStore.ts'
+import { useSettingsStore } from '@/settingsStore.ts'
+import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
 
-const props = defineProps({
-  mode: {
-    type: String,
-    required: true,
-  },
-  computedWorkDays: {
-    type: Array as PropType<ComputedWorkEntries[]>,
-    required: true,
-  },
-  customSubtractedTime: {
-    type: Array as PropType<boolean[]>,
-    required: true,
-  },
-  tracking: {
-    type: Array as PropType<boolean[]>,
-    required: true,
-  },
-  precision: {
-    type: Number,
-    required: true
-  }
-})
+const props = defineProps<{ storeId: string }>()
 
-defineEmits<{
-  (e: 'update:workDays-day', idx: number, day: string): void
-  (e: 'update:workDays-from', idx: number, from: string | null): void
-  (e: 'update:workDays-to', idx: number, to: string | null): void
-  (e: 'update:workDays-subtractedTime', idx: number, subtractedTime: string | null): void
-  (e: 'update:workDays-notes', idx: number, notes: string | null): void
-  (e: 'update:workDays-tracking', idx: number, tracking: boolean): void
-  (e: 'addRowAfter', idx: number): void
-  (e: 'removeRow', idx: number): void
-  (e: 'toggleCustomSubtractedTime', idx: number): void
-}>()
+const settingsStore = computed(() => useSettingsStore(props.storeId))
+const entriesStore = computed(() => useEntriesStore(props.storeId))
 
 const tableFields: ComputedRef<TableField[]> = computed(() => {
-  if (props.mode === 'hours') {
+  if (settingsStore.value.mode === 'hours') {
     return [
       {
         key: 'day',
@@ -276,9 +237,9 @@ interface TableItem {
 function bodyTrClasses(item: TableItem | null, type: TableRowType): TableStrictClassValue {
   if (type === 'row' && item) {
     const day = item.day as string
-    const idx = props.computedWorkDays.findIndex((v) => v.day === day)
+    const idx = entriesStore.value.entries.findIndex((v) => v.day === day)
     if (idx > 0) {
-      const prevDay = props.computedWorkDays[idx - 1].day
+      const prevDay = entriesStore.value.entries[idx - 1].day
       if (new Date(day).getDate() - new Date(prevDay).getDate() > 1) {
         return 'table-group-divider'
       }
@@ -304,7 +265,7 @@ const computedTableItems = ref<
 >([])
 watchSyncEffect(() => {
   try {
-    computedTableItems.value = props.computedWorkDays.map((entry) => ({
+    computedTableItems.value = entriesStore.value.computedWorkDays.map((entry) => ({
       day: entry.day,
       arrived: entry.from ?? undefined,
       left: entry.to ?? undefined,

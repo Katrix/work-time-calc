@@ -3,12 +3,16 @@
     <div :class="{ 'hours-settings': mode === 'hours', 'tasks-settings': mode === 'tasks' }">
       <label style="grid-area: name-description" for="nameInput">Name:</label>
       <div style="grid-area: name-content">
-        <BFormInput id="nameInput" v-model="nameInput"></BFormInput>
+        <BFormInput id="nameInput" v-model="settingsStore.nameInput"></BFormInput>
       </div>
 
       <div :key="'modeSwitch'" style="grid-area: mode-switch" class="d-flex">
         <span class="me-2">Tasks</span>
-        <BFormCheckbox :model-value="mode === 'hours'" switch @update:model-value="switchMode()"></BFormCheckbox>
+        <BFormCheckbox
+          :model-value="mode === 'hours'"
+          switch
+          @update:model-value="settingsStore.switchMode()"
+        ></BFormCheckbox>
         <span>Hours</span>
       </div>
 
@@ -16,41 +20,56 @@
         >Saved up time:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: saved-up-time-content">
-        <BFormInput id="savedUpTimeInput" v-model="savedUpTime"></BFormInput>
+        <BFormInput id="savedUpTimeInput" v-model="settingsStore.savedUpTime"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description">Saved up vacation days:</label>
       <div v-if="mode === 'hours'" style="grid-area: saved-up-vacation-content">
-        <BFormInput id="savedUpVacationInput" v-model="savedUpVacation"></BFormInput>
+        <BFormInput id="savedUpVacationInput" v-model="settingsStore.savedUpVacation"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: work-time-description" for="workTimeInput">Work time:</label>
       <div v-if="mode === 'hours'" style="grid-area: work-time-content">
-        <BFormInput id="workTimeInput" v-model="workTime"></BFormInput>
+        <BFormInput id="workTimeInput" v-model="settingsStore.workTime"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: default-work-from-description" for="defaultWorkFromInput"
         >Default work from:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: default-work-from-content">
-        <BFormInput id="defaultWorkFromInput" v-model="defaultFrom"></BFormInput>
+        <BFormInput id="defaultWorkFromInput" v-model="settingsStore.defaultFrom"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: default-work-to-description" for="defaultWorkToInput"
         >Default work to:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: default-work-to-content">
-        <BFormInput id="defaultWorkToInput" v-model="defaultTo"></BFormInput>
+        <BFormInput id="defaultWorkToInput" v-model="settingsStore.defaultTo"></BFormInput>
       </div>
 
       <label class="sr-only" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
-          <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
+          <BFormFile id="inputFile" v-model="settingsStore.saveFile" accept="application/json"></BFormFile>
           <template #append>
-            <BButton type="button" :disabled="!saveFile" @click="$emit('load', saveFile as File)">Load</BButton>
-            <BButton type="button" :disabled="!saveFile && !nameInput" @click="$emit('save', saveFile as File)">Save</BButton>
-            <BButton type="button" :disabled="!saveFile && !nameInput" @click="$emit('saveCsv', saveFile as File)">Save CSV</BButton>
+            <BButton
+              type="button"
+              :disabled="!settingsStore.saveFile"
+              @click="$emit('load', settingsStore.saveFile as File)"
+              >Load</BButton
+            >
+            <BButton
+              type="button"
+              :disabled="!settingsStore.saveFile && !settingsStore.nameInput"
+              @click="$emit('save', settingsStore.saveFile as File)"
+              >Save</BButton
+            >
+            <BButton
+              type="button"
+              :disabled="!settingsStore.saveFile && !settingsStore.nameInput"
+              @click="$emit('saveCsv', settingsStore.saveFile as File)"
+              >Save CSV</BButton
+            >
           </template>
         </BInputGroup>
       </div>
@@ -59,11 +78,11 @@
       <div style="grid-area: actions-content" class="d-flex justify-content-between">
         <BButtonToolbar>
           <BButtonGroup>
-            <BButton type="button" variant="danger" @click="$emit('clear')">Clear</BButton>
-            <BButton v-if="mode === 'hours'" type="button" variant="danger" @click="$emit('fillWorkdays')">
+            <BButton type="button" variant="danger" @click="entriesStore.clear()">Clear</BButton>
+            <BButton v-if="mode === 'hours'" type="button" variant="danger" @click="entriesStore.fillWorkdays()">
               Fill workdays
             </BButton>
-            <BButton v-if="mode === 'hours'" type="button" @click="$emit('fillRemainingWorkdays')">
+            <BButton v-if="mode === 'hours'" type="button" @click="entriesStore.fillRemainingWorkdays()">
               Add remaining workdays
             </BButton>
           </BButtonGroup>
@@ -72,7 +91,7 @@
 
       <label style="grid-area: precision-description" for="precisionInput">Precision (minutes)</label>
       <div style="grid-area: precision-content">
-        <BFormInput id="precisionInput" v-model="precision" type="number" />
+        <BFormInput id="precisionInput" v-model="settingsStore.precision" type="number" />
       </div>
     </div>
   </BForm>
@@ -89,77 +108,19 @@ import {
   BFormInput,
   BInputGroup,
 } from 'bootstrap-vue-next'
-import { ref } from 'vue'
+import { useSettingsStore } from '@/settingsStore.ts'
+import { computed } from 'vue'
+import { useEntriesStore } from '@/entriesStore.ts'
 
-const mode = ref<'hours' | 'tasks'>('hours')
-const nameInput = ref('')
-const savedUpTime = ref('00:00')
-const savedUpVacation = ref('0')
-const workTime = ref('08:00')
-const defaultFrom = ref('08:45')
-const defaultTo = ref('17:00')
-const saveFile = ref<null | File>(null)
-const precision = ref(5)
+const props = defineProps<{ storeId: string }>()
+
+const settingsStore = computed(() => useSettingsStore(props.storeId))
+const entriesStore = computed(() => useEntriesStore(props.storeId))
+const mode = computed(() => settingsStore.value.mode)
 
 defineEmits<{
   load: [File]
   save: [File]
   saveCsv: [File]
-  clear: []
-  fillWorkdays: []
-  fillRemainingWorkdays: []
 }>()
-
-function loadData(data: {
-  mode: 'hours' | 'tasks'
-  name: string
-  savedUpTime: string
-  savedUpVacation: string
-  workTime: string
-  defaultFrom: string
-  defaultTo: string
-}) {
-  mode.value = data.mode
-  nameInput.value = data.name
-  savedUpTime.value = data.savedUpTime
-  savedUpVacation.value = data.savedUpVacation
-  workTime.value = data.workTime
-  defaultFrom.value = data.defaultFrom
-  defaultTo.value = data.defaultTo
-}
-
-defineExpose({
-  mode,
-  nameInput,
-  savedUpTime,
-  savedUpVacation,
-  workTime,
-  defaultFrom,
-  defaultTo,
-  saveFile,
-  loadData,
-  precision
-})
-
-function setModeHours() {
-  mode.value = 'hours'
-  workTime.value = '08:00'
-  defaultFrom.value = '08:45'
-  defaultTo.value = '17:00'
-}
-
-function setModeTasks() {
-  mode.value = 'tasks'
-  workTime.value = '00:00'
-  defaultFrom.value = '00:00'
-  defaultTo.value = '00:00'
-}
-
-function switchMode() {
-  if (mode.value === 'hours') {
-    setModeTasks()
-  } else {
-    setModeHours()
-  }
-}
 </script>
