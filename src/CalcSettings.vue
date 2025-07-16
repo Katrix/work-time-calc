@@ -74,6 +74,11 @@
         </BInputGroup>
       </div>
 
+      <label style="grid-area: precision-description" for="precisionInput">Precision (minutes)</label>
+      <div style="grid-area: precision-content">
+        <BFormInput id="precisionInput" v-model="settingsStore.precision" type="number" />
+      </div>
+
       <span class="sr-only">Actions:</span>
       <div style="grid-area: actions-content" class="d-flex justify-content-between">
         <BButtonToolbar>
@@ -87,11 +92,6 @@
             </BButton>
           </BButtonGroup>
         </BButtonToolbar>
-      </div>
-
-      <label style="grid-area: precision-description" for="precisionInput">Precision (minutes)</label>
-      <div style="grid-area: precision-content">
-        <BFormInput id="precisionInput" v-model="settingsStore.precision" type="number" />
       </div>
     </div>
   </BForm>
@@ -108,8 +108,8 @@ import {
   BFormInput,
   BInputGroup,
 } from 'bootstrap-vue-next'
-import { useSettingsStore } from '@/settingsStore.ts'
 import { computed } from 'vue'
+import { useSettingsStore } from '@/settingsStore.ts'
 import { useEntriesStore } from '@/entriesStore.ts'
 
 const props = defineProps<{ storeId: string }>()

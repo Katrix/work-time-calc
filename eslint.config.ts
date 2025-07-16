@@ -1,52 +1,49 @@
 import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
 import pluginVue from 'eslint-plugin-vue'
-import { neostandard } from 'neostandard/lib/main'
+import neostandard from 'neostandard'
 import pluginSecurity from 'eslint-plugin-security'
 import globals from 'globals'
 
 export default [
   ...defineConfigWithVueTs(
-    ...neostandard({
+    ...(neostandard({
       ts: false,
       noJsx: true,
-      noStyle: true
-    }) as any,
-    pluginSecurity.configs.recommended,
+      noStyle: true,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    }) as any),
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    pluginSecurity.configs.recommended as any,
     {
       rules: {
         'security/detect-object-injection': 'off',
       },
     },
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pluginVue.configs['flat/recommended'] as any,
     vueTsConfigs.recommended,
     {
       languageOptions: {
         ecmaVersion: 'latest',
         globals: {
-          ...globals.browser
+          ...globals.browser,
         },
         parserOptions: {
           tsconfigRootDir: import.meta.dirname,
           extraFileExtensions: ['.vue'],
-        }
+        },
       },
       rules: {
         '@typescript-eslint/only-throw-error': 'error',
         'vue/html-self-closing': 'off',
-        'vue/max-attributes-per-line': [
-          'error',
-          {
-            singleline: 5,
-            multiline: 1,
-          },
-        ],
+        'vue/max-attributes-per-line': 'off',
         'vue/singleline-html-element-content-newline': 'off',
         'vue/html-closing-bracket-newline': 'off',
         'vue/html-indent': 'off',
         'vue/require-default-prop': 'off',
 
-        'import/order': 'error',
-        'import/first': 'error',
+        'import-x/order': 'error',
+        'import-x/first': 'error',
         'prefer-const': [
           'error',
           {
@@ -56,11 +53,17 @@ export default [
         ],
         'require-await': 'error',
         'no-var': 'error',
-        'object-shorthand': 'error'
+        'object-shorthand': 'error',
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            caughtErrors: 'none',
+          },
+        ],
       },
     },
   ),
   {
-    ignores: ['dist', 'node_modules']
-  }
+    ignores: ['dist', 'node_modules'],
+  },
 ]

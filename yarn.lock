@@ -847,7 +847,16 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@types/eslint@npm:^9.6.1":
+"@types/eslint-plugin-security@npm:^3.0.0":
+  version: 3.0.0
+  resolution: "@types/eslint-plugin-security@npm:3.0.0"
+  dependencies:
+    "@types/eslint": "*"
+  checksum: 00ed770a5184cdd7853964c5f7b4ddf782178c29ea2eccd166b67e7f999d5b66fc6d5a4f0913c9d19ad2f495ebe5cf4148a36501bf6bf823f71f245ec8f7d9dc
+  languageName: node
+  linkType: hard
+
+"@types/eslint@npm:*, @types/eslint@npm:^9.6.1":
   version: 9.6.1
   resolution: "@types/eslint@npm:9.6.1"
   dependencies:
@@ -875,6 +884,13 @@ __metadata:
   version: 7.0.15
   resolution: "@types/json-schema@npm:7.0.15"
   checksum: 97ed0cb44d4070aecea772b7b2e2ed971e10c81ec87dd4ecc160322ffa55ff330dace1793489540e3e318d90942064bb697cc0f8989391797792d919737b3b98
+  languageName: node
+  linkType: hard
+
+"@types/web-bluetooth@npm:^0.0.21":
+  version: 0.0.21
+  resolution: "@types/web-bluetooth@npm:0.0.21"
+  checksum: 85a957d52263607d26236b1748771fdcfc0791f2c20373370e6c725410067dee6a5ec425b0e25ec85db2908dd59415079070655fd3277841cbbd3a557d1f7777
   languageName: node
   linkType: hard
 
@@ -1381,6 +1397,35 @@ __metadata:
     vue:
       optional: true
   checksum: 98992aa8dc37f26cfe440c1b0ad402c3fb0132b89a53af036925df7b866e0c681eb1d0e706ae0d2372751103782731993299a5a9f02651462ef8d71f3ab38ae8
+  languageName: node
+  linkType: hard
+
+"@vueuse/core@npm:^13.5.0":
+  version: 13.5.0
+  resolution: "@vueuse/core@npm:13.5.0"
+  dependencies:
+    "@types/web-bluetooth": ^0.0.21
+    "@vueuse/metadata": 13.5.0
+    "@vueuse/shared": 13.5.0
+  peerDependencies:
+    vue: ^3.5.0
+  checksum: 59a7b64c338e32f2edb097b48eeebef0cd996d290f076958a22ccf67905008d780dd3cfdcfd75f7b22296fcb88ea7cf7d511e7877525329e300e77645d70ee7a
+  languageName: node
+  linkType: hard
+
+"@vueuse/metadata@npm:13.5.0":
+  version: 13.5.0
+  resolution: "@vueuse/metadata@npm:13.5.0"
+  checksum: 0c24a5e0234900127f75cdccb202ec81b6437c018f5b6bc9c2f49d0c0759471a203120b6a260cf08e13c304d36afcc5ead9cf34d10b31231757edd5fbc963bed
+  languageName: node
+  linkType: hard
+
+"@vueuse/shared@npm:13.5.0":
+  version: 13.5.0
+  resolution: "@vueuse/shared@npm:13.5.0"
+  peerDependencies:
+    vue: ^3.5.0
+  checksum: c3e68b56e08fcaf1aa456839763616b521f524b299d94cea5e4b08914cad978bf30e417d499042db05e8eb26dd4e4ca239cd9ffcb92632bb244ac622144d09de
   languageName: node
   linkType: hard
 
@@ -6511,9 +6556,11 @@ __metadata:
     "@js-temporal/polyfill": ^0.5.1
     "@popperjs/core": ^2.11.8
     "@types/eslint": ^9.6.1
+    "@types/eslint-plugin-security": ^3.0.0
     "@vitejs/plugin-vue": ^5.2.4
     "@vue/eslint-config-typescript": ^14.5.0
     "@vue/tsconfig": ^0.7.0
+    "@vueuse/core": ^13.5.0
     autoprefixer: ^10.4.21
     bootstrap: ^5.3.6
     bootstrap-vue-next: ^0.30.2

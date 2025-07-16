@@ -1,8 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, watchSyncEffect } from 'vue'
+import Holidays from 'date-holidays'
 import { type ComputedWorkEntries, computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime.ts'
 import { useSettingsStore } from '@/settingsStore.ts'
-import Holidays from 'date-holidays'
 
 export const useEntriesStore = (storeId: string) => {
   const store = defineStore(`entries-${storeId}`, () => {

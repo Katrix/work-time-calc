@@ -1,6 +1,4 @@
-// @ts-ignore
-// noinspection ES6UnusedImports
-import { Intl, Temporal, toTemporalInstant } from '@js-temporal/polyfill'
+import { Temporal } from '@js-temporal/polyfill'
 
 export interface WorkRange {
   day: string

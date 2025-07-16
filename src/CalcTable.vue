@@ -116,10 +116,10 @@ import {
   type TableStrictClassValue,
 } from 'bootstrap-vue-next'
 import { computed, type ComputedRef, ref, watchSyncEffect } from 'vue'
+import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
 import { currentTime } from '@/ComputeWorkTime'
 import { useEntriesStore } from '@/entriesStore.ts'
 import { useSettingsStore } from '@/settingsStore.ts'
-import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
 
 const props = defineProps<{ storeId: string }>()
 
@@ -185,7 +185,7 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
       {
         key: 'day',
         label: 'Task',
-        thStyle: 'min-width: 130px',
+        thStyle: 'min-width: 240px',
       },
       {
         key: 'arrived',
