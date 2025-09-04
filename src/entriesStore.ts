@@ -6,6 +6,8 @@ import { useSettingsStore } from '@/settingsStore.ts'
 
 export const useEntriesStore = (storeId: string) => {
   const store = defineStore(`entries-${storeId}`, () => {
+    const settingsStore = useSettingsStore(storeId)
+
     function dateToDateString(d: Date) {
       try {
         const isoStr = d.toISOString()
@@ -15,16 +17,19 @@ export const useEntriesStore = (storeId: string) => {
       }
     }
 
-    function currentDate() {
-      return dateToDateString(new Date()) as string
+    function defaultEntryName(): string {
+      if (settingsStore.mode === 'hours') {
+        return dateToDateString(new Date()) ?? ''
+      } else {
+        return ''
+      }
     }
 
     const entries = ref<(WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]>([
-      { day: currentDate(), from: null, to: null, subtractedTime: null, customSubtractedTime: false },
+      { day: defaultEntryName(), from: null, to: null, subtractedTime: null, customSubtractedTime: false },
     ])
     const computedWorkDays = ref<ComputedWorkEntries[]>([])
 
-    const settingsStore = useSettingsStore(storeId)
     watchSyncEffect(() => {
       const workDaysObj: WorkDays = {}
       if (settingsStore.mode === 'tasks') {
@@ -71,16 +76,10 @@ export const useEntriesStore = (storeId: string) => {
     }
 
     function addRowAfter(idx: number) {
-      const prevDay = entries.value[idx]
-      let day: Date | string = new Date(prevDay ? prevDay.day : currentDate())
-      if (isNaN(day.valueOf())) {
-        day = prevDay.day
-      } else {
-        day.setDate(day.getDate() + 1)
-      }
+      const name = defaultEntryName()
 
       entries.value.splice(idx + 1, 0, {
-        day: day instanceof Date ? (dateToDateString(day) ?? '') : day,
+        day: name,
         from: settingsStore.defaultFrom,
         to: null,
         subtractedTime: null,
@@ -95,7 +94,7 @@ export const useEntriesStore = (storeId: string) => {
     function clear() {
       entries.value = [
         {
-          day: currentDate(),
+          day: defaultEntryName(),
           from: settingsStore.defaultFrom,
           to: settingsStore.defaultTo,
           subtractedTime: null,
