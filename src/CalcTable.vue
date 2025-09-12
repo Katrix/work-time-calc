@@ -155,11 +155,6 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
         thStyle: 'min-width: 60px',
       },
       {
-        key: 'lost_time',
-        label: 'Lost time',
-        thStyle: 'min-width: 60px',
-      },
-      {
         key: 'estimate',
         label: 'Estimate?',
         thStyle: 'min-width: 40px',
@@ -256,7 +251,6 @@ const computedTableItems = ref<
     left: string | undefined
     worked_time: string
     extra_time: string
-    lost_time: string
     estimate: boolean
     subtracted_time: string
     notes: string
@@ -270,9 +264,7 @@ watchSyncEffect(() => {
       arrived: entry.from ?? undefined,
       left: entry.to ?? undefined,
       worked_time: entry.workedTime,
-      // time_diff: entry.timeDiff,
       extra_time: entry.extraTime,
-      lost_time: entry.lostTime,
       estimate: entry.estimate,
       subtracted_time: entry.subtractedTime,
       notes: entry.notes,

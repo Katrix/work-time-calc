@@ -53,8 +53,6 @@
         <dd class="col-7">{{ item.workedTime }}</dd>
         <dt class="col-5">Extra time:</dt>
         <dd class="col-7">{{ item.extraTime }}</dd>
-        <dt class="col-5">Lost time:</dt>
-        <dd class="col-7">{{ item.lostTime }}</dd>
         <dt class="col-5">Estimate?:</dt>
         <dd class="col-7">{{ item.estimate }}</dd>
       </dl>

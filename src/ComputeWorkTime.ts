@@ -18,7 +18,6 @@ export interface ComputedWorkEntries {
   workedTime: string
   timeDiff: string
   extraTime: string
-  lostTime: string
   estimate: boolean
   subtractedTime: string
   notes: string
@@ -97,8 +96,7 @@ export function computeWorkTime(
         to: entry.to,
         workedTime: fromMinutes(preEntry.workedTime),
         timeDiff: fromMinutes(timeDiff),
-        extraTime: fromMinutes(timeDiff > 0 ? timeDiff : 0),
-        lostTime: fromMinutes(timeDiff < 0 ? Math.abs(timeDiff) : 0),
+        extraTime: (timeDiff < 0 ? '-' : '') + fromMinutes(Math.abs(timeDiff)),
         estimate: entry.from === null || entry.to === null,
         subtractedTime: fromMinutes(preEntry.subtracted),
         notes: entry.notes ?? '',

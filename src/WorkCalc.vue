@@ -120,7 +120,6 @@ function saveCSV() {
         to: item.to,
         workedTime: item.workedTime,
         extraTime: item.extraTime,
-        lostTime: item.lostTime,
         subtractedTime: item.subtractedTime,
         notes: item.notes,
       }))
