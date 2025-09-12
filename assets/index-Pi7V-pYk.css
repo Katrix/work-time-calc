@@ -1,4 +1,4 @@
-@charset "UTF-8";/*!
+@charset "UTF-8";@property --contrast-color{syntax: "<color>"; inherits: true; initial-value: transparent;}:root{--l-threshold: .7}.contrast-color{color:#fff!important;text-shadow:0 0 .05em black,0 0 .05em black,0 0 .05em black,0 0 .05em black;background-color:var(--contrast-color);@supports (color: oklch(from red l c h)){--l: clamp(0, (l / var(--l-threshold, .623) - 1) * -infinity, 1);color:oklch(from var(--contrast-color) var(--l) 0 h)!important;text-shadow:none}@supports (color: contrast-color(red)){color:contrast-color(var(--contrast-color))!important;text-shadow:none}}/*!
  * Bootstrap  v5.3.6 (https://getbootstrap.com/)
  * Copyright 2011-2025 The Bootstrap Authors
  * Licensed under MIT (https://github.com/twbs/bootstrap/blob/main/LICENSE)
