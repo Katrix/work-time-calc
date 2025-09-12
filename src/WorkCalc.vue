@@ -16,10 +16,12 @@ import CalcSized from '@/CalcSized.vue'
 import { useSettingsStore } from '@/settingsStore.ts'
 import { useEntriesStore } from '@/entriesStore.ts'
 
-const storeId = window.crypto.randomUUID()
+const props = defineProps<{
+  storeId: string
+}>()
 
-const settingsStore = useSettingsStore(storeId)
-const entriesStore = useEntriesStore(storeId)
+const settingsStore = useSettingsStore(props.storeId)
+const entriesStore = useEntriesStore(props.storeId)
 
 const trackingFunId = ref<number>()
 

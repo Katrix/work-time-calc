@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia'
-import { computed, ref, watchEffect } from 'vue'
-import { useLocalStorage } from '@vueuse/core'
+import { computed, type MaybeRefOrGetter, ref, watchEffect } from 'vue'
+import { useLocalStorage, useStorage } from '@vueuse/core'
 import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 
 interface SavedDefaults {
@@ -33,7 +33,11 @@ const tasksDefaults = useLocalStorage<SavedDefaults>(
 
 export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hours') => {
   const store = defineStore(`settings-${storeId}`, () => {
-    const mode = ref<'hours' | 'tasks'>(startingMode ?? 'hours')
+    function useStorageWithid<T>(name: string, defaultVal: MaybeRefOrGetter<T>) {
+      return useStorage(`settings.${storeId}.${name}`, defaultVal)
+    }
+
+    const mode = useStorageWithid<'hours' | 'tasks'>('mode', startingMode ?? 'hours')
 
     const defaults = computed(() => (mode.value === 'hours' ? hoursDefaults.value : tasksDefaults.value))
     const nameDefault = computed(() => {
@@ -46,14 +50,14 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
       }
     })
 
-    const nameInput = ref(nameDefault.value)
-    const savedUpTime = ref('00:00')
-    const savedUpVacation = ref('0')
-    const workTime = ref(defaults.value.workTime)
-    const defaultFrom = ref(defaults.value.defaultFrom)
-    const defaultTo = ref(defaults.value.defaultTo)
+    const nameInput = useStorageWithid('name', nameDefault.value)
+    const savedUpTime = useStorageWithid('savedUpTime', '00:00')
+    const savedUpVacation = useStorageWithid('savedUpVacation', '0')
+    const workTime = useStorageWithid('workTime', defaults.value.workTime)
+    const defaultFrom = useStorageWithid('defaultFrom', defaults.value.defaultFrom)
+    const defaultTo = useStorageWithid('defaultTo', defaults.value.defaultTo)
     const saveFile = ref<null | File>(null)
-    const precision = ref(defaults.value.precision)
+    const precision = useStorageWithid('precision', defaults.value.precision)
 
     function setDefaults() {
       workTime.value = defaults.value.workTime

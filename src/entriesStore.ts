@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
-import { ref, watchSyncEffect } from 'vue'
+import { computed } from 'vue'
 import Holidays from 'date-holidays'
+import { useStorage } from '@vueuse/core'
 import { type ComputedWorkEntries, computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime.ts'
 import { useSettingsStore } from '@/settingsStore.ts'
 
@@ -25,12 +26,11 @@ export const useEntriesStore = (storeId: string) => {
       }
     }
 
-    const entries = ref<(WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]>([
-      { day: defaultEntryName(), from: null, to: null, subtractedTime: null, customSubtractedTime: false },
-    ])
-    const computedWorkDays = ref<ComputedWorkEntries[]>([])
-
-    watchSyncEffect(() => {
+    const entries = useStorage<(WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]>(
+      `entries.${storeId}.entries`,
+      [{ day: defaultEntryName(), from: null, to: null, subtractedTime: null, customSubtractedTime: false }],
+    )
+    const computedWorkDays = computed<ComputedWorkEntries[]>((oldValue) => {
       const workDaysObj: WorkDays = {}
       if (settingsStore.mode === 'tasks') {
         const group = []
@@ -59,7 +59,7 @@ export const useEntriesStore = (storeId: string) => {
       }
 
       try {
-        computedWorkDays.value = computeWorkTime(
+        return computeWorkTime(
           workDaysObj,
           settingsStore.savedUpTime,
           settingsStore.defaultFrom,
@@ -68,6 +68,7 @@ export const useEntriesStore = (storeId: string) => {
         ).sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
       } catch (e) {
         // Ignored
+        return oldValue ?? []
       }
     })
 

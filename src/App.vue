@@ -5,13 +5,13 @@
     <BTabs v-model:index="active">
       <BTab v-for="(id, idx) in calcs" :key="id">
         <template #title>
-          {{ calcName(idx, id) }}
+          {{ calcName(idx) }}
           <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click.stop="removeCalc(idx)">
             <font-awesome-icon :icon="['fas', 'times']"></font-awesome-icon>
           </BButton>
         </template>
 
-        <WorkCalc ref="calcObs" class="mt-2"></WorkCalc>
+        <WorkCalc ref="calcObs" class="mt-2" :store-id="id"></WorkCalc>
       </BTab>
 
       <BTab title="Defaults">
@@ -39,19 +39,19 @@
 <script setup lang="ts">
 import { BContainer, BTabs, BTab, BButton, BNavItem } from 'bootstrap-vue-next'
 import { computed, ref } from 'vue'
+import { useStorage } from '@vueuse/core'
 import WorkCalc from '@/WorkCalc.vue'
 import DefaultSettings from '@/DefaultSettings.vue'
 
-const calcs = ref<string[]>(['0'])
-const nextId = ref(1)
+const calcs = useStorage<string[]>('calculations', [crypto.randomUUID()])
 const calcObs = ref<InstanceType<typeof WorkCalc>[] | null>(null)
 const active = ref(0)
 
 const calcsLength = computed(() => Object.entries(calcs.value).length)
 
 function addCalc() {
-  const id = nextId.value++
-  calcs.value.push(String(id))
+  clearOldLocalStorageItems()
+  calcs.value.push(crypto.randomUUID())
   setTimeout(() => {
     active.value = calcs.value.length - 1
   }, 50)
@@ -62,11 +62,21 @@ function removeCalc(idx: number) {
     active.value--
   }
   calcs.value.splice(idx, 1)
+  clearOldLocalStorageItems()
 }
 
-function calcName(idx: number, id: string) {
+function clearOldLocalStorageItems() {
+  for (let i = 0; i < localStorage.length; i++) {
+    const key = localStorage.key(i)
+    if (key && key !== 'calculations' && calcs.value.every((s) => !key.includes(s)) && !key.includes('default')) {
+      localStorage.removeItem(key)
+    }
+  }
+}
+
+function calcName(idx: number) {
   const objs = calcObs.value ?? []
   const name = objs[idx]?.name
-  return name && name.length ? name : `Calc${id}`
+  return name && name.length ? name : `Calc${idx + 1}`
 }
 </script>
