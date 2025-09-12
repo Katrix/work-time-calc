@@ -104,6 +104,14 @@ export const useEntriesStore = (storeId: string) => {
       ]
     }
 
+
+    function addTag(index: number, tag: string) {
+      console.log(index, tag)
+      entries.value[index].tags ??= []
+      entries.value[index].tags.push(tag)
+      console.log(index, tag, entries.value[index].tags)
+    }
+
     function fillWorkdaysBase(start: Date) {
       const hd = new Holidays('DK')
 
@@ -155,6 +163,7 @@ export const useEntriesStore = (storeId: string) => {
       addRowAfter,
       removeRow,
       clear,
+      addTag,
       fillWorkdays,
       fillRemainingWorkdays,
     }

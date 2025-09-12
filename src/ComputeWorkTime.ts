@@ -7,6 +7,7 @@ export interface WorkRange {
   subtractedTime: string | null
   notes?: string
   idx?: number
+  tags?: string[]
 }
 
 export type WorkDays = { [group: string]: WorkRange[] }
@@ -22,6 +23,7 @@ export interface ComputedWorkEntries {
   subtractedTime: string
   notes: string
   idx?: number
+  tags: string[]
 }
 
 function toMinutes(str: string): number {
@@ -101,6 +103,7 @@ export function computeWorkTime(
         subtractedTime: fromMinutes(preEntry.subtracted),
         notes: entry.notes ?? '',
         idx: entry.idx,
+        tags: entry.tags ?? [],
       })
     }
   }

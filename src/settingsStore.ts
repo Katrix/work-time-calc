@@ -10,26 +10,18 @@ interface SavedDefaults {
   precision: number
 }
 
-const hoursDefaults = useLocalStorage<SavedDefaults>(
-  'settings-default-hours',
-  {
-    workTime: '08:00',
-    defaultFrom: '08:45',
-    defaultTo: '17:00',
-    precision: 5,
-  },
-  { mergeDefaults: true, listenToStorageChanges: true, writeDefaults: true },
-)
-const tasksDefaults = useLocalStorage<SavedDefaults>(
-  'settings-default-tasks',
-  {
-    workTime: '00:00',
-    defaultFrom: '00:00',
-    defaultTo: '00:00',
-    precision: 10,
-  },
-  { mergeDefaults: true, listenToStorageChanges: true, writeDefaults: true },
-)
+const hoursDefaults = {
+  workTime: '08:00',
+  defaultFrom: '08:45',
+  defaultTo: '17:00',
+  precision: 5,
+}
+const tasksDefaults = {
+  workTime: '00:00',
+  defaultFrom: '00:00',
+  defaultTo: '00:00',
+  precision: 10,
+}
 
 export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hours') => {
   const store = defineStore(`settings-${storeId}`, () => {
@@ -39,7 +31,7 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
 
     const mode = useStorageWithid<'hours' | 'tasks'>('mode', startingMode ?? 'hours')
 
-    const defaults = computed(() => (mode.value === 'hours' ? hoursDefaults.value : tasksDefaults.value))
+    const defaults = computed(() => (mode.value === 'hours' ? hoursDefaults : tasksDefaults))
     const nameDefault = computed(() => {
       const now = Temporal.Now.plainDateISO()
       if (mode.value === 'hours') {
@@ -110,16 +102,17 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
       defaultTo.value = data.defaultTo
     }
 
-    if (storeId.startsWith('default')) {
-      watchEffect(() => {
-        const defaults = mode.value === 'hours' ? hoursDefaults : tasksDefaults
-        defaults.value = {
-          workTime: workTime.value,
-          defaultFrom: defaultFrom.value,
-          defaultTo: defaultTo.value,
-          precision: precision.value,
-        }
-      })
+    const tagColors = useStorageWithid<Record<string, string>>('tagColors', {})
+
+    function getTagColor(tag: string) {
+      const existing = tagColors.value[tag]
+      if (existing) {
+        return existing
+      }
+
+      const color = '#' + Math.floor(Math.random()*16777215).toString(16);
+      tagColors.value[tag] = color
+      return color
     }
 
     return {
@@ -132,8 +125,10 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
       defaultTo,
       saveFile,
       precision,
+      tagColors,
       switchMode,
       loadData,
+      getTagColor
     }
   })
 

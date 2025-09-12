@@ -90,6 +90,11 @@
       </BInputGroup>
     </template>
 
+    <template #cell(tags)="{ index }">
+      <TagBadge v-for="tag in entriesStore.entries[index].tags ?? []" :key="tag" :tag="tag" />
+      <TagDropdown @new-tag="tag => entriesStore.addTag(index, tag)" />
+    </template>
+
     <template #cell(notes)="{ index }">
       <BFormInput v-model="entriesStore.entries[index].notes" />
     </template>
@@ -120,6 +125,8 @@ import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome
 import { currentTime } from '@/ComputeWorkTime'
 import { useEntriesStore } from '@/entriesStore.ts'
 import { useSettingsStore } from '@/settingsStore.ts'
+import TagBadge from '@/TagBadge.vue'
+import TagDropdown from '@/TagDropdown.vue'
 
 const props = defineProps<{ storeId: string }>()
 
@@ -200,6 +207,11 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
       {
         key: 'extra_time',
         label: 'Total time',
+        thStyle: 'min-width: 60px',
+      },
+      {
+        key: 'tags',
+        label: 'Tags',
         thStyle: 'min-width: 60px',
       },
       {

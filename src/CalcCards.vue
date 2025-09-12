@@ -60,8 +60,8 @@
       <BFormGroup v-if="settingsStore.mode !== 'tasks'" label="Subtracted time:">
         <BInputGroup>
           <BFormInput
-            :disabled="!entriesStore.entries[index].customSubtractedTime"
             v-model="entriesStore.entries[index].subtractedTime"
+            :disabled="!entriesStore.entries[index].customSubtractedTime"
           />
 
           <template #prepend>
@@ -97,6 +97,11 @@
       <BFormGroup label="Notes:">
         <BFormTextarea v-model="entriesStore.entries[index].notes" />
       </BFormGroup>
+
+      <template v-if="settingsStore.mode === 'tasks'">
+        Tags: <TagBadge v-for="tag in entriesStore.entries[index].tags ?? []" :key="tag" :tag="tag" />
+        <TagDropdown @new-tag="tag => entriesStore.addTag(index, tag)" />
+      </template>
     </BCardText>
 
     <template #footer>
@@ -111,12 +116,23 @@
 </template>
 
 <script setup lang="ts">
-import { BButton, BCard, BCardText, BFormGroup, BFormInput, BInputGroup, BFormTextarea } from 'bootstrap-vue-next'
+import {
+  BButton,
+  BCard,
+  BCardText,
+  BFormGroup,
+  BFormInput,
+  BInputGroup,
+  BFormTextarea,
+  BBadge,
+} from 'bootstrap-vue-next'
+import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
+import { computed } from 'vue'
 import { currentTime } from '@/ComputeWorkTime'
 import { useEntriesStore } from '@/entriesStore.ts'
 import { useSettingsStore } from '@/settingsStore.ts'
-import { computed } from 'vue'
-import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
+import TagBadge from '@/TagBadge.vue'
+import TagDropdown from '@/TagDropdown.vue'
 
 const props = defineProps<{ storeId: string }>()
 
