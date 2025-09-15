@@ -2,7 +2,13 @@ import { defineStore } from 'pinia'
 import { computed } from 'vue'
 import Holidays from 'date-holidays'
 import { useStorage } from '@vueuse/core'
-import { type ComputedWorkEntries, computeWorkTime, type WorkDays, type WorkRange } from '@/ComputeWorkTime.ts'
+import {
+  type ComputedWorkEntry,
+  type ComputedWorkTime,
+  computeWorkTime,
+  type WorkDays,
+  type WorkRange,
+} from '@/ComputeWorkTime.ts'
 import { useSettingsStore } from '@/settingsStore.ts'
 
 export const useEntriesStore = (storeId: string) => {
@@ -30,7 +36,7 @@ export const useEntriesStore = (storeId: string) => {
       `entries.${storeId}.entries`,
       [{ day: defaultEntryName(), from: null, to: null, subtractedTime: null, customSubtractedTime: false }],
     )
-    const computedWorkDays = computed<ComputedWorkEntries[]>((oldValue) => {
+    const computedWorkTime = computed<ComputedWorkTime>((oldValue) => {
       const workDaysObj: WorkDays = {}
       if (settingsStore.mode === 'tasks') {
         const group = []
@@ -59,18 +65,23 @@ export const useEntriesStore = (storeId: string) => {
       }
 
       try {
-        return computeWorkTime(
+        const res = computeWorkTime(
           workDaysObj,
           settingsStore.savedUpTime,
           settingsStore.defaultFrom,
           settingsStore.defaultTo,
           settingsStore.workTime,
-        ).sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
+        )
+        res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
+        return res
       } catch (e) {
         // Ignored
-        return oldValue ?? []
+        return oldValue ?? { entries: [], summaryByTag: {} }
       }
     })
+
+    const computedWorkDays = computed(() => computedWorkTime.value.entries)
+    const tagSummaries = computed(() => computedWorkTime.value.summaryByTag)
 
     function setEntries(newEntries: (WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]) {
       entries.value = newEntries
@@ -104,12 +115,18 @@ export const useEntriesStore = (storeId: string) => {
       ]
     }
 
-
     function addTag(index: number, tag: string) {
-      console.log(index, tag)
       entries.value[index].tags ??= []
       entries.value[index].tags.push(tag)
-      console.log(index, tag, entries.value[index].tags)
+    }
+
+    function removeTag(index: number, tag: string) {
+      const entry = entries.value[index]
+      entry.tags?.splice(entry.tags?.indexOf(tag), 1)
+
+      if (entries.value.every((e) => !e.tags?.includes(tag))) {
+        settingsStore.deleteTag(tag)
+      }
     }
 
     function fillWorkdaysBase(start: Date) {
@@ -158,12 +175,15 @@ export const useEntriesStore = (storeId: string) => {
 
     return {
       entries,
+      computedWorkTime,
       computedWorkDays,
+      tagSummaries,
       setEntries,
       addRowAfter,
       removeRow,
       clear,
       addTag,
+      removeTag,
       fillWorkdays,
       fillRemainingWorkdays,
     }

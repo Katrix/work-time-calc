@@ -56,8 +56,8 @@
     <template #cell(subtracted_time)="{ index }">
       <BInputGroup>
         <BFormInput
-          :disabled="!entriesStore.entries[index].customSubtractedTime"
           v-model="entriesStore.entries[index].subtractedTime"
+          :disabled="!entriesStore.entries[index].customSubtractedTime"
         />
 
         <template #prepend>
@@ -91,8 +91,18 @@
     </template>
 
     <template #cell(tags)="{ index }">
-      <TagBadge v-for="tag in entriesStore.entries[index].tags ?? []" :key="tag" :tag="tag" />
-      <TagDropdown @new-tag="tag => entriesStore.addTag(index, tag)" />
+      <TagBadge
+        v-for="tag in entriesStore.entries[index].tags ?? []"
+        :key="tag"
+        :tag="tag"
+        :store-id="storeId"
+        @delete-tag="entriesStore.removeTag(index, tag)"
+      />
+      <TagDropdown
+        :store-id="storeId"
+        :existing-tags="entriesStore.entries[index].tags ?? []"
+        @new-tag="(tag) => entriesStore.addTag(index, tag)"
+      />
     </template>
 
     <template #cell(notes)="{ index }">
@@ -108,13 +118,26 @@
       </BButton>
     </template>
   </BTableLite>
+
+  <BCard v-if="hasTagSummary" header="Summary" no-body>
+    <BListGroup flush>
+      <BListGroupItem v-for="(summary, tag) in entriesStore.tagSummaries" :key="tag">
+        <TagBadge :tag="tag" :store-id="storeId" :hide-delete="true" />
+        Worked time: {{ summary.time }} Entries: {{ summary.names.join(', ') }} Notes: {{ summary.notes.join(', ') }}
+      </BListGroupItem>
+    </BListGroup>
+  </BCard>
 </template>
 
 <script setup lang="ts">
 import {
   BButton,
+  BCard,
+  BCardText,
   BFormInput,
   BInputGroup,
+  BListGroup,
+  BListGroupItem,
   BTableLite,
   type TableField,
   type TableRowType,
@@ -212,7 +235,8 @@ const tableFields: ComputedRef<TableField[]> = computed(() => {
       {
         key: 'tags',
         label: 'Tags',
-        thStyle: 'min-width: 60px',
+        thStyle: 'min-width: 60px; max-width: 160px',
+        tdClass: 'table-max-160px',
       },
       {
         key: 'notes',
@@ -286,4 +310,12 @@ watchSyncEffect(() => {
     // Ignored
   }
 })
+
+const hasTagSummary = computed(() => Object.entries(entriesStore.value.tagSummaries).length > 0)
 </script>
+
+<style>
+.table-max-160px {
+  max-width: 160px;
+}
+</style>

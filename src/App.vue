@@ -1,43 +1,45 @@
 <template>
-  <BContainer fluid="xl" class="wider-container">
-    <h1>Work time calc</h1>
+  <BApp>
+    <BContainer fluid="xl" class="wider-container">
+      <h1>Work time calc</h1>
 
-    <BTabs v-model:index="active">
-      <BTab v-for="(id, idx) in calcs" :key="id">
-        <template #title>
-          {{ calcName(idx) }}
-          <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click.stop="removeCalc(idx)">
-            <font-awesome-icon :icon="['fas', 'times']"></font-awesome-icon>
-          </BButton>
+      <BTabs v-model:index="active">
+        <BTab v-for="(id, idx) in calcs" :key="id">
+          <template #title>
+            {{ calcName(idx) }}
+            <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click.stop="removeCalc(idx)">
+              <font-awesome-icon :icon="['fas', 'times']"></font-awesome-icon>
+            </BButton>
+          </template>
+
+          <WorkCalc ref="calcObs" class="mt-2" :store-id="id"></WorkCalc>
+        </BTab>
+
+        <BTab title="Defaults">
+          <div class="row">
+            <div class="col-6">
+              <h2>Hours</h2>
+              <DefaultSettings mode="hours" />
+            </div>
+            <div class="col-6">
+              <h2>Tasks</h2>
+              <DefaultSettings mode="tasks" />
+            </div>
+          </div>
+        </BTab>
+
+        <template #tabs-end>
+          <BNavItem role="presentation" href="#" @click.prevent="addCalc()">
+            <b>+</b>
+          </BNavItem>
         </template>
-
-        <WorkCalc ref="calcObs" class="mt-2" :store-id="id"></WorkCalc>
-      </BTab>
-
-      <BTab title="Defaults">
-        <div class="row">
-          <div class="col-6">
-            <h2>Hours</h2>
-            <DefaultSettings mode="hours" />
-          </div>
-          <div class="col-6">
-            <h2>Tasks</h2>
-            <DefaultSettings mode="tasks" />
-          </div>
-        </div>
-      </BTab>
-
-      <template #tabs-end>
-        <BNavItem role="presentation" href="#" @click.prevent="addCalc()">
-          <b>+</b>
-        </BNavItem>
-      </template>
-    </BTabs>
-  </BContainer>
+      </BTabs>
+    </BContainer>
+  </BApp>
 </template>
 
 <script setup lang="ts">
-import { BContainer, BTabs, BTab, BButton, BNavItem } from 'bootstrap-vue-next'
+import { BContainer, BTabs, BTab, BButton, BNavItem, BApp } from 'bootstrap-vue-next'
 import { computed, ref } from 'vue'
 import { useStorage } from '@vueuse/core'
 import WorkCalc from '@/WorkCalc.vue'

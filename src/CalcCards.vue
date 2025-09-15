@@ -99,8 +99,19 @@
       </BFormGroup>
 
       <template v-if="settingsStore.mode === 'tasks'">
-        Tags: <TagBadge v-for="tag in entriesStore.entries[index].tags ?? []" :key="tag" :tag="tag" />
-        <TagDropdown @new-tag="tag => entriesStore.addTag(index, tag)" />
+        Tags:
+        <TagBadge
+          v-for="tag in entriesStore.entries[index].tags ?? []"
+          :key="tag"
+          :tag="tag"
+          :store-id="storeId"
+          @delete-tag="entriesStore.removeTag(index, tag)"
+        />
+        <TagDropdown
+          :store-id="storeId"
+          :existing-tags="entriesStore.entries[index].tags ?? []"
+          @new-tag="(tag) => entriesStore.addTag(index, tag)"
+        />
       </template>
     </BCardText>
 
@@ -113,6 +124,15 @@
       </BButton>
     </template>
   </BCard>
+
+  <BCard v-if="hasTagSummary" header="Summary" no-body>
+    <BListGroup flush>
+      <BListGroupItem v-for="(summary, tag) in entriesStore.tagSummaries" :key="tag">
+        <TagBadge :tag="tag" :store-id="storeId" :hide-delete="true" />
+        Worked time: {{ summary.time }} Entries: {{ summary.names.join(', ') }} Notes: {{ summary.notes.join(', ') }}
+      </BListGroupItem>
+    </BListGroup>
+  </BCard>
 </template>
 
 <script setup lang="ts">
@@ -124,7 +144,8 @@ import {
   BFormInput,
   BInputGroup,
   BFormTextarea,
-  BBadge,
+  BListGroupItem,
+  BListGroup,
 } from 'bootstrap-vue-next'
 import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
 import { computed } from 'vue'
@@ -138,4 +159,6 @@ const props = defineProps<{ storeId: string }>()
 
 const settingsStore = computed(() => useSettingsStore(props.storeId))
 const entriesStore = computed(() => useEntriesStore(props.storeId))
+
+const hasTagSummary = computed(() => Object.entries(entriesStore.value.tagSummaries).length > 0)
 </script>

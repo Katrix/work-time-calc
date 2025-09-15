@@ -1,18 +1,30 @@
 <template>
-  <span class="badge contrast-color" :style="{ '--contrast-color': defaultSettingsStore.getTagColor(tag) }"
-    >{{ tag }}<FontAwesomeIcon style="cursor: pointer" :icon="['fas', 'times-circle']"
+  <span class="badge contrast-color" :style="{ '--contrast-color': settingsStore.getTagColor(tag) }"
+    >{{ tag
+    }}<FontAwesomeIcon
+      v-if="!hideDelete"
+      style="cursor: pointer; margin-left: 0.2rem"
+      :icon="['fas', 'times-circle']"
+      @click="$emit('deleteTag')"
   /></span>
 </template>
 
 <script setup lang="ts">
 import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
+import { computed } from 'vue'
 import { useSettingsStore } from '@/settingsStore.ts'
 
-defineProps<{
+const props = defineProps<{
   tag: string
+  storeId: string
+  hideDelete?: boolean
 }>()
 
-const defaultSettingsStore = useSettingsStore('default', 'tasks')
+const settingsStore = computed(() => useSettingsStore(props.storeId))
+
+defineEmits<{
+  deleteTag: []
+}>()
 </script>
 
 <style>

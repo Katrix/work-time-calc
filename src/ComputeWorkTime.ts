@@ -12,7 +12,7 @@ export interface WorkRange {
 
 export type WorkDays = { [group: string]: WorkRange[] }
 
-export interface ComputedWorkEntries {
+export interface ComputedWorkEntry {
   day: string
   from: string | null
   to: string | null
@@ -54,14 +54,28 @@ function fromMinutes(minutes: number): string {
   return negative ? `-${res}` : res
 }
 
+export interface TagSummary {
+  time: string
+  names: string[]
+  notes: string[]
+}
+
+export interface ComputedWorkTime {
+  entries: ComputedWorkEntry[]
+  summaryByTag: Record<string, TagSummary>
+}
+
 export function computeWorkTime(
   workDays: WorkDays,
   leftoverTime: string,
   defaultFrom: string,
   defaultTo: string,
   workTime: string,
-): ComputedWorkEntries[] {
-  const workEntriesComputed: ComputedWorkEntries[] = []
+): ComputedWorkTime {
+  const workEntriesComputed: ComputedWorkEntry[] = []
+  const tagSummaries: Record<string, TagSummary> = {}
+  const tagTime: Record<string, number> = {}
+
   let timeDiff = toMinutes(leftoverTime)
   for (const [, entries] of Object.entries(workDays)) {
     const preEntries = entries.map((entry, idx) => {
@@ -92,6 +106,22 @@ export function computeWorkTime(
       timeDiff += preEntry.workedTime
       timeDiff -= preEntry.subtracted
 
+      for (const tag of entry.tags ?? []) {
+        if (!tagSummaries[tag]) {
+          tagSummaries[tag] = { time: '00:00', names: [], notes: [] }
+        }
+        if (!tagTime[tag]) {
+          tagTime[tag] = 0
+        }
+
+        tagSummaries[tag].names.push(entry.day)
+        if (entry.notes) {
+          tagSummaries[tag].notes.push(entry.notes)
+        }
+
+        tagTime[tag] += preEntry.workedTime
+      }
+
       workEntriesComputed.push({
         day: entry.day,
         from: entry.from,
@@ -108,7 +138,11 @@ export function computeWorkTime(
     }
   }
 
-  return workEntriesComputed
+  for (const [tag, time] of Object.entries(tagTime)) {
+    tagSummaries[tag].time = fromMinutes(time)
+  }
+
+  return { entries: workEntriesComputed, summaryByTag: tagSummaries }
 }
 
 function dateToTimeString(d: Date, precision: number) {
