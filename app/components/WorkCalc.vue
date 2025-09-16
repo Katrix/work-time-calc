@@ -7,14 +7,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
-
-import { currentTime, type WorkRange } from '@/ComputeWorkTime'
-import CalcSettings from '@/CalcSettings.vue'
-import CalcSized from '@/CalcSized.vue'
-import { useSettingsStore } from '@/settingsStore.ts'
-import { useEntriesStore } from '@/entriesStore.ts'
 
 const props = defineProps<{
   storeId: string

@@ -25,10 +25,6 @@
 </template>
 
 <script setup lang="ts">
-import { BForm, BFormInput } from 'bootstrap-vue-next'
-import { computed } from 'vue'
-import { useSettingsStore } from '@/settingsStore.ts'
-
 const props = defineProps<{ mode: 'hours' | 'tasks' }>()
 
 const settingsStore = computed(() => useSettingsStore(`default-${props.mode}`, props.mode))

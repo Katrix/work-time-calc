@@ -136,25 +136,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-  BButton,
-  BCard,
-  BCardText,
-  BFormGroup,
-  BFormInput,
-  BInputGroup,
-  BFormTextarea,
-  BListGroupItem,
-  BListGroup,
-} from 'bootstrap-vue-next'
-import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
-import { computed } from 'vue'
-import { currentTime } from '@/ComputeWorkTime'
-import { useEntriesStore } from '@/entriesStore.ts'
-import { useSettingsStore } from '@/settingsStore.ts'
-import TagBadge from '@/TagBadge.vue'
-import TagDropdown from '@/TagDropdown.vue'
-
 const props = defineProps<{ storeId: string }>()
 
 const settingsStore = computed(() => useSettingsStore(props.storeId))

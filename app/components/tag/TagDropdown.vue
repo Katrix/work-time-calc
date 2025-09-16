@@ -16,19 +16,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-  BDropdown,
-  BDropdownDivider,
-  BDropdownForm,
-  BDropdownItemButton,
-  BFormGroup,
-  BFormInput,
-} from 'bootstrap-vue-next'
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { computed, ref, useTemplateRef } from 'vue'
-import { useSettingsStore } from '@/settingsStore.ts'
-import TagBadge from '@/TagBadge.vue'
-
 const props = defineProps<{
   storeId: string
   existingTags: string[]

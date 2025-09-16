@@ -1,17 +1,18 @@
 {
-  "extends": "@vue/tsconfig/tsconfig.dom.json",
-  "include": ["env.d.ts", "src/**/*", "src/**/*.vue"],
-  "compilerOptions": {
-    "baseUrl": ".",
-    "paths": {
-      "@/*": ["./src/*"]
-    },
-    "lib": ["ES2021", "DOM", "DOM.Iterable"],
-    "noUncheckedIndexedAccess": false
-  },
+  // https://nuxt.com/docs/guide/concepts/typescript
+  "files": [],
   "references": [
     {
-      "path": "tsconfig.node.json"
+      "path": "./.nuxt/tsconfig.app.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.server.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.shared.json"
+    },
+    {
+      "path": "./.nuxt/tsconfig.node.json"
     }
   ]
 }

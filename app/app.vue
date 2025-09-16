@@ -7,8 +7,8 @@
         <BTab v-for="(id, idx) in calcs" :key="id">
           <template #title>
             {{ calcName(idx) }}
-            <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click.stop="removeCalc(idx)">
-              <font-awesome-icon :icon="['fas', 'times']"></font-awesome-icon>
+            <BButton v-if="calcsLength > 1" variant="danger" size="sm" @click.prevent="removeCalc(idx)">
+              <FontAwesomeIcon :icon="['fas', 'times']"></FontAwesomeIcon>
             </BButton>
           </template>
 
@@ -39,13 +39,9 @@
 </template>
 
 <script setup lang="ts">
-import { BContainer, BTabs, BTab, BButton, BNavItem, BApp } from 'bootstrap-vue-next'
-import { computed, ref } from 'vue'
-import { useStorage } from '@vueuse/core'
-import WorkCalc from '@/WorkCalc.vue'
-import DefaultSettings from '@/DefaultSettings.vue'
+import type { WorkCalc } from '#components'
 
-const calcs = useStorage<string[]>('calculations', [crypto.randomUUID()])
+const calcs = useLocalStorage<string[]>('calculations', [crypto.randomUUID()])
 const calcObs = ref<InstanceType<typeof WorkCalc>[] | null>(null)
 const active = ref(0)
 

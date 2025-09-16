@@ -16,12 +16,13 @@ jobs:
           cache: 'yarn'
 
       - run: yarn install
-      - run: yarn build
+      - run: yarn generate-dates
+      - run: yarn generate
 
       - name: Push site
         uses: s0/git-publish-subdir-action@v2.6.0
         env:
           REPO: self
           BRANCH: gh-pages
-          FOLDER: dist
+          FOLDER: .output/public
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

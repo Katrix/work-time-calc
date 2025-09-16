@@ -9,7 +9,4 @@
 
 <script setup lang="ts">
 defineProps<{ storeId: string }>()
-
-import CalcTable from '@/CalcTable.vue'
-import CalcCards from '@/CalcCards.vue'
 </script>

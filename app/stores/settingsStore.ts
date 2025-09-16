@@ -1,6 +1,3 @@
-import { defineStore } from 'pinia'
-import { computed, ref } from 'vue'
-import { useStorage } from '@vueuse/core'
 import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 
 interface Defaults {
@@ -40,7 +37,7 @@ function getDefaults(storeId: string, mode: 'tasks' | 'hours'): Defaults {
 export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hours') => {
   const store = defineStore(`settings-${storeId}`, () => {
     function useStorageWithId<T>(name: string, defaultVal: () => T) {
-      return useStorage(`settings.${storeId}.${name}`, defaultVal, localStorage, {
+      return useLocalStorage(`settings.${storeId}.${name}`, defaultVal, {
         writeDefaults: false,
       })
     }
@@ -152,6 +149,10 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
       deleteTag,
     }
   })
+
+  if (import.meta.hot) {
+    import.meta.hot.accept(acceptHMRUpdate(store, import.meta.hot))
+  }
 
   return store()
 }

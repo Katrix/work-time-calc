@@ -47,10 +47,10 @@
         <BFormInput id="defaultWorkToInput" v-model="settingsStore.defaultTo"></BFormInput>
       </div>
 
-      <label class="sr-only" for="inputFile">Input:</label>
+      <label class="visually-hidden" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
-          <BFormFile id="inputFile" v-model="settingsStore.saveFile" accept="application/json"></BFormFile>
+          <BFormFile id="inputFile" v-model="settingsStore.saveFile" accept="application/json" :directory="null"></BFormFile>
           <template #append>
             <BButton
               type="button"
@@ -79,7 +79,7 @@
         <BFormInput id="precisionInput" v-model="settingsStore.precision" type="number" />
       </div>
 
-      <span class="sr-only">Actions:</span>
+      <span class="visually-hidden">Actions:</span>
       <div style="grid-area: actions-content" class="d-flex justify-content-between">
         <BButtonToolbar>
           <BButtonGroup>
@@ -98,20 +98,6 @@
 </template>
 
 <script setup lang="ts">
-import {
-  BButton,
-  BButtonGroup,
-  BButtonToolbar,
-  BForm,
-  BFormCheckbox,
-  BFormFile,
-  BFormInput,
-  BInputGroup,
-} from 'bootstrap-vue-next'
-import { computed } from 'vue'
-import { useSettingsStore } from '@/settingsStore.ts'
-import { useEntriesStore } from '@/entriesStore.ts'
-
 const props = defineProps<{ storeId: string }>()
 
 const settingsStore = computed(() => useSettingsStore(props.storeId))

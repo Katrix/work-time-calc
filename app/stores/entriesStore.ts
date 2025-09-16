@@ -1,15 +1,4 @@
-import { defineStore } from 'pinia'
-import { computed } from 'vue'
 import Holidays from 'date-holidays'
-import { useStorage } from '@vueuse/core'
-import {
-  type ComputedWorkEntry,
-  type ComputedWorkTime,
-  computeWorkTime,
-  type WorkDays,
-  type WorkRange,
-} from '@/ComputeWorkTime.ts'
-import { useSettingsStore } from '@/settingsStore.ts'
 
 export const useEntriesStore = (storeId: string) => {
   const store = defineStore(`entries-${storeId}`, () => {
@@ -32,7 +21,7 @@ export const useEntriesStore = (storeId: string) => {
       }
     }
 
-    const entries = useStorage<(WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]>(
+    const entries = useLocalStorage<(WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]>(
       `entries.${storeId}.entries`,
       [{ day: defaultEntryName(), from: null, to: null, subtractedTime: null, customSubtractedTime: false }],
     )
@@ -188,5 +177,10 @@ export const useEntriesStore = (storeId: string) => {
       fillRemainingWorkdays,
     }
   })
+
+  if (import.meta.hot) {
+    import.meta.hot.accept(acceptHMRUpdate(store, import.meta.hot))
+  }
+
   return store()
 }

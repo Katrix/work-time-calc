@@ -1,38 +1,23 @@
-import { defineConfigWithVueTs, vueTsConfigs } from '@vue/eslint-config-typescript'
-import pluginVue from 'eslint-plugin-vue'
+// @ts-check
+import withNuxt from './.nuxt/eslint.config.mjs'
 import neostandard from 'neostandard'
 import pluginSecurity from 'eslint-plugin-security'
-import globals from 'globals'
 
 export default [
-  ...defineConfigWithVueTs(
+  withNuxt(
     ...(neostandard({
       ts: false,
       noJsx: true,
       noStyle: true,
       // eslint-disable-next-line @typescript-eslint/no-explicit-any
     }) as any),
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     pluginSecurity.configs.recommended as any,
     {
       rules: {
         'security/detect-object-injection': 'off',
       },
     },
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    pluginVue.configs['flat/recommended'] as any,
-    vueTsConfigs.recommended,
     {
-      languageOptions: {
-        ecmaVersion: 'latest',
-        globals: {
-          ...globals.browser,
-        },
-        parserOptions: {
-          tsconfigRootDir: import.meta.dirname,
-          extraFileExtensions: ['.vue'],
-        },
-      },
       rules: {
         '@typescript-eslint/only-throw-error': 'error',
         'vue/html-self-closing': 'off',
@@ -63,7 +48,4 @@ export default [
       },
     },
   ),
-  {
-    ignores: ['dist', 'node_modules'],
-  },
 ]

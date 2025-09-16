@@ -10,10 +10,6 @@
 </template>
 
 <script setup lang="ts">
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-import { computed } from 'vue'
-import { useSettingsStore } from '@/settingsStore.ts'
-
 const props = defineProps<{
   tag: string
   storeId: string

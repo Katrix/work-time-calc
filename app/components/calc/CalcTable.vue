@@ -130,26 +130,7 @@
 </template>
 
 <script setup lang="ts">
-import {
-  BButton,
-  BCard,
-  BCardText,
-  BFormInput,
-  BInputGroup,
-  BListGroup,
-  BListGroupItem,
-  BTableLite,
-  type TableField,
-  type TableRowType,
-  type TableStrictClassValue,
-} from 'bootstrap-vue-next'
-import { computed, type ComputedRef, ref, watchSyncEffect } from 'vue'
-import { FontAwesomeIcon, FontAwesomeLayers } from '@fortawesome/vue-fontawesome'
-import { currentTime } from '@/ComputeWorkTime'
-import { useEntriesStore } from '@/entriesStore.ts'
-import { useSettingsStore } from '@/settingsStore.ts'
-import TagBadge from '@/TagBadge.vue'
-import TagDropdown from '@/TagDropdown.vue'
+import type { TableField, TableRowType, TableStrictClassValue } from 'bootstrap-vue-next'
 
 const props = defineProps<{ storeId: string }>()
 
