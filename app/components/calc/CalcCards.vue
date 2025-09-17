@@ -1,141 +1,80 @@
 <template>
-  <BCard v-for="(item, index) in entriesStore.computedWorkDays" :key="item.day + index" class="mb-4">
-    <template #header>
-      <BFormInput v-model="entriesStore.entries[index].day" />
-    </template>
+  <div v-for="(item, index) in entriesStore.entries" :key="item.day + index" class="card mb-4">
+    <div class="card-header">
+      <BFormInput v-model="item.day" />
+    </div>
 
-    <BCardText>
-      <BFormGroup label="Arrived:">
-        <BInputGroup>
-          <BFormInput v-model="entriesStore.entries[index].from" />
-          <template #append>
-            <BButton @click="entriesStore.entries[index].from = currentTime(settingsStore.precision)">
-              <font-awesome-icon :icon="['fas', 'clock']" />
-            </BButton>
-          </template>
-        </BInputGroup>
-      </BFormGroup>
+    <div class="card-body">
+      <div class="card-text">
+        <BFormGroup label="Arrived:">
+          <CalcInputFrom :store-id="storeId" :precision="settingsStore.precision" v-model="item.from" />
+        </BFormGroup>
 
-      <BFormGroup label="Left:" class="mb-2">
-        <BInputGroup>
-          <BFormInput v-model="entriesStore.entries[index].to" />
-          <template #append>
-            <BButton @click="entriesStore.entries[index].to = currentTime(settingsStore.precision)">
-              <font-awesome-icon :icon="['fas', 'clock']" />
-            </BButton>
-            <BButton
-              v-if="!entriesStore.entries[index].isTracking && (entriesStore.entries[index].to ?? '') === ''"
-              @click="
-                () => {
-                  entriesStore.entries[index].to = currentTime(settingsStore.precision)
-                  entriesStore.entries[index].isTracking = true
-                }
-              "
-            >
-              <font-awesome-icon :icon="['fas', 'hourglass-start']" />
-            </BButton>
-            <BButton
-              v-else-if="entriesStore.entries[index].isTracking"
-              variant="primary"
-              @click="entriesStore.entries[index].isTracking = false"
-            >
-              <font-awesome-icon :icon="['fas', 'hourglass-half']" />
-            </BButton>
-            <BButton v-else disabled>
-              <font-awesome-icon :icon="['fas', 'hourglass-end']" />
-            </BButton>
-          </template>
-        </BInputGroup>
-      </BFormGroup>
-
-      <dl class="row">
-        <dt class="col-5">Worked time:</dt>
-        <dd class="col-7">{{ item.workedTime }}</dd>
-        <dt class="col-5">Extra time:</dt>
-        <dd class="col-7">{{ item.extraTime }}</dd>
-        <dt class="col-5">Estimate?:</dt>
-        <dd class="col-7">{{ item.estimate }}</dd>
-      </dl>
-
-      <BFormGroup v-if="settingsStore.mode !== 'tasks'" label="Subtracted time:">
-        <BInputGroup>
-          <BFormInput
-            v-model="entriesStore.entries[index].subtractedTime"
-            :disabled="!entriesStore.entries[index].customSubtractedTime"
+        <BFormGroup label="Left:" class="mb-2">
+          <CalcInputTo
+            :store-id="storeId"
+            :precision="settingsStore.precision"
+            v-model:to="item.to"
+            v-model:is-tracking="item.isTracking"
           />
+        </BFormGroup>
 
-          <template #prepend>
-            <BButton
-              @click="
-                () => {
-                  entriesStore.entries[index].customSubtractedTime = !entriesStore.entries[index].customSubtractedTime
-                  entriesStore.entries[index].subtractedTime = null
-                }
-              "
-            >
-              <FontAwesomeLayers fixed-width>
-                <FontAwesomeIcon
-                  v-if="!entriesStore.entries[index].customSubtractedTime"
-                  :icon="['fas', 'slash']"
-                  transform="down-1 left-1"
-                />
-                <FontAwesomeIcon
-                  v-if="!entriesStore.entries[index].customSubtractedTime"
-                  :icon="['fas', 'slash']"
-                  :mask="['fas', 'pen-to-square']"
-                />
-                <FontAwesomeIcon
-                  v-if="entriesStore.entries[index].customSubtractedTime"
-                  :icon="['fas', 'pen-to-square']"
-                />
-              </FontAwesomeLayers>
-            </BButton>
-          </template>
-        </BInputGroup>
-      </BFormGroup>
+        <dl class="row">
+          <dt class="col-5">Worked time:</dt>
+          <dd class="col-7">{{ entriesStore.computedWorkDays[index].workedTime }}</dd>
+          <dt class="col-5">Extra time:</dt>
+          <dd class="col-7">{{ entriesStore.computedWorkDays[index].extraTime }}</dd>
+          <dt class="col-5">Estimate?:</dt>
+          <dd class="col-7">{{ entriesStore.computedWorkDays[index].estimate }}</dd>
+        </dl>
 
-      <BFormGroup label="Notes:">
-        <BFormTextarea v-model="entriesStore.entries[index].notes" />
-      </BFormGroup>
+        <BFormGroup v-if="settingsStore.mode !== 'tasks'" label="Subtracted time:">
+          <CalcInputSubtractedTime
+            v-model:subtracted-time="item.subtractedTime"
+            v-model:custom-subtracted-time="item.customSubtractedTime"
+          ></CalcInputSubtractedTime>
+        </BFormGroup>
 
-      <template v-if="settingsStore.mode === 'tasks'">
-        Tags:
-        <TagBadge
-          v-for="tag in entriesStore.entries[index].tags ?? []"
-          :key="tag"
-          :tag="tag"
-          :store-id="storeId"
-          @delete-tag="entriesStore.removeTag(index, tag)"
-        />
-        <TagDropdown
-          :store-id="storeId"
-          :existing-tags="entriesStore.entries[index].tags ?? []"
-          @new-tag="(tag) => entriesStore.addTag(index, tag)"
-        />
-      </template>
-    </BCardText>
+        <BFormGroup label="Notes:">
+          <!-- FIXME: This fails on page reload in dev mode if it's not Lazy and I'm checking responsive dev mode -->
+          <LazyBFormTextarea v-model="item.notes" />
+        </BFormGroup>
 
-    <template #footer>
-      <BButton @click="entriesStore.addRowAfter(index)">
+        <template v-if="settingsStore.mode === 'tasks'">
+          Tags:
+          <TagBadge
+            v-for="tag in item.tags ?? []"
+            :key="tag"
+            :tag="tag"
+            :store-id="storeId"
+            @delete-tag="entriesStore.removeTag(index, tag)"
+          />
+          <TagDropdown
+            :store-id="storeId"
+            :existing-tags="item.tags ?? []"
+            @new-tag="(tag) => entriesStore.addTag(index, tag)"
+          />
+        </template>
+      </div>
+    </div>
+
+    <div class="card-footer">
+      <button class="btn btn-secondary" @click="entriesStore.addRowAfter(index)">
         <FontAwesomeIcon :icon="['fas', 'plus']" />
-      </BButton>
-      <BButton v-if="entriesStore.entries.length > 1" @click="entriesStore.removeRow(index)">
+      </button>
+      <button class="btn btn-secondary" v-if="entriesStore.entries.length > 1" @click="entriesStore.removeRow(index)">
         <FontAwesomeIcon :icon="['fas', 'minus']" />
-      </BButton>
-    </template>
-  </BCard>
+      </button>
+    </div>
+  </div>
 
-  <BCard v-if="hasTagSummary" header="Summary" no-body>
-    <BListGroup flush>
-      <BListGroupItem v-for="(summary, tag) in entriesStore.tagSummaries" :key="tag">
-        <TagBadge :tag="tag" :store-id="storeId" :hide-delete="true" />
-        Worked time: {{ summary.time }} Entries: {{ summary.names.join(', ') }} Notes: {{ summary.notes.join(', ') }}
-      </BListGroupItem>
-    </BListGroup>
-  </BCard>
+  <CalcTagSummary :storeId="storeId" :tag-summaries="entriesStore.tagSummaries" />
 </template>
 
 <script setup lang="ts">
+import CalcInputFrom from '~/components/calc/input/CalcInputFrom.vue'
+import CalcInputTo from '~/components/calc/input/CalcInputTo.vue'
+
 const props = defineProps<{ storeId: string }>()
 
 const settingsStore = computed(() => useSettingsStore(props.storeId))

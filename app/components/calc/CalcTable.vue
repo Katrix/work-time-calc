@@ -1,302 +1,110 @@
 <template>
-  <BTableLite
-    :fields="tableFields"
-    :items="computedTableItems"
-    :dark="true"
-    :striped="true"
-    :tbody-tr-class="bodyTrClasses"
-  >
-    <template #cell(day)="{ index }">
-      <BFormInput v-model="entriesStore.entries[index].day"></BFormInput>
-    </template>
+  <table class="table table-dark table-striped">
+    <thead>
+      <tr v-if="settingsStore.mode === 'hours'">
+        <th scope="col" style="min-width: 130px">Day</th>
+        <th scope="col" style="min-width: 120px">Arrived</th>
+        <th scope="col" style="min-width: 160px">Left</th>
+        <th scope="col" style="min-width: 60px">Worked time</th>
+        <th scope="col" style="min-width: 60px">Extra time</th>
+        <th scope="col" style="min-width: 125px">Subtracted time</th>
+        <th scope="col" style="min-width: 200px">Notes</th>
+        <th scope="col" style="min-width: 100px">Add/Remove row</th>
+      </tr>
+      <tr v-else>
+        <th scope="col" style="min-width: 240px">Task</th>
+        <th scope="col" style="min-width: 120px">From</th>
+        <th scope="col" style="min-width: 160px">To</th>
+        <th scope="col" style="min-width: 60px">Worked time</th>
+        <th scope="col" style="min-width: 60px">Total time</th>
+        <th scope="col" style="min-width: 60px; max-width: 160px">Tags</th>
+        <th scope="col" style="min-width: 200px">Notes</th>
+        <th scope="col" style="min-width: 100px">Add/Remove row</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr v-for="(item, index) in entriesStore.entries" :class="trClasses(item)">
+        <td><BFormInput v-model="item.day"></BFormInput></td>
 
-    <template #cell(arrived)="{ index }">
-      <BInputGroup>
-        <BFormInput v-model="entriesStore.entries[index].from" />
-        <template #append>
-          <BButton @click="entriesStore.entries[index].from = currentTime(settingsStore.precision)">
-            <FontAwesomeIcon :icon="['fas', 'clock']" />
-          </BButton>
-        </template>
-      </BInputGroup>
-    </template>
+        <td><CalcInputFrom :store-id="storeId" :precision="settingsStore.precision" v-model="item.from" /></td>
+        <td>
+          <CalcInputTo
+            :store-id="storeId"
+            :precision="settingsStore.precision"
+            v-model:to="item.to"
+            v-model:is-tracking="item.isTracking"
+          />
+        </td>
 
-    <template #cell(left)="{ index }">
-      <BInputGroup>
-        <BFormInput v-model="entriesStore.entries[index].to" :disabled="entriesStore.entries[index].isTracking" />
-        <template #append>
-          <BButton @click="entriesStore.entries[index].to = currentTime(settingsStore.precision)">
-            <FontAwesomeIcon :icon="['fas', 'clock']" />
-          </BButton>
-          <BButton
-            v-if="!entriesStore.entries[index].isTracking && (entriesStore.entries[index].to ?? '') === ''"
-            @click="
-              () => {
-                entriesStore.entries[index].to = currentTime(settingsStore.precision)
-                entriesStore.entries[index].isTracking = true
-              }
-            "
+        <td>{{ entriesStore.computedWorkDays[index].workedTime }}</td>
+        <td>{{ entriesStore.computedWorkDays[index].extraTime }}</td>
+
+        <td v-if="settingsStore.mode === 'hours'">
+          <CalcInputSubtractedTime
+            v-model:subtracted-time="item.subtractedTime"
+            v-model:custom-subtracted-time="item.customSubtractedTime"
+          ></CalcInputSubtractedTime>
+        </td>
+
+        <!-- Tags -->
+        <td v-if="settingsStore.mode === 'tasks'" style="max-width: 160px">
+          <TagBadge
+            v-for="tag in item.tags ?? []"
+            :key="tag"
+            :tag="tag"
+            :store-id="storeId"
+            @delete-tag="entriesStore.removeTag(index, tag)"
+          />
+          <TagDropdown
+            :store-id="storeId"
+            :existing-tags="item.tags ?? []"
+            @new-tag="(tag) => entriesStore.addTag(index, tag)"
+          />
+        </td>
+
+        <td><BFormInput v-model="entriesStore.entries[index].notes" /></td>
+
+        <!-- Add/Remove row -->
+        <td>
+          <button class="btn btn-secondary" @click="entriesStore.addRowAfter(index)">
+            <FontAwesomeIcon :icon="['fas', 'plus']" />
+          </button>
+          <button
+            class="btn btn-secondary"
+            v-if="entriesStore.entries.length > 1"
+            @click="entriesStore.removeRow(index)"
           >
-            <FontAwesomeIcon :icon="['fas', 'hourglass-start']" />
-          </BButton>
-          <BButton
-            v-else-if="entriesStore.entries[index].isTracking"
-            variant="primary"
-            @click="entriesStore.entries[index].isTracking = false"
-          >
-            <FontAwesomeIcon :icon="['fas', 'hourglass-half']" />
-          </BButton>
-          <BButton v-else disabled>
-            <FontAwesomeIcon :icon="['fas', 'hourglass-end']" />
-          </BButton>
-        </template>
-      </BInputGroup>
-    </template>
+            <FontAwesomeIcon :icon="['fas', 'minus']" />
+          </button>
+        </td>
+      </tr>
+    </tbody>
+  </table>
 
-    <template #cell(subtracted_time)="{ index }">
-      <BInputGroup>
-        <BFormInput
-          v-model="entriesStore.entries[index].subtractedTime"
-          :disabled="!entriesStore.entries[index].customSubtractedTime"
-        />
-
-        <template #prepend>
-          <BButton
-            @click="
-              () => {
-                entriesStore.entries[index].customSubtractedTime = !entriesStore.entries[index].customSubtractedTime
-                entriesStore.entries[index].subtractedTime = null
-              }
-            "
-          >
-            <FontAwesomeLayers fixed-width>
-              <FontAwesomeIcon
-                v-if="!entriesStore.entries[index].customSubtractedTime"
-                :icon="['fas', 'slash']"
-                transform="down-1 left-1"
-              />
-              <FontAwesomeIcon
-                v-if="!entriesStore.entries[index].customSubtractedTime"
-                :icon="['fas', 'slash']"
-                :mask="['fas', 'pen-to-square']"
-              />
-              <FontAwesomeIcon
-                v-if="entriesStore.entries[index].customSubtractedTime"
-                :icon="['fas', 'pen-to-square']"
-              />
-            </FontAwesomeLayers>
-          </BButton>
-        </template>
-      </BInputGroup>
-    </template>
-
-    <template #cell(tags)="{ index }">
-      <TagBadge
-        v-for="tag in entriesStore.entries[index].tags ?? []"
-        :key="tag"
-        :tag="tag"
-        :store-id="storeId"
-        @delete-tag="entriesStore.removeTag(index, tag)"
-      />
-      <TagDropdown
-        :store-id="storeId"
-        :existing-tags="entriesStore.entries[index].tags ?? []"
-        @new-tag="(tag) => entriesStore.addTag(index, tag)"
-      />
-    </template>
-
-    <template #cell(notes)="{ index }">
-      <BFormInput v-model="entriesStore.entries[index].notes" />
-    </template>
-
-    <template #cell(add_sub)="{ index }">
-      <BButton @click="entriesStore.addRowAfter(index)">
-        <FontAwesomeIcon :icon="['fas', 'plus']" />
-      </BButton>
-      <BButton v-if="entriesStore.entries.length > 1" @click="entriesStore.removeRow(index)">
-        <FontAwesomeIcon :icon="['fas', 'minus']" />
-      </BButton>
-    </template>
-  </BTableLite>
-
-  <BCard v-if="hasTagSummary" header="Summary" no-body>
-    <BListGroup flush>
-      <BListGroupItem v-for="(summary, tag) in entriesStore.tagSummaries" :key="tag">
-        <TagBadge :tag="tag" :store-id="storeId" :hide-delete="true" />
-        Worked time: {{ summary.time }} Entries: {{ summary.names.join(', ') }} Notes: {{ summary.notes.join(', ') }}
-      </BListGroupItem>
-    </BListGroup>
-  </BCard>
+  <CalcTagSummary :storeId="storeId" :tag-summaries="entriesStore.tagSummaries" />
 </template>
 
 <script setup lang="ts">
-import type { TableField, TableRowType, TableStrictClassValue } from 'bootstrap-vue-next'
+import CalcInputFrom from '~/components/calc/input/CalcInputFrom.vue'
+import CalcInputTo from '~/components/calc/input/CalcInputTo.vue'
 
 const props = defineProps<{ storeId: string }>()
 
 const settingsStore = computed(() => useSettingsStore(props.storeId))
 const entriesStore = computed(() => useEntriesStore(props.storeId))
 
-const tableFields: ComputedRef<TableField[]> = computed(() => {
-  if (settingsStore.value.mode === 'hours') {
-    return [
-      {
-        key: 'day',
-        label: 'Day',
-        thStyle: 'min-width: 130px',
-      },
-      {
-        key: 'arrived',
-        label: 'Arrived',
-        thStyle: 'min-width: 120px',
-      },
-      {
-        key: 'left',
-        label: 'Left',
-        thStyle: 'min-width: 160px',
-      },
-      {
-        key: 'worked_time',
-        label: 'Worked time',
-        thStyle: 'min-width: 60px',
-      },
-      {
-        key: 'extra_time',
-        label: 'Extra time',
-        thStyle: 'min-width: 60px',
-      },
-      {
-        key: 'estimate',
-        label: 'Estimate?',
-        thStyle: 'min-width: 40px',
-      },
-      {
-        key: 'subtracted_time',
-        label: 'Subtracted time',
-        thStyle: 'min-width: 125px',
-      },
-      {
-        key: 'notes',
-        label: 'Notes',
-        thStyle: 'min-width: 200px',
-      },
-      {
-        key: 'add_sub',
-        label: 'Add/Remove row',
-        thStyle: 'min-width: 100px',
-      },
-    ]
-  } else {
-    return [
-      {
-        key: 'day',
-        label: 'Task',
-        thStyle: 'min-width: 240px',
-      },
-      {
-        key: 'arrived',
-        label: 'From',
-        thStyle: 'min-width: 120px',
-      },
-      {
-        key: 'left',
-        label: 'To',
-        thStyle: 'min-width: 160px',
-      },
-      {
-        key: 'worked_time',
-        label: 'Worked time',
-        thStyle: 'min-width: 60px',
-      },
-      {
-        key: 'extra_time',
-        label: 'Total time',
-        thStyle: 'min-width: 60px',
-      },
-      {
-        key: 'tags',
-        label: 'Tags',
-        thStyle: 'min-width: 60px; max-width: 160px',
-        tdClass: 'table-max-160px',
-      },
-      {
-        key: 'notes',
-        label: 'Notes',
-        thStyle: 'min-width: 200px',
-      },
-      {
-        key: 'add_sub',
-        label: 'Add/Remove row',
-        thStyle: 'min-width: 100px',
-      },
-    ]
-  }
-})
-
-interface TableItem {
-  day: string
-  arrived: string | undefined
-  left: string | undefined
-  worked_time: string
-  extra_time: string
-  lost_time: string
-  estimate: boolean
-  subtracted_time: string
-  notes: string
-  add_sub: string
-}
-
-function bodyTrClasses(item: TableItem | null, type: TableRowType): TableStrictClassValue {
-  if (type === 'row' && item) {
-    const day = item.day as string
-    const idx = entriesStore.value.entries.findIndex((v) => v.day === day)
-    if (idx > 0) {
-      const prevDay = entriesStore.value.entries[idx - 1].day
-      if (new Date(day).getDate() - new Date(prevDay).getDate() > 1) {
-        return 'table-group-divider'
-      }
+function trClasses(item: WorkRange): string | null {
+  const day = item.day
+  const idx = entriesStore.value.entries.findIndex((v) => v.day === day)
+  if (idx > 0) {
+    const prevDay = entriesStore.value.entries[idx - 1].day
+    if (new Date(day).getDate() - new Date(prevDay).getDate() > 1) {
+      return 'table-group-divider'
     }
   }
 
-  return {}
+  return null
 }
-
-const computedTableItems = ref<
-  {
-    day: string
-    arrived: string | undefined
-    left: string | undefined
-    worked_time: string
-    extra_time: string
-    estimate: boolean
-    subtracted_time: string
-    notes: string
-    add_sub: string
-  }[]
->([])
-watchSyncEffect(() => {
-  try {
-    computedTableItems.value = entriesStore.value.computedWorkDays.map((entry) => ({
-      day: entry.day,
-      arrived: entry.from ?? undefined,
-      left: entry.to ?? undefined,
-      worked_time: entry.workedTime,
-      extra_time: entry.extraTime,
-      estimate: entry.estimate,
-      subtracted_time: entry.subtractedTime,
-      notes: entry.notes,
-      add_sub: '',
-    }))
-  } catch (e) {
-    // Ignored
-  }
-})
 
 const hasTagSummary = computed(() => Object.entries(entriesStore.value.tagSummaries).length > 0)
 </script>
-
-<style>
-.table-max-160px {
-  max-width: 160px;
-}
-</style>

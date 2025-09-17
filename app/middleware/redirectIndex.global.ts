@@ -1,6 +1,6 @@
 export default defineNuxtRouteMiddleware(to => {
   if (to.path === '/') {
-    const calcs = useLocalStorage<string[]>('calculations', () => [crypto.randomUUID()])
-    return navigateTo(`/${calcs.value[0]}`)
+    const calcStore = useCalcStore()
+    return navigateTo(`/${calcStore.calcs[0]}`)
   }
 })

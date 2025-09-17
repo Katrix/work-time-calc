@@ -4,14 +4,22 @@
 
 <script setup lang="ts">
 const route = useRoute('calculation')
+const calcStore = useCalcStore()
 
-const calculations = useLocalStorage<string[]>('calculations', [route.params.calculation], {
-  listenToStorageChanges: true,
-})
-watchEffect(() => {
+watch(
+  route,
+  () => {
+    if (!calcStore.calcs.includes(route.params.calculation)) {
+      calcStore.calcs.push(route.params.calculation)
+    }
+  },
+  {
+    immediate: true,
+  },
+)
 
-  if (!calculations.value.includes(route.params.calculation)) {
-    calculations.value.push(route.params.calculation)
-  }
+// Things get a bit slow otherwise. Maybe smart to find out why
+definePageMeta({
+  keepalive: true
 })
 </script>

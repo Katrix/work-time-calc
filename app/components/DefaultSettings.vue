@@ -1,5 +1,5 @@
 <template>
-  <BForm>
+  <form>
     <div>
       <label v-if="mode === 'hours'" for="workTimeInput">Work time:</label>
       <div v-if="mode === 'hours'">
@@ -21,7 +21,7 @@
         <BFormInput id="precisionInput" v-model="settingsStore.precision" type="number" />
       </div>
     </div>
-  </BForm>
+  </form>
 </template>
 
 <script setup lang="ts">

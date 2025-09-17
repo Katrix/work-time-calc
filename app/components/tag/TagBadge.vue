@@ -18,9 +18,7 @@ const props = defineProps<{
 
 const settingsStore = computed(() => useSettingsStore(props.storeId))
 
-defineEmits<{
-  deleteTag: []
-}>()
+defineEmits<{ deleteTag: [] }>()
 </script>
 
 <style>

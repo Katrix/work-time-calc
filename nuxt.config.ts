@@ -24,6 +24,14 @@ export default defineNuxtConfig({
       },
     ],
   },
+  app: {
+    head: {
+      title: 'Work-time-calc',
+      htmlAttrs: {
+        lang: 'en'
+      }
+    }
+  },
   experimental: {
     typedPages: true,
   }

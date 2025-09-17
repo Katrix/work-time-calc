@@ -1,5 +1,5 @@
 <template>
-  <BForm>
+  <form>
     <div :class="{ 'hours-settings': mode === 'hours', 'tasks-settings': mode === 'tasks' }">
       <label style="grid-area: name-description" for="nameInput">Name:</label>
       <div style="grid-area: name-content">
@@ -23,7 +23,9 @@
         <BFormInput id="savedUpTimeInput" v-model="settingsStore.savedUpTime"></BFormInput>
       </div>
 
-      <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description">Saved up vacation days:</label>
+      <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description" for="savedUpVacationInput"
+        >Saved up vacation days:</label
+      >
       <div v-if="mode === 'hours'" style="grid-area: saved-up-vacation-content">
         <BFormInput id="savedUpVacationInput" v-model="settingsStore.savedUpVacation"></BFormInput>
       </div>
@@ -50,26 +52,37 @@
       <label class="visually-hidden" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
-          <BFormFile id="inputFile" v-model="settingsStore.saveFile" accept="application/json" :directory="null"></BFormFile>
+          <BFormFile
+            id="inputFile"
+            v-model="settingsStore.saveFile"
+            accept="application/json"
+            :directory="null"
+          ></BFormFile>
           <template #append>
-            <BButton
+            <button
+              class="btn btn-secondary"
               type="button"
               :disabled="!settingsStore.saveFile"
               @click="$emit('load', settingsStore.saveFile as File)"
-              >Load</BButton
             >
-            <BButton
+              Load
+            </button>
+            <button
+              class="btn btn-secondary"
               type="button"
               :disabled="!settingsStore.saveFile && !settingsStore.nameInput"
               @click="$emit('save', settingsStore.saveFile as File)"
-              >Save</BButton
             >
-            <BButton
+              Save
+            </button>
+            <button
+              class="btn btn-secondary"
               type="button"
               :disabled="!settingsStore.saveFile && !settingsStore.nameInput"
               @click="$emit('saveCsv', settingsStore.saveFile as File)"
-              >Save CSV</BButton
             >
+              Save CSV
+            </button>
           </template>
         </BInputGroup>
       </div>
@@ -81,20 +94,27 @@
 
       <span class="visually-hidden">Actions:</span>
       <div style="grid-area: actions-content" class="d-flex justify-content-between">
-        <BButtonToolbar>
-          <BButtonGroup>
-            <BButton type="button" variant="danger" @click="entriesStore.clear()">Clear</BButton>
-            <BButton v-if="mode === 'hours'" type="button" variant="danger" @click="entriesStore.fillWorkdays()">
+        <div class="btn-toolbar" role="toolbar">
+          <div class="btn-group" role="group" aria-label="Actions">
+            <button class="btn btn-secondary" type="button" variant="danger" @click="entriesStore.clear()">
+              Clear
+            </button>
+            <button class="btn btn-danger" v-if="mode === 'hours'" type="button" @click="entriesStore.fillWorkdays()">
               Fill workdays
-            </BButton>
-            <BButton v-if="mode === 'hours'" type="button" @click="entriesStore.fillRemainingWorkdays()">
+            </button>
+            <button
+              class="btn btn-secondary"
+              v-if="mode === 'hours'"
+              type="button"
+              @click="entriesStore.fillRemainingWorkdays()"
+            >
               Add remaining workdays
-            </BButton>
-          </BButtonGroup>
-        </BButtonToolbar>
+            </button>
+          </div>
+        </div>
       </div>
     </div>
-  </BForm>
+  </form>
 </template>
 
 <script setup lang="ts">

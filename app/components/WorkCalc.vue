@@ -13,19 +13,15 @@ const props = defineProps<{
   storeId: string
 }>()
 
-const settingsStore = useSettingsStore(props.storeId)
-const entriesStore = useEntriesStore(props.storeId)
+const settingsStore = computed(() => useSettingsStore(props.storeId))
+const entriesStore = computed(() => useEntriesStore(props.storeId))
 
 const trackingFunId = ref<number>()
 
-const nameComputed = computed(() => settingsStore.nameInput)
-
-defineExpose({ name: nameComputed })
-
 onMounted(() => {
   trackingFunId.value = setInterval(() => {
-    const t = currentTime(settingsStore.precision)
-    for (const workDay of entriesStore.entries) {
+    const t = currentTime(settingsStore.value.precision)
+    for (const workDay of entriesStore.value.entries) {
       if (workDay.isTracking) {
         workDay.to = t
       }
@@ -38,13 +34,13 @@ onUnmounted(() => {
 })
 
 function fileName(extension: string) {
-  return settingsStore.nameInput.length
-    ? `${settingsStore.nameInput}.${extension}`
-    : (settingsStore.saveFile?.name ?? `data.${extension}`)
+  return settingsStore.value.nameInput.length
+    ? `${settingsStore.value.nameInput}.${extension}`
+    : (settingsStore.value.saveFile?.name ?? `data.${extension}`)
 }
 
 async function load() {
-  const file = settingsStore.saveFile
+  const file = settingsStore.value.saveFile
   if (file) {
     const text = await file.text()
     const json = JSON.parse(text) as {
@@ -63,7 +59,7 @@ async function load() {
       throw new Error(`Invalid mode ${json.mode}`)
     }
 
-    settingsStore.loadData({
+    settingsStore.value.loadData({
       mode: json.mode ?? 'hours',
       name: json.name ?? '',
       savedUpTime: json.savedUpTime ?? json.savedUp ?? '00:00',
@@ -73,20 +69,21 @@ async function load() {
       defaultTo: json.defaultTo,
     })
 
-    entriesStore.setEntries(json.workDays)
+    entriesStore.value.setEntries(json.workDays)
   }
 }
 
 function save() {
+  const ss = settingsStore.value
   const data = {
-    mode: settingsStore.mode,
-    name: settingsStore.nameInput,
-    savedUpTime: settingsStore.savedUpTime,
-    savedUpVacation: settingsStore.savedUpVacation,
-    workTime: settingsStore.workTime,
-    defaultFrom: settingsStore.defaultFrom,
-    defaultTo: settingsStore.defaultTo,
-    workDays: entriesStore.entries,
+    mode: ss.mode,
+    name: ss.nameInput,
+    savedUpTime: ss.savedUpTime,
+    savedUpVacation: ss.savedUpVacation,
+    workTime: ss.workTime,
+    defaultFrom: ss.defaultFrom,
+    defaultTo: ss.defaultTo,
+    workDays: entriesStore.value.entries,
   }
 
   // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
@@ -105,9 +102,9 @@ function save() {
 
 function saveCSV() {
   let computedWorkDays
-  switch (settingsStore.mode) {
+  switch (settingsStore.value.mode) {
     case 'hours':
-      computedWorkDays = entriesStore.computedWorkDays.map((item) => ({
+      computedWorkDays = entriesStore.value.computedWorkDays.map((item) => ({
         day: item.day,
         from: item.from,
         to: item.to,
@@ -118,7 +115,7 @@ function saveCSV() {
       }))
       break
     case 'tasks':
-      computedWorkDays = entriesStore.computedWorkDays.map((item) => ({
+      computedWorkDays = entriesStore.value.computedWorkDays.map((item) => ({
         task: item.day,
         from: item.from,
         to: item.to,
