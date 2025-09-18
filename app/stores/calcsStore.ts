@@ -24,7 +24,7 @@ export const useCalcStore = defineStore('calcs', () => {
   function clearOldLocalStorageItems() {
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
-      if (key && key !== 'calculations' && calcs.value.every((s) => !key.includes(s)) && !key.includes('default')) {
+      if (key && key !== 'calculations' && calcs.value.every((s) => !key.includes(s)) && !key.includes('presets')) {
         localStorage.removeItem(key)
       }
     }
@@ -43,3 +43,7 @@ export const useCalcStore = defineStore('calcs', () => {
     calcName
   }
 })
+
+if (import.meta.hot) {
+  import.meta.hot.accept(acceptHMRUpdate(useCalcStore, import.meta.hot))
+}

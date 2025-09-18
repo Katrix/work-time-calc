@@ -29,9 +29,9 @@ const emits = defineEmits<{
 
 const newTag = ref('')
 
-const applicableTags = computed(() =>
-  Object.keys(settingsStore.value.tagColors).filter((t) => !props.existingTags.includes(t)),
-)
+const applicableTags = computed(() => [
+  ...settingsStore.value.tagColors.keys().filter((t) => !props.existingTags.includes(t)),
+])
 
 const dropdown = useTemplateRef('dropdown')
 

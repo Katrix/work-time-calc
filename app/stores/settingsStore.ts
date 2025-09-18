@@ -1,39 +1,5 @@
 import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 
-interface Defaults {
-  workTime: string
-  defaultFrom: string
-  defaultTo: string
-  precision: number
-}
-
-const hoursDefaults: Defaults = {
-  workTime: '08:00',
-  defaultFrom: '08:45',
-  defaultTo: '17:00',
-  precision: 5,
-}
-const tasksDefaults: Defaults = {
-  workTime: '00:00',
-  defaultFrom: '00:00',
-  defaultTo: '00:00',
-  precision: 10,
-}
-
-function getDefaults(storeId: string, mode: 'tasks' | 'hours'): Defaults {
-  if (storeId === `default-${mode}`) {
-    return mode === 'hours' ? hoursDefaults : tasksDefaults
-  } else {
-    const defaultStore = useSettingsStore(`default-${mode}`, mode)
-    return {
-      workTime: defaultStore.workTime,
-      defaultFrom: defaultStore.defaultFrom,
-      defaultTo: defaultStore.defaultTo,
-      precision: defaultStore.precision,
-    }
-  }
-}
-
 export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hours') => {
   const store = defineStore(`settings-${storeId}`, () => {
     function useStorageWithId<T>(name: string, defaultVal: () => T) {
@@ -41,10 +7,11 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
         writeDefaults: false,
       })
     }
+    const presetStore = usePresetStore()
 
     const mode = useStorageWithId<'hours' | 'tasks'>('mode', () => startingMode ?? 'hours')
 
-    const defaults = computed<Defaults>(() => getDefaults(storeId, mode.value))
+    const defaults = computed(() => presetStore.currentPreset[mode.value])
     const nameDefault = computed(() => {
       const now = Temporal.Now.plainDateISO()
       if (mode.value === 'hours') {
@@ -115,21 +82,28 @@ export const useSettingsStore = (storeId: string, startingMode?: 'tasks' | 'hour
       defaultTo.value = data.defaultTo
     }
 
-    const tagColors = useStorageWithId<Record<string, string>>('tagColors', () => ({}))
+    const tagColors = useStorageWithId<Map<string, { color: string; fromPreset?: boolean }>>(
+      'tagColors',
+      () => new Map(defaults.value.tags.entries().map(([k, color]) => [k, { color, fromPreset: true }])),
+    )
 
     function getTagColor(tag: string) {
-      const existing = tagColors.value[tag]
+      const existing = tagColors.value.get(tag)
       if (existing) {
-        return existing
+        return existing.color
       }
 
       const color = '#' + Math.floor(Math.random() * 16777215).toString(16)
-      tagColors.value[tag] = color
+      tagColors.value.set(tag, { color })
       return color
     }
 
-    function deleteTag(tag: string) {
-      delete tagColors.value[tag]
+    function deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }) {
+      const tag = tagColors.value.get(tagName)
+      if (tag && tag.fromPreset && !deleteConfigured) {
+        return
+      }
+      tagColors.value.delete(tagName)
     }
 
     return {
