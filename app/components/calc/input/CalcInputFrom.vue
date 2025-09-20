@@ -11,5 +11,5 @@
 
 <script setup lang="ts">
 const from = defineModel<string | null>({ required: true })
-defineProps<{ storeId: string; precision: number }>()
+defineProps<{ precision: number }>()
 </script>

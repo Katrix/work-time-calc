@@ -10740,6 +10740,7 @@ __metadata:
     bootstrap-vue-next: ^0.40.3
     csv-stringify: ^6.6.0
     date-holidays: ^3.26.1
+    devalue: ^5.3.2
     eslint: ^9.0.0
     eslint-plugin-security: ^3.0.1
     neostandard: ^0.12.2

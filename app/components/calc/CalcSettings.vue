@@ -3,16 +3,12 @@
     <div :class="{ 'hours-settings': mode === 'hours', 'tasks-settings': mode === 'tasks' }">
       <label style="grid-area: name-description" for="nameInput">Name:</label>
       <div style="grid-area: name-content">
-        <BFormInput id="nameInput" v-model="settingsStore.nameInput"></BFormInput>
+        <BFormInput id="nameInput" v-model="calc.name"></BFormInput>
       </div>
 
       <div :key="'modeSwitch'" style="grid-area: mode-switch" class="d-flex">
         <span class="me-2">Tasks</span>
-        <BFormCheckbox
-          :model-value="mode === 'hours'"
-          switch
-          @update:model-value="settingsStore.switchMode()"
-        ></BFormCheckbox>
+        <BFormCheckbox :model-value="mode === 'hours'" switch @update:model-value="switchMode()"></BFormCheckbox>
         <span>Hours</span>
       </div>
 
@@ -20,66 +16,61 @@
         >Saved up time:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: saved-up-time-content">
-        <BFormInput id="savedUpTimeInput" v-model="settingsStore.savedUpTime"></BFormInput>
+        <BFormInput id="savedUpTimeInput" v-model="calc.savedUpTime"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description" for="savedUpVacationInput"
         >Saved up vacation days:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: saved-up-vacation-content">
-        <BFormInput id="savedUpVacationInput" v-model="settingsStore.savedUpVacation"></BFormInput>
+        <BFormInput id="savedUpVacationInput" v-model="calc.savedUpVacation"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: work-time-description" for="workTimeInput">Work time:</label>
       <div v-if="mode === 'hours'" style="grid-area: work-time-content">
-        <BFormInput id="workTimeInput" v-model="settingsStore.workTime"></BFormInput>
+        <BFormInput id="workTimeInput" v-model="calc.workTime"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: default-work-from-description" for="defaultWorkFromInput"
         >Default work from:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: default-work-from-content">
-        <BFormInput id="defaultWorkFromInput" v-model="settingsStore.defaultFrom"></BFormInput>
+        <BFormInput id="defaultWorkFromInput" v-model="calc.defaultFrom"></BFormInput>
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: default-work-to-description" for="defaultWorkToInput"
         >Default work to:</label
       >
       <div v-if="mode === 'hours'" style="grid-area: default-work-to-content">
-        <BFormInput id="defaultWorkToInput" v-model="settingsStore.defaultTo"></BFormInput>
+        <BFormInput id="defaultWorkToInput" v-model="calc.defaultTo"></BFormInput>
       </div>
 
       <label class="visually-hidden" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
-          <BFormFile
-            id="inputFile"
-            v-model="settingsStore.saveFile"
-            accept="application/json"
-            :directory="null"
-          ></BFormFile>
+          <BFormFile id="inputFile" v-model="saveFile" accept="application/json" :directory="null"></BFormFile>
           <template #append>
             <button
               class="btn btn-secondary"
               type="button"
-              :disabled="!settingsStore.saveFile"
-              @click="$emit('load', settingsStore.saveFile as File)"
+              :disabled="!saveFile"
+              @click="$emit('load', saveFile as File)"
             >
               Load
             </button>
             <button
               class="btn btn-secondary"
               type="button"
-              :disabled="!settingsStore.saveFile && !settingsStore.nameInput"
-              @click="$emit('save', settingsStore.saveFile as File)"
+              :disabled="!saveFile && !calc.name"
+              @click="$emit('save', saveFile as File)"
             >
               Save
             </button>
             <button
               class="btn btn-secondary"
               type="button"
-              :disabled="!settingsStore.saveFile && !settingsStore.nameInput"
-              @click="$emit('saveCsv', settingsStore.saveFile as File)"
+              :disabled="!saveFile && !calc.name"
+              @click="$emit('saveCsv', saveFile as File)"
             >
               Save CSV
             </button>
@@ -89,25 +80,18 @@
 
       <label style="grid-area: precision-description" for="precisionInput">Precision (minutes)</label>
       <div style="grid-area: precision-content">
-        <BFormInput id="precisionInput" v-model="settingsStore.precision" type="number" />
+        <BFormInput id="precisionInput" v-model="calc.precision" type="number" />
       </div>
 
       <span class="visually-hidden">Actions:</span>
       <div style="grid-area: actions-content" class="d-flex justify-content-between">
         <div class="btn-toolbar" role="toolbar">
           <div class="btn-group" role="group" aria-label="Actions">
-            <button class="btn btn-secondary" type="button" variant="danger" @click="entriesStore.clear()">
-              Clear
-            </button>
-            <button class="btn btn-danger" v-if="mode === 'hours'" type="button" @click="entriesStore.fillWorkdays()">
+            <button class="btn btn-secondary" type="button" variant="danger" @click="calcClear()">Clear</button>
+            <button class="btn btn-danger" v-if="mode === 'hours'" type="button" @click="fillWorkdays()">
               Fill workdays
             </button>
-            <button
-              class="btn btn-secondary"
-              v-if="mode === 'hours'"
-              type="button"
-              @click="entriesStore.fillRemainingWorkdays()"
-            >
+            <button class="btn btn-secondary" v-if="mode === 'hours'" type="button" @click="fillRemainingWorkdays()">
               Add remaining workdays
             </button>
           </div>
@@ -120,9 +104,20 @@
 <script setup lang="ts">
 const props = defineProps<{ storeId: string }>()
 
-const settingsStore = computed(() => useSettingsStore(props.storeId))
-const entriesStore = computed(() => useEntriesStore(props.storeId))
-const mode = computed(() => settingsStore.value.mode)
+const calcStore = useCalcStore()
+const {
+  calc,
+  switchMode,
+  clear: calcClear,
+  fillWorkdays,
+  fillRemainingWorkdays,
+} = calcStore.useCalc(computed(() => props.storeId))
+const mode = computed(() => calc.value.mode)
+
+const saveFile = computed<File | null, File>({
+  get: () => calcStore.saveFiles.get(props.storeId) ?? null,
+  set: (value) => calcStore.saveFiles.set(props.storeId, value),
+})
 
 defineEmits<{
   load: [File]

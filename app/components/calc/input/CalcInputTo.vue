@@ -30,5 +30,5 @@
 <script setup lang="ts">
 const to = defineModel<string | null>('to', { required: true })
 const isTracking = defineModel<boolean | undefined>('isTracking', { required: true })
-defineProps<{ storeId: string; precision: number }>()
+defineProps<{ precision: number }>()
 </script>

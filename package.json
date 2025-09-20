@@ -17,6 +17,7 @@
   "devDependencies": {
     "@nuxt/eslint": "1.9.0",
     "@types/eslint-plugin-security": "^3.0.0",
+    "devalue": "^5.3.2",
     "eslint": "^9.0.0",
     "eslint-plugin-security": "^3.0.1",
     "neostandard": "^0.12.2",

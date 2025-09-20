@@ -4,14 +4,14 @@
       <h1>Work time calc</h1>
 
       <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation" v-for="(id, idx) in calcStore.calcs" :key="id">
+        <li class="nav-item" role="presentation" v-for="(id, idx) in calcStore.calcs.keys()" :key="id">
           <NuxtLink class="nav-link" :to="{ name: 'calculation', params: { calculation: id } }" active-class="active">
-            {{ calcStore.calcName(idx) }}
+            {{ calcStore.calcName(id, idx) }}
             <BButton
-              v-if="calcStore.calcs.length > 1"
+              v-if="calcStore.calcs.size > 1"
               variant="danger"
               size="sm"
-              @click.prevent="calcStore.removeCalc(idx)"
+              @click.prevent="calcStore.removeCalc(id)"
             >
               <FontAwesomeIcon :icon="['fas', 'times']"></FontAwesomeIcon>
             </BButton>

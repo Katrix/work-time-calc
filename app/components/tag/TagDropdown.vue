@@ -4,7 +4,7 @@
       <FontAwesomeIcon :icon="['fas', 'plus']" />
     </template>
     <BDropdownItemButton v-for="tag in applicableTags" :key="tag" @click="onSelectedTag(tag)">
-      <TagBadge :tag="tag" :store-id="storeId" :hide-delete="true" />
+      <TagBadge :tag="tag" :calc-id="calcId" :hide-delete="true" />
     </BDropdownItemButton>
     <BDropdownDivider v-show="applicableTags.length > 0" />
     <BDropdownForm>
@@ -17,11 +17,12 @@
 
 <script setup lang="ts">
 const props = defineProps<{
-  storeId: string
+  calcId: string
   existingTags: string[]
 }>()
 
-const settingsStore = computed(() => useSettingsStore(props.storeId))
+const calcStore = useCalcStore()
+const { calc } = calcStore.useCalc(computed(() => props.calcId))
 
 const emits = defineEmits<{
   newTag: [string]
@@ -29,9 +30,7 @@ const emits = defineEmits<{
 
 const newTag = ref('')
 
-const applicableTags = computed(() => [
-  ...settingsStore.value.tagColors.keys().filter((t) => !props.existingTags.includes(t)),
-])
+const applicableTags = computed(() => [...calc.value.tags.keys().filter((t) => !props.existingTags.includes(t))])
 
 const dropdown = useTemplateRef('dropdown')
 

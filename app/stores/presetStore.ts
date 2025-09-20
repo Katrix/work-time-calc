@@ -1,3 +1,5 @@
+import * as devalue from 'devalue'
+
 interface PresetPart {
   workTime: string
   defaultFrom: string
@@ -12,38 +14,52 @@ interface Preset {
 }
 
 export const usePresetStore = defineStore('presetStore', () => {
-  function useStorageWithId<T>(name: string, defaultVal: () => T) {
-    return useLocalStorage(`presets.${name}`, defaultVal, {
-      writeDefaults: false,
-    })
+  const presets = ref<Map<string, Preset>>(
+    new Map<string, Preset>([
+      [
+        'Default',
+        {
+          hours: {
+            workTime: '08:00',
+            defaultFrom: '08:45',
+            defaultTo: '17:00',
+            precision: 5,
+            tags: new Map(),
+          },
+          tasks: {
+            workTime: '00:00',
+            defaultFrom: '00:00',
+            defaultTo: '00:00',
+            precision: 10,
+            tags: new Map(),
+          },
+        },
+      ],
+    ]),
+  )
+  const lastUpdated = ref(0)
+  watch(presets, () => {
+    lastUpdated.value = Date.now()
+
+    if (import.meta.client) {
+      localStorage.setItem(
+        'presets',
+        JSON.stringify({ lastUpdated: lastUpdated.value, data: devalue.stringify([...presets.value.keys()]) }),
+      )
+    }
+  })
+
+  if (import.meta.client) {
+    const presetsStr = localStorage.getItem('presets')
+    if (presetsStr) {
+      const presetsObj = JSON.parse(presetsStr)
+      if (presetsObj.lastUpdated > lastUpdated.value) {
+        presets.value = devalue.parse(presetsObj.data) as Map<string, Preset>
+      }
+    }
   }
 
-  const presets = useStorageWithId<Map<string, Preset>>(
-    'presets',
-    () =>
-      new Map<string, Preset>([
-        [
-          'Default',
-          {
-            hours: {
-              workTime: '08:00',
-              defaultFrom: '08:45',
-              defaultTo: '17:00',
-              precision: 5,
-              tags: new Map()
-            },
-            tasks: {
-              workTime: '00:00',
-              defaultFrom: '00:00',
-              defaultTo: '00:00',
-              precision: 10,
-              tags: new Map()
-            },
-          },
-        ],
-      ]),
-  )
-  const currentPresetId = useStorageWithId('current', () => 'Default')
+  const currentPresetId = ref('Default')
   const currentPreset = computed<Preset, Preset>({
     get() {
       return presets.value.get(currentPresetId.value)!
@@ -54,7 +70,7 @@ export const usePresetStore = defineStore('presetStore', () => {
   })
 
   function newPreset(name: string) {
-    if (name in presets.value) {
+    if (presets.value.has(name)) {
       return
     }
     presets.value.set(name, JSON.parse(JSON.stringify(currentPreset.value)))
@@ -86,6 +102,7 @@ export const usePresetStore = defineStore('presetStore', () => {
 
   return {
     presets,
+    presetsUpdated: lastUpdated,
     currentPresetId,
     currentPreset,
     newPreset,

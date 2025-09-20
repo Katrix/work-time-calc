@@ -12,11 +12,13 @@
           }
         "
       >
-        <FontAwesomeLayers fixed-width>
-          <FontAwesomeIcon v-if="!customSubtractedTime" :icon="['fas', 'slash']" transform="down-1 left-1" />
-          <FontAwesomeIcon v-if="!customSubtractedTime" :icon="['fas', 'slash']" :mask="['fas', 'pen-to-square']" />
-          <FontAwesomeIcon v-if="customSubtractedTime" :icon="['fas', 'pen-to-square']" />
-        </FontAwesomeLayers>
+        <ClientOnly>
+          <FontAwesomeLayers fixed-width>
+            <FontAwesomeIcon v-if="!customSubtractedTime" :icon="['fas', 'slash']" transform="down-1 left-1" />
+            <FontAwesomeIcon v-if="!customSubtractedTime" :icon="['fas', 'slash']" :mask="['fas', 'pen-to-square']" />
+            <FontAwesomeIcon v-if="customSubtractedTime" :icon="['fas', 'pen-to-square']" />
+          </FontAwesomeLayers>
+        </ClientOnly>
       </button>
     </template>
   </BInputGroup>

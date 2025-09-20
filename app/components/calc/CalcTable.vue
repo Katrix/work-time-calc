@@ -1,7 +1,7 @@
 <template>
   <table class="table table-dark table-striped">
     <thead>
-      <tr v-if="settingsStore.mode === 'hours'">
+      <tr v-if="calc.mode === 'hours'">
         <th scope="col" style="min-width: 130px">Day</th>
         <th scope="col" style="min-width: 120px">Arrived</th>
         <th scope="col" style="min-width: 160px">Left</th>
@@ -23,23 +23,22 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(item, index) in entriesStore.entries" :class="trClasses(item)">
+      <tr v-for="(item, index) in calc.entries" :class="trClasses(item)">
         <td><BFormInput v-model="item.day"></BFormInput></td>
 
-        <td><CalcInputFrom :store-id="storeId" :precision="settingsStore.precision" v-model="item.from" /></td>
+        <td><CalcInputFrom :precision="calc.precision" v-model="item.from" /></td>
         <td>
-          <CalcInputTo
-            :store-id="storeId"
-            :precision="settingsStore.precision"
-            v-model:to="item.to"
-            v-model:is-tracking="item.isTracking"
-          />
+          <CalcInputTo :precision="calc.precision" v-model:to="item.to" v-model:is-tracking="item.isTracking" />
         </td>
 
-        <td>{{ entriesStore.computedWorkDays[index].workedTime }}</td>
-        <td>{{ entriesStore.computedWorkDays[index].extraTime }}</td>
+        <td>
+          {{ computedCalc?.entries?.[index] ? computedCalc.entries[index].workedTime : '' }}
+        </td>
+        <td>
+          {{ computedCalc?.entries?.[index] ? computedCalc.entries[index].extraTime : '' }}
+        </td>
 
-        <td v-if="settingsStore.mode === 'hours'">
+        <td v-if="calc.mode === 'hours'">
           <CalcInputSubtractedTime
             v-model:subtracted-time="item.subtractedTime"
             v-model:custom-subtracted-time="item.customSubtractedTime"
@@ -47,33 +46,25 @@
         </td>
 
         <!-- Tags -->
-        <td v-if="settingsStore.mode === 'tasks'" style="max-width: 160px">
+        <td v-if="calc.mode === 'tasks'" style="max-width: 160px">
           <TagBadge
             v-for="tag in item.tags ?? []"
             :key="tag"
             :tag="tag"
-            :store-id="storeId"
-            @delete-tag="entriesStore.removeTag(index, tag)"
+            :calc-id="calcId"
+            @delete-tag="removeTag(index, tag)"
           />
-          <TagDropdown
-            :store-id="storeId"
-            :existing-tags="item.tags ?? []"
-            @new-tag="(tag) => entriesStore.addTag(index, tag)"
-          />
+          <TagDropdown :calc-id="calcId" :existing-tags="item.tags ?? []" @new-tag="(tag) => addTag(index, tag)" />
         </td>
 
-        <td><BFormInput v-model="entriesStore.entries[index].notes" /></td>
+        <td><BFormInput v-model="calc.entries[index].notes" /></td>
 
         <!-- Add/Remove row -->
         <td>
-          <button class="btn btn-secondary" @click="entriesStore.addRowAfter(index)">
+          <button class="btn btn-secondary" @click="addRowAfter(index)">
             <FontAwesomeIcon :icon="['fas', 'plus']" />
           </button>
-          <button
-            class="btn btn-secondary"
-            v-if="entriesStore.entries.length > 1"
-            @click="entriesStore.removeRow(index)"
-          >
+          <button class="btn btn-secondary" v-if="calc.entries.length > 1" @click="removeRow(index)">
             <FontAwesomeIcon :icon="['fas', 'minus']" />
           </button>
         </td>
@@ -81,23 +72,21 @@
     </tbody>
   </table>
 
-  <CalcTagSummary :storeId="storeId" :tag-summaries="entriesStore.tagSummaries" />
+  <CalcTagSummary :calcId="calcId" :tag-summaries="computedCalc?.value?.summaryByTag ?? {}" />
 </template>
 
 <script setup lang="ts">
-import CalcInputFrom from '~/components/calc/input/CalcInputFrom.vue'
-import CalcInputTo from '~/components/calc/input/CalcInputTo.vue'
-
-const props = defineProps<{ storeId: string }>()
-
-const settingsStore = computed(() => useSettingsStore(props.storeId))
-const entriesStore = computed(() => useEntriesStore(props.storeId))
+const props = defineProps<{ calcId: string }>()
+const calcStore = useCalcStore()
+const { calc, computedCalc, addTag, removeTag, addRowAfter, removeRow } = calcStore.useCalc(
+  computed(() => props.calcId),
+)
 
 function trClasses(item: WorkRange): string | null {
   const day = item.day
-  const idx = entriesStore.value.entries.findIndex((v) => v.day === day)
+  const idx = calc.value.entries.findIndex((v) => v.day === day)
   if (idx > 0) {
-    const prevDay = entriesStore.value.entries[idx - 1].day
+    const prevDay = calc.value.entries[idx - 1].day
     if (new Date(day).getDate() - new Date(prevDay).getDate() > 1) {
       return 'table-group-divider'
     }
@@ -105,6 +94,4 @@ function trClasses(item: WorkRange): string | null {
 
   return null
 }
-
-const hasTagSummary = computed(() => Object.entries(entriesStore.value.tagSummaries).length > 0)
 </script>

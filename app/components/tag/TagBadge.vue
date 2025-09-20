@@ -1,5 +1,5 @@
 <template>
-  <span class="badge contrast-color" :style="{ '--contrast-color': settingsStore.getTagColor(tag) }"
+  <span class="badge contrast-color" :style="{ '--contrast-color': calc.getTagColor(tag) }"
     >{{ tag
     }}<FontAwesomeIcon
       v-if="!hideDelete"
@@ -12,11 +12,11 @@
 <script setup lang="ts">
 const props = defineProps<{
   tag: string
-  storeId: string
+  calcId: string
   hideDelete?: boolean
 }>()
-
-const settingsStore = computed(() => useSettingsStore(props.storeId))
+const calcStore = useCalcStore()
+const calc = calcStore.useCalc(computed(() => props.calcId))
 
 defineEmits<{ deleteTag: [] }>()
 </script>
