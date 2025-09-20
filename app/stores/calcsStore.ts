@@ -162,24 +162,18 @@ export const useCalcStore = defineStore('calcs', () => {
   }
 
   const lastUpdated = ref(new Map<string, number>())
-
   const saveFiles = ref(new Map<string, File>())
 
-  const calcs = shallowRef<
-    Map<string, { entry: Ref<Calc>; computedTime: Ref<ComputedWorkTime>; watcher: Ref<WatchHandle> }>
-  >(
+  const calcOrder = ref<string[]>(
     (() => {
       const route = useRoute()
-      const id = route.name === 'calculation' ? route.params.calculation : crypto.randomUUID()
-      return new Map([[id, newCalcWithWatchers(id, 'hours')]])
+      return route.name === 'calculation' ? [route.params.calculation] : []
     })(),
   )
 
-  if (import.meta.client) {
-    watch(calcs, () => {
-      localStorage.setItem('calcs', JSON.stringify([...calcs.value.keys()]))
-    })
-  }
+  const calcs = shallowRef<
+    Map<string, { entry: Ref<Calc>; computedTime: Ref<ComputedWorkTime>; watcher: Ref<WatchHandle> }>
+  >(new Map(calcOrder.value.map((id) => [id, newCalcWithWatchers(id, 'hours')])))
 
   function calcName(calcId: string, idx: number) {
     const calc = calcs.value.get(calcId)?.entry?.value
@@ -255,28 +249,34 @@ export const useCalcStore = defineStore('calcs', () => {
           setMode('hours')
         }
       },
-      loadData(
-        data: {
-          mode: 'hours' | 'tasks'
-          name: string
-          savedUpTime: string
-          savedUpVacation: string
+      async loadFromFile(file: File) {
+        const text = await file.text()
+        const json = JSON.parse(text) as {
+          mode?: string
+          name?: string
+          savedUpTime?: string
+          savedUp?: string
+          savedUpVacation?: string
           workTime: string
           defaultFrom: string
           defaultTo: string
-        },
-        newEntries: (WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[],
-      ) {
+          workDays: (WorkRange & { customSubtractedTime: boolean })[]
+        }
+
+        if (json.mode !== undefined && json.mode !== 'hours' && json.mode !== 'tasks') {
+          throw new Error(`Invalid mode ${json.mode}`)
+        }
+
         calc.value = {
           ...calc.value,
-          mode: data.mode,
-          name: data.name,
-          savedUpTime: data.savedUpTime,
-          savedUpVacation: data.savedUpVacation,
-          workTime: data.workTime,
-          defaultFrom: data.defaultFrom,
-          defaultTo: data.defaultTo,
-          entries: newEntries,
+          mode: json.mode ?? 'hours',
+          name: json.name ?? '',
+          savedUpTime: json.savedUpTime ?? json.savedUp ?? '00:00',
+          savedUpVacation: json.savedUpVacation ?? '0',
+          workTime: json.workTime,
+          defaultFrom: json.defaultFrom,
+          defaultTo: json.defaultTo,
+          entries: json.workDays,
         }
       },
       getTagColor(tag: string) {
@@ -365,6 +365,7 @@ export const useCalcStore = defineStore('calcs', () => {
 
   function addCalc(newId?: string) {
     newId ??= crypto.randomUUID()
+    calcOrder.value.push(newId)
     calcs.value.set(newId, newCalcWithWatchers(newId, 'hours'))
     triggerRef(calcs)
     navigateTo({ name: 'calculation', params: { calculation: newId } })
@@ -377,13 +378,12 @@ export const useCalcStore = defineStore('calcs', () => {
 
     const route = useRoute()
     const needNavigation = route.name === 'calculation' && route.params.calculation === id
-    const idx = [...calcs.value.keys()].reduce<number | null>(
-      (acc, key, idx) => (acc !== null ? acc : key === id ? idx : null),
-      null,
-    )
+    const idx = calcOrder.value.indexOf(id)
 
     const removed = calcs.value.get(id)
-
+    if (idx !== -1) {
+      calcOrder.value.splice(idx, 1)
+    }
     calcs.value.delete(id)
 
     if (removed) {
@@ -397,7 +397,7 @@ export const useCalcStore = defineStore('calcs', () => {
     }
 
     if (needNavigation) {
-      const newIdx = idx !== null ? Math.min(idx + 1, calcs.value.size - 1) : null
+      const newIdx = idx !== -1 ? Math.min(idx + 1, calcs.value.size - 1) : null
       const nextCalc = newIdx !== null ? [...calcs.value.keys()].find((k, idx) => idx === newIdx) : null
       navigateTo({
         name: 'calculation',
@@ -406,8 +406,19 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
-  function firstCalc() {
-    return calcs.value.keys().next().value!
+  function firstCalc(): string {
+    return calcOrder.value[0]
+  }
+
+  let resolveLocalStorage: (value: void | PromiseLike<void>) => void = () => {}
+  const waitForLocalStorage = ref<Promise<void>>(
+    new Promise<void>((resolve) => {
+      resolveLocalStorage = resolve
+    }),
+  )
+
+  if (import.meta.server) {
+    resolveLocalStorage()
   }
 
   if (import.meta.client) {
@@ -421,9 +432,10 @@ export const useCalcStore = defineStore('calcs', () => {
       const calcsStr = localStorage.getItem('calcs')
       if (calcsStr) {
         const calcsArr = JSON.parse(calcsStr) as string[]
-        for (let calcId of calcsArr) {
+        for (const calcId of calcsArr) {
           if (!calcs.value.has(calcId)) {
             calcs.value.set(calcId, newCalcWithWatchers(calcId, 'hours'))
+            calcOrder.value.push(calcId)
           }
         }
       }
@@ -458,12 +470,19 @@ export const useCalcStore = defineStore('calcs', () => {
       }
 
       triggerRef(calcs)
+      resolveLocalStorage()
+
+      watchEffect(() => {
+        localStorage.setItem('calcs', JSON.stringify(calcOrder.value))
+      })
     })
   }
 
   return {
     calcs,
+    calcOrder,
     saveFiles: skipHydrate(saveFiles),
+    waitForLocalStorage: skipHydrate(waitForLocalStorage),
     lastUpdated,
     addCalc,
     removeCalc,

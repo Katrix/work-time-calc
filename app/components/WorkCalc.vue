@@ -14,7 +14,7 @@ const props = defineProps<{
 }>()
 
 const calcStore = useCalcStore()
-const { calc, computedCalc, loadData } = calcStore.useCalc(computed(() => props.calcId))
+const { calc, computedCalc, loadFromFile } = calcStore.useCalc(computed(() => props.calcId))
 
 const trackingFunId = ref<number>()
 
@@ -45,35 +45,7 @@ function fileName(extension: string) {
 async function load() {
   const file = calcStore.saveFiles.get(props.calcId)
   if (file) {
-    const text = await file.text()
-    const json = JSON.parse(text) as {
-      mode?: string
-      name?: string
-      savedUpTime?: string
-      savedUp?: string
-      savedUpVacation?: string
-      workTime: string
-      defaultFrom: string
-      defaultTo: string
-      workDays: (WorkRange & { customSubtractedTime: boolean })[]
-    }
-
-    if (json.mode !== undefined && json.mode !== 'hours' && json.mode !== 'tasks') {
-      throw new Error(`Invalid mode ${json.mode}`)
-    }
-
-    loadData(
-      {
-        mode: json.mode ?? 'hours',
-        name: json.name ?? '',
-        savedUpTime: json.savedUpTime ?? json.savedUp ?? '00:00',
-        savedUpVacation: json.savedUpVacation ?? '0',
-        workTime: json.workTime,
-        defaultFrom: json.defaultFrom,
-        defaultTo: json.defaultTo,
-      },
-      json.workDays,
-    )
+    await loadFromFile(file)
   }
 }
 

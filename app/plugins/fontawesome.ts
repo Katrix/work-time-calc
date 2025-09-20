@@ -11,6 +11,7 @@ import {
   faHourglassEnd,
   faTimes,
   faTimesCircle,
+  faSpinner,
 } from '@fortawesome/free-solid-svg-icons'
 
 config.autoAddCss = false
@@ -26,6 +27,7 @@ library.add(
   faHourglassEnd,
   faTimes,
   faTimesCircle,
+  faSpinner,
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

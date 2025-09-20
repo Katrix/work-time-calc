@@ -1,10 +1,10 @@
 <template>
   <BApp>
-    <BContainer fluid="xl" class="wider-container">
+    <BContainer fluid="xl" class="wider-container h-100">
       <h1>Work time calc</h1>
 
       <ul class="nav nav-tabs" role="tablist">
-        <li class="nav-item" role="presentation" v-for="(id, idx) in calcStore.calcs.keys()" :key="id">
+        <li class="nav-item" role="presentation" v-for="(id, idx) in calcStore.calcOrder" :key="id">
           <NuxtLink class="nav-link" :to="{ name: 'calculation', params: { calculation: id } }" active-class="active">
             {{ calcStore.calcName(id, idx) }}
             <BButton
