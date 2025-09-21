@@ -10,6 +10,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxthub/core',
     'nuxt-security',
+    '@sidebase/nuxt-auth',
   ],
   ssr: true,
   css: [
@@ -17,6 +18,11 @@ export default defineNuxtConfig({
     'bootstrap-vue-next/dist/bootstrap-vue-next.css',
     '@fortawesome/fontawesome-svg-core/styles.css',
   ],
+  runtimeConfig: {
+    authSecret: undefined, // https://next-auth.js.org/configuration/options#secret
+    githubClientId: '',
+    githubClientSecret: '',
+  },
   vite: {
     css: {
       preprocessorOptions: {
@@ -59,6 +65,14 @@ export default defineNuxtConfig({
         'font-src': ["'self'", 'https:'],
         'img-src': ["'self'", 'data:'],
         'worker-src': ["'self'", 'blob:'], // For dev stuff
+      },
+    },
+  },
+  auth: {
+    sessionRefresh: {
+      provider: {
+        type: 'authjs',
+        defaultProvider: 'github',
       },
     },
   },
