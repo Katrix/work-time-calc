@@ -72,7 +72,7 @@
     </tbody>
   </table>
 
-  <CalcTagSummary :calcId="calcId" :tag-summaries="computedCalc?.value?.summaryByTag ?? {}" />
+  <CalcTagSummary :calcId="calcId" :tag-summaries="computedCalc?.summaryByTag ?? {}" />
 </template>
 
 <script setup lang="ts">

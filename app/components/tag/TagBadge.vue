@@ -5,7 +5,7 @@
       v-if="!hideDelete"
       style="cursor: pointer; margin-left: 0.2rem"
       :icon="['fas', 'times-circle']"
-      @click="$emit('deleteTag')"
+      @click="emits('deleteTag')"
   /></span>
 </template>
 
@@ -18,7 +18,7 @@ const props = defineProps<{
 const calcStore = useCalcStore()
 const calc = calcStore.useCalc(computed(() => props.calcId))
 
-defineEmits<{ deleteTag: [] }>()
+const emits = defineEmits<{ (e: 'deleteTag'): void }>()
 </script>
 
 <style>

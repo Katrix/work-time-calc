@@ -235,7 +235,7 @@ export const useCalcStore = defineStore('calcs', () => {
       return monthDates.filter((d) => !isHoliday(d, holidayRules))
     }
 
-    return {
+    const ret = {
       calc,
       computedCalc,
       calcName(idx: number) {
@@ -332,7 +332,7 @@ export const useCalcStore = defineStore('calcs', () => {
         entry?.tags?.splice(entry.tags?.indexOf(tag), 1)
 
         if (calc.value.entries.every((e) => !e.tags?.includes(tag))) {
-          this.deleteTag(tag, { deleteConfigured: false })
+          ret.deleteTag(tag, { deleteConfigured: false })
         }
       },
       fillWorkdays() {
@@ -359,6 +359,7 @@ export const useCalcStore = defineStore('calcs', () => {
         )
       },
     }
+    return ret
   }
 
   function addCalc(newId?: string) {
