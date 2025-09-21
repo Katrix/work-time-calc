@@ -23,6 +23,9 @@ export default defineNuxtConfig({
     githubClientId: '',
     githubClientSecret: '',
   },
+  hub: {
+    cache: true,
+  },
   vite: {
     css: {
       preprocessorOptions: {
