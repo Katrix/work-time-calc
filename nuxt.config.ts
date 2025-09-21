@@ -50,8 +50,17 @@ export default defineNuxtConfig({
     },
   },
   security: {
+    strict: true,
     removeLoggers: false,
     xssValidator: false,
+    headers: {
+      contentSecurityPolicy: {
+        'style-src': ["'self'", 'https:', "'unsafe-inline'"],
+        'font-src': ["'self'", 'https:'],
+        'img-src': ["'self'", 'data:'],
+        'worker-src': ["'self'", 'blob:'], // For dev stuff
+      },
+    },
   },
   experimental: {
     typedPages: true,
