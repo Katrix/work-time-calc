@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@pinia/nuxt',
     '@nuxthub/core',
+    'nuxt-security',
   ],
   ssr: true,
   css: [
@@ -47,6 +48,10 @@ export default defineNuxtConfig({
         lang: 'en',
       },
     },
+  },
+  security: {
+    removeLoggers: false,
+    xssValidator: false,
   },
   experimental: {
     typedPages: true,
