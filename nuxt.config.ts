@@ -2,7 +2,14 @@
 export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   devtools: { enabled: true },
-  modules: ['@nuxt/eslint', '@nuxt/test-utils', '@bootstrap-vue-next/nuxt', '@vueuse/nuxt', '@pinia/nuxt'],
+  modules: [
+    '@nuxt/eslint',
+    '@nuxt/test-utils',
+    '@bootstrap-vue-next/nuxt',
+    '@vueuse/nuxt',
+    '@pinia/nuxt',
+    '@nuxthub/core',
+  ],
   ssr: true,
   css: [
     '~/assets/scss/app.scss',
