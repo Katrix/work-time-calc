@@ -1,14 +1,15 @@
 import * as devalue from 'devalue'
 
-interface PresetPart {
+export interface PresetPart {
   workTime: string
   defaultFrom: string
   defaultTo: string
   precision: number
   tags: Map<string, string>
+  holidayRules: HolidayRule[]
 }
 
-interface Preset {
+export interface Preset {
   hours: PresetPart
   tasks: PresetPart
 }
@@ -25,6 +26,14 @@ export const usePresetStore = defineStore('presetStore', () => {
             defaultTo: '17:00',
             precision: 5,
             tags: new Map(),
+            holidayRules: [
+              { type: 'christmas' },
+              { type: 'easter' },
+              { type: 'ascension' },
+              { type: 'pentecost' },
+              { type: 'saturday' },
+              { type: 'sunday' },
+            ],
           },
           tasks: {
             workTime: '00:00',
@@ -32,31 +41,38 @@ export const usePresetStore = defineStore('presetStore', () => {
             defaultTo: '00:00',
             precision: 10,
             tags: new Map(),
+            holidayRules: [],
           },
         },
       ],
     ]),
   )
   const lastUpdated = ref(0)
-  watch(presets, () => {
-    lastUpdated.value = Date.now()
+  watch(
+    presets,
+    () => {
+      lastUpdated.value = Date.now()
 
-    if (import.meta.client) {
-      localStorage.setItem(
-        'presets',
-        JSON.stringify({ lastUpdated: lastUpdated.value, data: devalue.stringify([...presets.value.keys()]) }),
-      )
-    }
-  })
+      if (import.meta.client) {
+        localStorage.setItem(
+          'presets',
+          JSON.stringify({ lastUpdated: lastUpdated.value, data: devalue.stringify(presets.value) }),
+        )
+      }
+    },
+    { deep: true },
+  )
 
   if (import.meta.client) {
     const presetsStr = localStorage.getItem('presets')
-    if (presetsStr) {
-      const presetsObj = JSON.parse(presetsStr)
-      if (presetsObj.lastUpdated > lastUpdated.value) {
-        presets.value = devalue.parse(presetsObj.data) as Map<string, Preset>
+    nextTick(() => {
+      if (presetsStr) {
+        const presetsObj = JSON.parse(presetsStr)
+        if (presetsObj.lastUpdated > lastUpdated.value) {
+          presets.value = devalue.parse(presetsObj.data) as Map<string, Preset>
+        }
       }
-    }
+    })
   }
 
   const currentPresetId = ref('Default')

@@ -1,5 +1,4 @@
 import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
-import Holidays from 'date-holidays'
 import type { WatchHandle } from 'vue'
 import * as devalue from 'devalue'
 import { skipHydrate } from 'pinia'
@@ -218,22 +217,22 @@ export const useCalcStore = defineStore('calcs', () => {
       }
     }
 
-    function fillWorkdaysBase(start: Date) {
-      const hd = new Holidays('DK')
+    function fillWorkdaysBase(start: Temporal.PlainDate) {
+      const holidayRules = presetStore.currentPreset[calc.value.mode].holidayRules
 
-      const monthDates: Date[] = []
-      const date = new Date(start)
+      const monthDates: Temporal.PlainDate[] = []
+      let date = start
       let i = 0
-      while (date.getMonth() === start.getMonth()) {
-        monthDates.push(new Date(date))
-        date.setDate(date.getDate() + 1)
+      while (date.month === start.month) {
+        monthDates.push(date)
+        date = date.add({ days: 1 })
         i += 1
         if (i > 31) {
           throw new Error(`Did not stop when expected ${date}`)
         }
       }
 
-      return monthDates.filter((d) => !hd.isHoliday(d) && d.getDay() !== 0 && d.getDay() !== 6)
+      return monthDates.filter((d) => !isHoliday(d, holidayRules))
     }
 
     return {
@@ -301,7 +300,7 @@ export const useCalcStore = defineStore('calcs', () => {
 
         calc.value.entries.splice(idx + 1, 0, {
           day: name,
-          from: calc.value.defaultFrom ?? null,
+          from: calc.value.defaultFrom,
           to: null,
           subtractedTime: null,
           customSubtractedTime: false,
@@ -314,8 +313,8 @@ export const useCalcStore = defineStore('calcs', () => {
         calc.value.entries = [
           {
             day: defaultEntryName(calc.value.mode),
-            from: calc.value.defaultFrom ?? null,
-            to: calc.value.defaultTo ?? null,
+            from: calc.value.defaultFrom,
+            to: calc.value.defaultTo,
             subtractedTime: null,
             customSubtractedTime: false,
           },
@@ -337,9 +336,9 @@ export const useCalcStore = defineStore('calcs', () => {
         }
       },
       fillWorkdays() {
-        const dates = fillWorkdaysBase(new Date(calc.value.entries[0].day))
+        const dates = fillWorkdaysBase(Temporal.PlainDate.from(calc.value.entries[0].day))
         calc.value.entries = dates.map((d) => ({
-          day: dateToDateString(d) ?? '',
+          day: d.toString(),
           from: null,
           to: null,
           subtractedTime: null,
@@ -347,12 +346,11 @@ export const useCalcStore = defineStore('calcs', () => {
         }))
       },
       fillRemainingWorkdays() {
-        const start = new Date(calc.value.entries[calc.value.entries.length - 1].day)
-        start.setDate(start.getDate() + 1)
+        const start = Temporal.PlainDate.from(calc.value.entries[calc.value.entries.length - 1].day).add({ days: 1 })
         const dates = fillWorkdaysBase(start)
         calc.value.entries.push(
           ...dates.map((d) => ({
-            day: dateToDateString(d) ?? '',
+            day: d.toString(),
             from: null,
             to: null,
             subtractedTime: null,
