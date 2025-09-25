@@ -9,9 +9,19 @@ export interface PresetPart {
   holidayRules: HolidayRule[]
 }
 
+export interface Repo {
+  name: string
+  nameWithOwner: string
+  autocompleteWithoutOwner: boolean
+}
+
 export interface Preset {
   hours: PresetPart
   tasks: PresetPart
+  github: {
+    owners: string[]
+    repos: Map<string, Repo[]>
+  }
 }
 
 export const usePresetStore = defineStore('presetStore', () => {
@@ -43,6 +53,10 @@ export const usePresetStore = defineStore('presetStore', () => {
             tags: new Map(),
             holidayRules: [],
           },
+          github: {
+            owners: [],
+            repos: new Map()
+          }
         },
       ],
     ]),

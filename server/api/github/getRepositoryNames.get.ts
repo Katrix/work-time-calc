@@ -2,6 +2,7 @@ import { getToken } from '#auth'
 import { graphql } from '~~/server/utils/gql'
 import { Client, fetchExchange } from '@urql/core'
 import { defineCachedEventHandler } from 'nitropack/runtime/internal/cache'
+import type { GithubRepoInfo } from '#shared/types/github'
 
 const query = graphql(`
   query GetRepositories($pageSize: Int = 100, $after: String) {
@@ -12,7 +13,9 @@ const query = graphql(`
           hasNextPage
         }
         nodes {
-          id
+          owner {
+            login
+          }
           name
           nameWithOwner
           url
@@ -21,13 +24,6 @@ const query = graphql(`
     }
   }
 `)
-
-export interface RepoInfo {
-  id: string
-  name: string
-  nameWithOwner: string
-  url: string
-}
 
 export default defineCachedEventHandler(
   async (event) => {
@@ -47,9 +43,9 @@ export default defineCachedEventHandler(
       exchanges: [fetchExchange],
     })
 
-    let after = null
+    let after: string | null | undefined = null
     let hasNextPage = true
-    const result: RepoInfo[] = []
+    const result: GithubRepoInfo[] = []
     do {
       const res = await client.query(query, { pageSize: 100, after }).toPromise()
       if (!res.data) {
