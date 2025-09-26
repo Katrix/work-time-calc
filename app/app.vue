@@ -5,11 +5,10 @@
         Work time calc
 
         <span>
-          <BButton variant="primary" v-if="status === 'unauthenticated'" @click="signIn('github')">Sign in with GitHub</BButton>
-          <BButton variant="primary" v-if="status === 'loading'" disabled>
-            Sign in with GitHub <FontAwesomeIcon :icon="['fas', 'spinner']" spin />
-          </BButton>
-          <BButton v-if="status === 'authenticated'" @click="signOut()">Sign out</BButton>
+          <AuthState v-slot="{ loggedIn, clear }">
+            <BButton v-if="loggedIn" @click="clear()">Sign out</BButton>
+            <BButton v-else variant="primary" href="/auth/github">Sign in with GitHub</BButton>
+          </AuthState>
         </span>
       </h1>
 
@@ -45,5 +44,4 @@
 
 <script setup lang="ts">
 const calcStore = useCalcStore()
-const { signIn, status, signOut } = useAuth()
 </script>

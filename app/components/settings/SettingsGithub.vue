@@ -2,7 +2,7 @@
   <fieldset>
     <legend>Github</legend>
 
-    <div class="row" v-if="auth.status.value === 'authenticated' && repoNamesStatus === 'success'">
+    <div class="row" v-if="loggedIn && repoNamesStatus === 'success'">
       <BFormGroup class="col-xl-4" label-for="githubRepoOwners">
         <template #label>
           <span class="d-flex justify-content-between">
@@ -66,23 +66,20 @@
         </ul>
       </div>
     </div>
-    <div
-      v-else-if="auth.status.value === 'loading' || repoNamesStatus === 'pending'"
-      class="d-flex justify-content-center align-items-center"
-    >
+    <div v-else-if="loggedIn && repoNamesStatus === 'pending'" class="d-flex justify-content-center align-items-center">
       <FontAwesomeIcon :icon="['fa', 'spinner']" spin size="8x"></FontAwesomeIcon>
     </div>
     <BAlert v-else-if="repoNamesStatus === 'error'" variant="danger" :model-value="true">
       {{ repoNameError }}
     </BAlert>
-    <BAlert v-else-if="auth.status.value === 'unauthenticated'" variant="info" :model-value="true">
+    <BAlert v-else-if="!loggedIn" variant="info" :model-value="true">
       Not logged in. Log in to autocomplete issues in task names.
     </BAlert>
   </fieldset>
 </template>
 
 <script setup lang="ts">
-const auth = useAuth()
+const { loggedIn } = useUserSession()
 const presetStore = usePresetStore()
 
 interface Repo {
@@ -101,9 +98,9 @@ const {
 })
 
 watch(
-  computed(() => auth.status.value),
-  (status) => {
-    if (status === 'authenticated') {
+  loggedIn,
+  (loggedIn) => {
+    if (loggedIn) {
       repoNamesRefresh()
     }
   },

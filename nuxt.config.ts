@@ -10,7 +10,7 @@ export default defineNuxtConfig({
     '@pinia/nuxt',
     '@nuxthub/core',
     // 'nuxt-security',
-    '@sidebase/nuxt-auth',
+    'nuxt-auth-utils',
   ],
   ssr: true,
   css: [
@@ -19,9 +19,10 @@ export default defineNuxtConfig({
     '@fortawesome/fontawesome-svg-core/styles.css',
   ],
   runtimeConfig: {
-    authSecret: undefined, // https://next-auth.js.org/configuration/options#secret
-    githubClientId: '',
-    githubClientSecret: '',
+    github: {
+      clientId: '',
+      clientSecret: '',
+    },
   },
   hub: {
     cache: true,
@@ -83,13 +84,6 @@ export default defineNuxtConfig({
           "'unsafe-eval'"
         ]
       },
-    },
-  },
-  auth: {
-    baseURL: '/api/auth',
-    provider: {
-      type: 'authjs',
-      defaultProvider: 'github',
     },
   },
   experimental: {

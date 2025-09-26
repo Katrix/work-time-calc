@@ -1,4 +1,3 @@
-import { getToken } from '#auth'
 import { graphql } from '~~/server/utils/gql'
 import { Client, fetchExchange } from '@urql/core'
 import { defineCachedEventHandler } from 'nitropack/runtime/internal/cache'
@@ -27,9 +26,9 @@ const query = graphql(`
 
 export default defineCachedEventHandler(
   async (event) => {
-    const token = await getToken({ event })
-    const sessionToken = token?.sessionToken
-    if (!token || !token.sessionToken) {
+    const session = await getUserSession(event)
+    const accessToken = session.secure?.githubAccessToken
+    if (!accessToken) {
       throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
     }
 
@@ -37,7 +36,7 @@ export default defineCachedEventHandler(
       url: 'https://api.github.com/graphql',
       fetchOptions: {
         headers: {
-          authorization: `Bearer ${sessionToken}`,
+          authorization: `Bearer ${accessToken}`,
         },
       },
       exchanges: [fetchExchange],
@@ -63,12 +62,12 @@ export default defineCachedEventHandler(
   {
     maxAge: 60 * 60 * 4,
     getKey: async (event) => {
-      const token = await getToken({ event })
-      const sessionToken = token?.sessionToken
-      if (!token || !token.sessionToken) {
+      const session = await getUserSession(event)
+      const accessToken = session.secure?.githubAccessToken
+      if (!accessToken) {
         return `${event.method}:${event.path}`
       }
-      return `${event.method}:${event.path}:${sessionToken}`
+      return `${event.method}:${event.path}:${accessToken}`
     },
   },
 )

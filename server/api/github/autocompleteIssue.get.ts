@@ -1,5 +1,4 @@
 import z from 'zod'
-import { getToken } from '#auth'
 import { graphql } from '~~/server/utils/gql'
 import { Client, fetchExchange } from '@urql/core'
 
@@ -26,9 +25,9 @@ export default defineEventHandler(async (event) => {
     z.object({ prefix: z.string(), repo: z.string().array() }).parse,
   )
 
-  const token = await getToken({ event })
-  const sessionToken = token?.sessionToken
-  if (!token || !token.sessionToken) {
+  const session = await getUserSession(event)
+  const accessToken = session.secure?.githubAccessToken
+  if (!accessToken) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
@@ -36,7 +35,7 @@ export default defineEventHandler(async (event) => {
     url: 'https://api.github.com/graphql',
     fetchOptions: {
       headers: {
-        authorization: `Bearer ${sessionToken}`,
+        authorization: `Bearer ${accessToken}`,
       },
     },
     exchanges: [fetchExchange],
