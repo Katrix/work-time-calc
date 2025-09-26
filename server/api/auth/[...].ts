@@ -5,17 +5,20 @@ const config = useRuntimeConfig()
 export default NuxtAuthHandler({
   secret: config.authSecret,
   providers: [
-    // // @ts-expect-error Use .default here for it to work during SSR.
+
     (() => {
       console.log(typeof GithubProvider, typeof (GithubProvider as any).default)
       console.log(config.githubClientId)
-      return GithubProvider({
+      // @ts-expect-error Use .default here for it to work during SSR.
+      const res = (typeof GithubProvider.default === 'function' ? GithubProvider.default : GithubProvider)({
         clientId: config.githubClientId,
         clientSecret: config.githubClientSecret,
         authorization: {
           params: { scope: 'read:user user:email repo' },
         },
       })
+      console.log(res)
+      return res
     })(),
   ],
   // your authentication configuration here!
