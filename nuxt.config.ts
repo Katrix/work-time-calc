@@ -9,7 +9,7 @@ export default defineNuxtConfig({
     '@vueuse/nuxt',
     '@pinia/nuxt',
     '@nuxthub/core',
-    'nuxt-security',
+    // 'nuxt-security',
     '@sidebase/nuxt-auth',
   ],
   ssr: true,
@@ -63,7 +63,7 @@ export default defineNuxtConfig({
     },
   },
   security: {
-    strict: false,
+    strict: true,
     removeLoggers: false,
     xssValidator: false,
     headers: {
