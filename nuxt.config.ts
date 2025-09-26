@@ -42,6 +42,10 @@ export default defineNuxtConfig({
       },
     },
   },
+  sourcemap: {
+    client: true,
+    server: true,
+  },
   imports: {
     presets: [
       {

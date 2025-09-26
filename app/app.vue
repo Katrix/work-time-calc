@@ -45,10 +45,5 @@
 
 <script setup lang="ts">
 const calcStore = useCalcStore()
-const { signIn: doSignIn, status, signOut } = useAuth()
-
-function signIn(provider: string) {
-  debugger
-  return doSignIn(provider)
-}
+const { signIn, status, signOut } = useAuth()
 </script>
