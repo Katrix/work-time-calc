@@ -1,5 +1,5 @@
 import { graphql } from '~~/server/utils/gql'
-import { Client, fetchExchange } from '@urql/core'
+import { Client, fetchExchange, mapExchange, type OperationResult } from '@urql/core'
 import { defineCachedEventHandler } from 'nitropack/runtime/internal/cache'
 import type { GithubRepoInfo } from '#shared/types/github'
 
@@ -39,7 +39,20 @@ export default defineCachedEventHandler(
           authorization: `Bearer ${accessToken}`,
         },
       },
-      exchanges: [fetchExchange],
+      exchanges: [
+        fetchExchange,
+        mapExchange({
+          onOperation(operation) {
+            console.log('graphql-operation', operation)
+          },
+          onResult(result) {
+            console.log('graphql-result', result)
+          },
+          onError(err, operation) {
+            console.log('graphql-error', err, operation)
+          }
+        }),
+      ],
     })
 
     let after: string | null | undefined = null
