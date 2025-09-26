@@ -64,6 +64,7 @@ export default defineNuxtConfig({
     xssValidator: false,
     headers: {
       contentSecurityPolicy: {
+        'default-src': ["'self'"],
         'style-src': ["'self'", 'https:', "'unsafe-inline'"],
         'font-src': ["'self'", 'https:'],
         'img-src': ["'self'", 'data:'],
