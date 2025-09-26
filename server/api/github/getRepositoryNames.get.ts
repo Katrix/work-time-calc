@@ -37,6 +37,7 @@ export default defineCachedEventHandler(
       fetchOptions: {
         headers: {
           authorization: `Bearer ${accessToken}`,
+          'user-agent': 'Work-time-calc',
         },
       },
       preferGetMethod: false,
@@ -44,7 +45,7 @@ export default defineCachedEventHandler(
         console.log('graphql-fetch', args)
         console.log('graphql-fetch-body', (args[1] as any).body)
         const res = await fetch(...args)
-        console.log('graphql-fetch-res', res)
+        console.log('graphql-fetch-res', JSON.parse(JSON.stringify(res)))
         return res
       },
       exchanges: [
