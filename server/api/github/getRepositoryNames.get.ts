@@ -39,6 +39,7 @@ export default defineCachedEventHandler(
           authorization: `Bearer ${accessToken}`,
         },
       },
+      preferGetMethod: false,
       fetch(...args) {
         console.log('graphql-fetch', args)
         return fetch(...args)
@@ -54,7 +55,7 @@ export default defineCachedEventHandler(
           },
           onError(err, operation) {
             console.log('graphql-error', err, operation)
-          }
+          },
         }),
       ],
     })
