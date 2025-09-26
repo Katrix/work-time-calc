@@ -72,11 +72,9 @@ export default defineNuxtConfig({
     },
   },
   auth: {
-    sessionRefresh: {
-      provider: {
-        type: 'authjs',
-        defaultProvider: 'github',
-      },
+    provider: {
+      type: 'authjs',
+      defaultProvider: 'github',
     },
   },
   experimental: {
