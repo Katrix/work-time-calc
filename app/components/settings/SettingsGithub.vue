@@ -39,7 +39,6 @@
             }"
           ></BFormSelect>
         </BFormGroup>
-        |
 
         <ul class="list-group">
           <li
