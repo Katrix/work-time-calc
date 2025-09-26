@@ -48,7 +48,11 @@ export default defineCachedEventHandler(
     do {
       const res = await client.query(query, { pageSize: 100, after }).toPromise()
       if (!res.data) {
-        throw createError({ statusCode: 500, statusMessage: 'Failed to fetch repositories' })
+        console.log('GraphQL error', res.error?.message, res.error)
+        throw createError({
+          statusCode: 500,
+          statusMessage: 'Failed to fetch repositories. Error: ' + (res.error?.message ?? 'Unknown error'),
+        })
       }
 
       result.push(...(res.data.viewer.repositories.nodes ?? []).flatMap((n) => (n !== null ? [n] : [])))

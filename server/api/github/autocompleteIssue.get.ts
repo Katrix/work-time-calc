@@ -52,7 +52,11 @@ export default defineEventHandler(async (event) => {
   const res = await client.query(query, { query: searchQuery, first: 20 }).toPromise()
 
   if (!res.data) {
-    throw createError({ statusCode: 500, statusMessage: 'Failed to fetch issues' })
+    console.log('GraphQL error', res.error?.message, res.error)
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Failed to fetch issues. Error: ' + (res.error?.message ?? 'Unknown error'),
+    })
   }
 
   const nodes = res.data.search.nodes
