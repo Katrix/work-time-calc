@@ -73,7 +73,7 @@ export default defineNuxtConfig({
     },
   },
   auth: {
-    baseUrl: '/api/auth',
+    baseURL: '/api/auth',
     provider: {
       type: 'authjs',
       defaultProvider: 'github',
