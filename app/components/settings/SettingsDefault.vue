@@ -1,60 +1,60 @@
 <template>
-  <div>
+  <fieldset>
+    <label v-if="mode === 'hours'" for="workTimeInput">Work time:</label>
+    <div v-if="mode === 'hours'">
+      <BFormInput id="workTimeInput" v-model="presetStore.currentPreset[mode].workTime"></BFormInput>
+    </div>
+
+    <label v-if="mode === 'hours'" for="defaultWorkFromInput">Default work from:</label>
+    <div v-if="mode === 'hours'">
+      <BFormInput id="defaultWorkFromInput" v-model="presetStore.currentPreset[mode].defaultFrom"></BFormInput>
+    </div>
+
+    <label v-if="mode === 'hours'" for="defaultWorkToInput">Default work to:</label>
+    <div v-if="mode === 'hours'">
+      <BFormInput id="defaultWorkToInput" v-model="presetStore.currentPreset[mode].defaultTo"></BFormInput>
+    </div>
+
+    <label for="precisionInput">Precision (minutes)</label>
+    <div>
+      <BFormInput id="precisionInput" v-model="presetStore.currentPreset[mode].precision" type="number" />
+    </div>
+  </fieldset>
+
+  <hr />
+
+  <fieldset v-if="mode === 'hours'">
+    <legend>Holidays</legend>
+
+    <BFormCheckboxGroup stacked v-model="checkedHolidays" :options="namedOptions" name="holidays" />
+
+    <hr />
+
     <fieldset>
-      <label v-if="mode === 'hours'" for="workTimeInput">Work time:</label>
-      <div v-if="mode === 'hours'">
-        <BFormInput id="workTimeInput" v-model="presetStore.currentPreset[mode].workTime"></BFormInput>
-      </div>
+      <legend>Custom days</legend>
 
-      <label v-if="mode === 'hours'" for="defaultWorkFromInput">Default work from:</label>
-      <div v-if="mode === 'hours'">
-        <BFormInput id="defaultWorkFromInput" v-model="presetStore.currentPreset[mode].defaultFrom"></BFormInput>
-      </div>
+      <SettingsFixedHolidayInput
+        v-for="{ rule, idx } in fixedRulesWithIdx"
+        :key="idx"
+        v-model:from="rule.from"
+        v-model:to="rule.to"
+        @add-after="addFixedRuleAfter(idx)"
+        @remove="removeRule(idx)"
+      />
 
-      <label v-if="mode === 'hours'" for="defaultWorkToInput">Default work to:</label>
-      <div v-if="mode === 'hours'">
-        <BFormInput id="defaultWorkToInput" v-model="presetStore.currentPreset[mode].defaultTo"></BFormInput>
-      </div>
-
-      <label for="precisionInput">Precision (minutes)</label>
-      <div>
-        <BFormInput id="precisionInput" v-model="presetStore.currentPreset[mode].precision" type="number" />
+      <div v-if="presetStore.currentPreset[mode].holidayRules.filter((rule) => rule.type === 'fixed').length === 0">
+        <button
+          type="button"
+          class="btn btn-secondary btn-sm"
+          @click="addFixedRuleAfter(presetStore.currentPreset['hours'].holidayRules.length - 1)"
+        >
+          <FontAwesomeIcon :icon="['fas', 'plus']" />
+        </button>
       </div>
     </fieldset>
+  </fieldset>
 
-    <hr v-if="mode === 'hours'" />
-
-    <fieldset v-if="mode === 'hours'">
-      <legend>Holiday</legend>
-
-      <BFormCheckboxGroup stacked v-model="checkedHolidays" :options="namedOptions" name="holidays" />
-
-      <hr />
-
-      <fieldset>
-        <legend>Custom days</legend>
-
-        <FixedHolidayInput
-          v-for="{ rule, idx } in fixedRulesWithIdx"
-          :key="idx"
-          v-model:from="rule.from"
-          v-model:to="rule.to"
-          @add-after="addFixedRuleAfter(idx)"
-          @remove="removeRule(idx)"
-        />
-
-        <div v-if="presetStore.currentPreset[mode].holidayRules.filter((rule) => rule.type === 'fixed').length === 0">
-          <button
-            type="button"
-            class="btn btn-secondary btn-sm"
-            @click="addFixedRuleAfter(presetStore.currentPreset['hours'].holidayRules.length - 1)"
-          >
-            <FontAwesomeIcon :icon="['fas', 'plus']" />
-          </button>
-        </div>
-      </fieldset>
-    </fieldset>
-  </div>
+  <SettingsGithub v-if="mode === 'tasks'" />
 </template>
 
 <script setup lang="ts">

@@ -22,8 +22,6 @@
 </template>
 
 <script setup lang="ts">
-import { FontAwesomeIcon } from '@fortawesome/vue-fontawesome'
-
 const calcStore = useCalcStore()
 const loading = ref(true)
 const foundCalc = ref(false)

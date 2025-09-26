@@ -1,7 +1,17 @@
 <template>
   <BApp>
     <BContainer fluid="xl" class="wider-container h-100">
-      <h1>Work time calc</h1>
+      <h1 class="d-flex justify-content-between">
+        Work time calc
+
+        <span>
+          <BButton variant="primary" v-if="status === 'unauthenticated'" @click="signIn('github')">Sign in with GitHub</BButton>
+          <BButton variant="primary" v-if="status === 'loading'" disabled>
+            Sign in with GitHub <FontAwesomeIcon :icon="['fas', 'spinner']" spin />
+          </BButton>
+          <BButton v-if="status === 'authenticated'" @click="signOut()">Sign out</BButton>
+        </span>
+      </h1>
 
       <ul class="nav nav-tabs" role="tablist">
         <li class="nav-item" role="presentation" v-for="(id, idx) in calcStore.calcOrder" :key="id">
@@ -35,4 +45,5 @@
 
 <script setup lang="ts">
 const calcStore = useCalcStore()
+const { signIn, status, signOut } = useAuth()
 </script>
