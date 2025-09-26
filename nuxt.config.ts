@@ -63,7 +63,7 @@ export default defineNuxtConfig({
     },
   },
   security: {
-    strict: true,
+    strict: false,
     removeLoggers: false,
     xssValidator: false,
     headers: {
