@@ -39,6 +39,10 @@ export default defineCachedEventHandler(
           authorization: `Bearer ${accessToken}`,
         },
       },
+      fetch(...args) {
+        console.log('graphql-fetch', args)
+        return fetch(...args)
+      },
       exchanges: [
         fetchExchange,
         mapExchange({
