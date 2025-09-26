@@ -5,11 +5,17 @@ const config = useRuntimeConfig()
 export default NuxtAuthHandler({
   secret: config.authSecret,
   providers: [
-
     (() => {
       // @ts-expect-error Use .default here for it to work during SSR.
       const functionToUse = typeof GithubProvider.default === 'function' ? GithubProvider.default : GithubProvider
-      console.log(config.githubClientId, typeof GithubProvider, typeof (GithubProvider as any).default, functionToUse)
+      throw new Error(
+        `Debugging ${JSON.stringify({
+          clientId: config.githubClientId,
+          provider: typeof GithubProvider,
+          providerDefault: typeof (GithubProvider as any).default,
+          functionToUse: functionToUse(),
+        })}`,
+      )
       const res = functionToUse({
         clientId: config.githubClientId,
         clientSecret: config.githubClientSecret,
