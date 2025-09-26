@@ -40,9 +40,12 @@ export default defineCachedEventHandler(
         },
       },
       preferGetMethod: false,
-      fetch(...args) {
+      async fetch(...args) {
         console.log('graphql-fetch', args)
-        return fetch(...args)
+        console.log('graphql-fetch-body', (args[1] as any).body)
+        const res = await fetch(...args)
+        console.log('graphql-fetch-res', res)
+        return res
       },
       exchanges: [
         fetchExchange,
