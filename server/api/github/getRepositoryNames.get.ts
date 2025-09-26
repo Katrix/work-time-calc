@@ -48,7 +48,7 @@ export default defineCachedEventHandler(
     do {
       const res = await client.query(query, { pageSize: 100, after }).toPromise()
       if (!res.data) {
-        console.log('GraphQL error', res.error?.message, res.error)
+        console.log('GraphQL error', res.error?.message, res.error, accessToken)
         throw createError({
           statusCode: 500,
           statusMessage: 'Failed to fetch repositories. Error: ' + (res.error?.message ?? 'Unknown error'),
