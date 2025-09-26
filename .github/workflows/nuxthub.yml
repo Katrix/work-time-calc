@@ -27,6 +27,9 @@ jobs:
       - name: Ensure NuxtHub module is installed
         run: npx nuxthub@latest ensure
 
+      - name: Generate GraphQL types
+        run: yarn gen-gql
+
       - name: Build & Deploy to NuxtHub
         uses: nuxt-hub/action@v2
         with:
