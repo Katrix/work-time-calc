@@ -7,29 +7,29 @@ export default NuxtAuthHandler({
   providers: [
 
     (() => {
-      console.log(typeof GithubProvider, typeof (GithubProvider as any).default)
-      console.log(config.githubClientId)
       // @ts-expect-error Use .default here for it to work during SSR.
-      const res = (typeof GithubProvider.default === 'function' ? GithubProvider.default : GithubProvider)({
+      const functionToUse = typeof GithubProvider.default === 'function' ? GithubProvider.default : GithubProvider
+      console.log(config.githubClientId, typeof GithubProvider, typeof (GithubProvider as any).default, functionToUse)
+      const res = functionToUse({
         clientId: config.githubClientId,
         clientSecret: config.githubClientSecret,
-        authorization: {
-          params: { scope: 'read:user user:email repo' },
-        },
+        //authorization: {
+        //  params: { scope: 'read:user user:email repo' },
+        //},
       })
       console.log(res)
       return res
     })(),
   ],
   // your authentication configuration here!
-  callbacks: {
-    jwt({ token, account }) {
-      if (account) {
-        token.sessionToken = account.session_token
-      }
-      return token
-    },
-  },
+  // callbacks: {
+  //   jwt({ token, account }) {
+  //     if (account) {
+  //       token.sessionToken = account.session_token
+  //     }
+  //     return token
+  //   },
+  // },
   pages: {
     signIn: '/auth/signin',
     signOut: '/auth/signout',

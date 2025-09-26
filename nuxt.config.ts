@@ -67,12 +67,21 @@ export default defineNuxtConfig({
     removeLoggers: false,
     xssValidator: false,
     headers: {
+      crossOriginEmbedderPolicy: 'unsafe-none',
       contentSecurityPolicy: {
         'default-src': ["'self'"],
         'style-src': ["'self'", 'https:', "'unsafe-inline'"],
         'font-src': ["'self'", 'https:'],
         'img-src': ["'self'", 'data:'],
         'worker-src': ["'self'", 'blob:'], // For dev stuff
+        'script-src': [
+          "'self'",
+          'https:',
+          "'unsafe-inline'",
+          "'strict-dynamic'",
+          "'nonce-{{nonce}}'",
+          "'unsafe-eval'"
+        ]
       },
     },
   },
