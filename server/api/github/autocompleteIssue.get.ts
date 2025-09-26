@@ -36,6 +36,7 @@ export default defineEventHandler(async (event) => {
     fetchOptions: {
       headers: {
         authorization: `Bearer ${accessToken}`,
+        'user-agent': 'Work-time-calc',
       },
     },
     exchanges: [fetchExchange],
