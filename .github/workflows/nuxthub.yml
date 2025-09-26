@@ -25,7 +25,7 @@ jobs:
         run: yarn install
 
       - name: Ensure NuxtHub module is installed
-        run: npx nuxthub@latest ensure
+        run: yarn dlx nuxthub@latest ensure
 
       - name: Generate GraphQL types
         run: yarn gen-gql
