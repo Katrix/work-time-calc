@@ -11,7 +11,6 @@ export interface PresetPart {
 
 export interface Repo {
   name: string
-  nameWithOwner: string
   autocompleteWithoutOwner: boolean
 }
 

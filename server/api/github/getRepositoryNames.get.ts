@@ -16,7 +16,6 @@ const query = graphql(`
             login
           }
           name
-          nameWithOwner
           url
         }
       }

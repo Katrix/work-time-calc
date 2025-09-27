@@ -11,7 +11,9 @@ const query = graphql(`
           number
           repository {
             name
-            nameWithOwner
+            owner {
+              login
+            }
           }
         }
       }
@@ -70,7 +72,7 @@ export default defineEventHandler(async (event) => {
     .map((n) => ({
       title: n.title,
       number: n.number,
-      repositoryWithOwner: n.repository.nameWithOwner,
+      repositoryOwner: n.repository.owner.login,
       repository: n.repository.name,
     }))
 })

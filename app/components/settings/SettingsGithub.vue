@@ -51,7 +51,7 @@
             <ul class="list-group list-group-flush">
               <li v-for="repo in repoArr" :key="owner + repo.name" class="list-group-item">
                 <div class="d-flex flex-row align-items-center flex-wrap">
-                  <span class="me-4">{{ repo.name }} ({{ repo.nameWithOwner }})</span>
+                  <span class="me-4">{{ repo.name }}</span>
                   <BFormCheckbox v-model="repo.autocompleteWithoutOwner" class="me-4" reverse>
                     Autocomplete without owner:
                   </BFormCheckbox>
@@ -83,7 +83,6 @@ const presetStore = usePresetStore()
 
 interface Repo {
   name: string
-  nameWithOwner: string
   autocompleteWithoutOwner: boolean
 }
 
@@ -142,7 +141,6 @@ function addRepo() {
 
   repoArr.push({
     name: repo.name,
-    nameWithOwner: repo.nameWithOwner,
     autocompleteWithoutOwner: false,
   })
   nextTick(() => (currentRepo.value = null))
