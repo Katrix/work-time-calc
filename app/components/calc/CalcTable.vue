@@ -24,7 +24,13 @@
     </thead>
     <tbody>
       <tr v-for="(item, index) in calc.entries" :class="trClasses(item)">
-        <td><BFormInput v-model="item.day"></BFormInput></td>
+        <td>
+          <CalcInputName
+            v-model="item.day"
+            :mode="calc.mode"
+            @on-autocomplete-issue="(notes) => (item.notes = notes)"
+          />
+        </td>
 
         <td><CalcInputFrom :precision="calc.precision" v-model="item.from" /></td>
         <td>

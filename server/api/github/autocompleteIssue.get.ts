@@ -7,6 +7,7 @@ const query = graphql(`
     search(type: ISSUE, query: $query, first: $first) {
       nodes {
         ... on Issue {
+          __typename
           title
           number
           repository {
@@ -41,17 +42,19 @@ export default defineEventHandler(async (event) => {
         'user-agent': 'Work-time-calc',
       },
     },
+    preferGetMethod: false,
     exchanges: [fetchExchange],
   })
 
   if (reposToSearch.length === 0) {
     return []
   }
-  const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' OR ')
+  const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' ')
 
   // TODO: Use RegExp.escape() when it's available
 
-  const searchQuery = `is:issue /^${prefix.replace('\\', '\\\\')}/ in:title (${repoFilters})`
+  const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title ${repoFilters}`
+  console.log({ searchQuery })
   const res = await client.query(query, { query: searchQuery, first: 20 }).toPromise()
 
   if (!res.data) {
@@ -63,6 +66,7 @@ export default defineEventHandler(async (event) => {
   }
 
   const nodes = res.data.search.nodes
+  console.log({ nodes })
   if (!nodes) {
     return []
   }

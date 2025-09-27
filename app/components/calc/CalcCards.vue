@@ -1,7 +1,7 @@
 <template>
   <div v-for="(item, index) in calc.entries" :key="item.day + index" class="card mb-4">
     <div class="card-header">
-      <BFormInput v-model="item.day" />
+      <CalcInputName v-model="item.day" :mode="calc.mode" @on-autocomplete-issue="(notes) => (item.notes = notes)" />
     </div>
 
     <div class="card-body">
