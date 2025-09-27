@@ -50,7 +50,7 @@
             <span>{{ owner }}/</span>
             <ul class="list-group list-group-flush">
               <li v-for="repo in repoArr" :key="owner + repo.name" class="list-group-item">
-                <div class="d-flex flex-row align-items-center flex-wrap">
+                <div style="grid-template-columns: 1fr 2fr auto" class="d-grid align-items-center">
                   <span class="me-4">{{ repo.name }}</span>
                   <BFormCheckbox v-model="repo.autocompleteWithoutOwner" class="me-4" reverse>
                     Autocomplete without owner:
@@ -109,16 +109,22 @@ watch(
 
 const ownersOptions = computed(() => [...new Set((repoNamesData.value ?? []).map((repo) => repo.owner.login))])
 
-const repoOptions = computed(() => [
-  { value: null, text: 'Add a repository' },
-  ...presetStore.currentPreset.github.owners.map((owner) => {
-    const repos = (repoNamesData.value ?? []).filter((repo) => repo.owner.login === owner)
-    return {
-      label: owner,
-      options: repos.map((repo) => ({ text: repo.name, value: repo })),
-    }
-  }),
-])
+const repoOptions = computed(() => {
+  const github = presetStore.currentPreset.github
+  return [
+    { value: null, text: 'Add a repository' },
+    ...github.owners.map((owner) => {
+      const existingRepos = (github.repos.get(owner) ?? []).map((repo) => repo.name)
+      const repos = (repoNamesData.value ?? []).filter(
+        (repo) => repo.owner.login === owner && !existingRepos.includes(repo.name),
+      )
+      return {
+        label: owner,
+        options: repos.map((repo) => ({ text: repo.name, value: repo })),
+      }
+    }),
+  ]
+})
 const currentRepo = ref<GithubRepoInfo | null>(null)
 const activeRepos = computed(() => {
   const github = presetStore.currentPreset.github
