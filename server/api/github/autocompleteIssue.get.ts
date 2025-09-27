@@ -54,7 +54,6 @@ export default defineEventHandler(async (event) => {
   // TODO: Use RegExp.escape() when it's available
 
   const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title ${repoFilters}`
-  console.log({ searchQuery })
   const res = await client.query(query, { query: searchQuery, first: 20 }).toPromise()
 
   if (!res.data) {
@@ -66,7 +65,6 @@ export default defineEventHandler(async (event) => {
   }
 
   const nodes = res.data.search.nodes
-  console.log({ nodes })
   if (!nodes) {
     return []
   }

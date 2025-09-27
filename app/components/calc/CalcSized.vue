@@ -1,5 +1,5 @@
 <template>
-  <div class="d-none d-lg-block" style="overflow-x: scroll">
+  <div class="d-none d-lg-block">
     <CalcTable :calc-id="calcId" />
   </div>
   <div class="d-lg-none">
