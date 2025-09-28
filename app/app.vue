@@ -50,18 +50,21 @@
 </template>
 
 <script setup lang="ts">
-import SidebarHeading from '~/components/sidebar/SidebarHeading.vue'
-import SidebarDirectory from '~/components/sidebar/SidebarDirectory.vue'
+import type { RouteLocationRaw } from '#vue-router'
 
+const presetStore = usePresetStore()
 const calcStore = useCalcStore()
-const intervalId = ref<number>()
+const trackedIntervalId = ref<number>()
 const now = useNow()
+
+await callOnce(async () => await presetStore.fetchData())
+
 onMounted(() => {
-  intervalId.value = setInterval(() => {
+  trackedIntervalId.value = setInterval(() => {
     now.value = new Date()
   }, 1000) as unknown as number
 })
-onUnmounted(() => clearInterval(intervalId.value))
+onUnmounted(() => clearInterval(trackedIntervalId.value))
 
 const nestedHourCalcs = computed(() => {
   interface Entry {
@@ -186,4 +189,10 @@ const nestedHourCalcs = computed(() => {
     tasksEntries: [...tasksItems, { icon: 'folder', text: 'Misc' }, miscTasksItems] satisfies Item[],
   }
 })
+
+const debouncedPresetUpdates = useDebounce(
+  computed(() => presetStore.updates),
+  10_000,
+)
+watch(debouncedPresetUpdates, () => presetStore.runUpdate(), { deep: true })
 </script>

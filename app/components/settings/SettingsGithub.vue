@@ -11,7 +11,7 @@
           </span>
         </template>
 
-        <BFormSelect id="githubRepoOwners" v-model="activeOwnerStrs" :options="ownersOptions" multiple></BFormSelect>
+        <BFormSelect id="githubRepoOwners" v-model="activeOwnerStrs" :options="ownersOptions" multiple @change="markGithubUpdate"></BFormSelect>
       </BFormGroup>
 
       <div class="col-xl-8">
@@ -46,7 +46,7 @@
               <li v-for="[repoName, repo] in owner.repos" :key="ownerName + repoName" class="list-group-item">
                 <div style="grid-template-columns: 1fr 2fr auto" class="d-grid align-items-center">
                   <span class="me-4">{{ repoName }}</span>
-                  <BFormCheckbox v-model="repo.autocompleteWithoutRepository" class="me-4" reverse>
+                  <BFormCheckbox v-model="repo.autocompleteWithoutRepository" class="me-4" reverse @change="markGithubUpdate">
                     Autocomplete without repository:
                   </BFormCheckbox>
                   <BButton variant="danger" size="sm" @click="removeRepo(ownerName, repoName)">
@@ -152,6 +152,7 @@ function addRepo() {
     autocompleteWithoutRepository: false,
   })
   nextTick(() => (currentRepo.value = null))
+  markGithubUpdate()
 }
 
 function removeRepo(owner: string, repoName: string) {
@@ -161,11 +162,17 @@ function removeRepo(owner: string, repoName: string) {
   }
 
   githubOwner.repos.delete(repoName)
+  markGithubUpdate()
 }
 
 function setAllReposInactive() {
   presetStore.currentPreset.github.forEach((owner) => {
     owner.active = false
   })
+  markGithubUpdate()
+}
+
+function markGithubUpdate() {
+  presetStore.markUpdate(presetStore.currentPresetId, 'github')
 }
 </script>
