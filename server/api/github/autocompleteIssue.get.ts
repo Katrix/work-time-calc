@@ -1,5 +1,5 @@
 import z from 'zod'
-import { graphql } from '~~/server/utils/gql'
+import { graphql } from '~~/server/gql/github'
 import { Client, fetchExchange } from '@urql/core'
 
 const query = graphql(`

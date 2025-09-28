@@ -48,7 +48,12 @@
       <label class="visually-hidden" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
-          <BFormFile id="inputFile" v-model="saveFile" accept="application/json" :directory="null"></BFormFile>
+          <BFormFile
+            id="inputFile"
+            v-model="saveFile"
+            accept="application/json"
+            :directory="null as unknown as boolean"
+          ></BFormFile>
           <template #append>
             <button
               class="btn btn-secondary"

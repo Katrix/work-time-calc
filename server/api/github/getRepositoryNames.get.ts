@@ -1,4 +1,4 @@
-import { graphql } from '~~/server/utils/gql'
+import { graphql } from '~~/server/gql/github'
 import { Client, fetchExchange } from '@urql/core'
 import { defineCachedEventHandler } from 'nitropack/runtime/internal/cache'
 import type { GithubRepoInfo } from '#shared/types/github'

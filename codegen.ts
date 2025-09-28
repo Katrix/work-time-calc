@@ -5,8 +5,11 @@ const config: CodegenConfig = {
   documents: ['server/**/*.ts'],
   ignoreNoDocuments: true, // for better experience with the watcher
   generates: {
-    './server/utils/gql/': {
+    './server/gql/github/': {
       preset: 'client',
+      config: {
+        useTypeImports: true
+      },
       plugins: [],
     },
   },

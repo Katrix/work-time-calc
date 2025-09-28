@@ -5,7 +5,7 @@
 .nitro
 .cache
 dist
-server/utils/gql
+server/gql
 
 # Node dependencies
 node_modules
