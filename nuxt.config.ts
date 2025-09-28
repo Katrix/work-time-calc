@@ -27,6 +27,7 @@ export default defineNuxtConfig({
   hub: {
     cache: true,
     database: true,
+  },
   vite: {
     css: {
       preprocessorOptions: {
