@@ -17,12 +17,15 @@ export const presetPart = z.object({
 })
 export type PresetPart = z.infer<typeof presetPart>
 
+export const presetGithub = z.object({
+  owners: z.string().array(),
+  repos: z.map(z.string(), repo.array()),
+})
+export type PresetGithub = z.infer<typeof presetGithub>
+
 export const preset = z.object({
   hours: presetPart,
   tasks: presetPart,
-  github: z.object({
-    owners: z.string().array(),
-    repos: z.map(z.string(), repo.array()),
-  }),
+  github: presetGithub,
 })
 export type Preset = z.infer<typeof preset>

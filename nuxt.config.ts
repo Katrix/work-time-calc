@@ -76,7 +76,7 @@ export default defineNuxtConfig({
       },
     },
   },
-  security: {
+  /*security: {
     strict: true,
     removeLoggers: false,
     xssValidator: false,
@@ -91,7 +91,7 @@ export default defineNuxtConfig({
         'script-src': ["'self'", 'https:', "'unsafe-inline'", "'strict-dynamic'", "'nonce-{{nonce}}'", "'unsafe-eval'"],
       },
     },
-  },
+  },*/
   experimental: {
     typedPages: true,
   },
