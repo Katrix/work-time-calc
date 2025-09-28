@@ -1,348 +1,42 @@
-import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
-import type { WatchHandle } from 'vue'
-import { skipHydrate } from 'pinia'
 import z from 'zod'
-import { dateToMinutesRounded } from '#shared/utils/ComputeWorkTime'
+import { useQuery, useQueryClient } from '@tanstack/vue-query'
+import type { InternalApi } from 'nitropack/types'
+
+interface CalcSummary {
+  name: string
+  mode: 'hours' | 'tasks'
+}
 
 export const useCalcStore = defineStore('calcs', () => {
   const presetStore = usePresetStore()
-  const now = useNow()
-
-  function defaults(mode: 'hours' | 'tasks') {
-    return presetStore.currentPreset[mode]
-  }
-
-  function nameDefault(mode: 'hours' | 'tasks') {
-    const now = Temporal.Now.plainDateISO()
-    if (mode === 'hours') {
-      const monthName = new TemporalIntl.DateTimeFormat('en', { month: 'long' }).format(now)
-      return `${now.year}-${now.month}-${monthName}`
-    } else {
-      return now.toString()
-    }
-  }
-
-  function makeNewCalc(mode: 'hours' | 'tasks'): CalcWithEntries {
-    const defaultVal = defaults(mode)
-
-    return {
-      version: currentCalcVersion,
-      name: nameDefault(mode),
-      mode: mode,
-      savedUpTime: 0,
-      savedUpVacation: 0,
-      workTime: defaultVal.workTime,
-      defaultFrom: defaultVal.defaultFrom,
-      defaultTo: defaultVal.defaultTo,
-      precision: defaultVal.precision,
-      tags: new Map([...defaultVal.tags.entries()]),
-      entries: [
-        {
-          name: defaultEntryName(mode),
-          from: defaultVal.defaultFrom,
-          to: null,
-          subtractedTime: null,
-          customSubtractedTime: false,
-        },
-      ],
-    }
-  }
-
-  function watcherForCalc(id: string, defaultCalc: CalcWithEntries, entry: Ref<CalcWithEntries>) {
-    const defaultStr = encodeCalcToString(defaultCalc)
-    return watch(
-      entry,
-      () => {
-        lastUpdated.value.set(id, Date.now())
-
-        if (import.meta.client) {
-          const serializedData = encodeCalcToString(entry.value)
-
-          if (serializedData !== defaultStr) {
-            localStorage.setItem(
-              `calcs.${id}`,
-              JSON.stringify({
-                lastUpdated: Date.now(),
-                data: serializedData,
-              }),
-            )
-          }
-        }
-      },
-      {
-        deep: true,
-      },
-    )
-  }
-
-  function makeComputedTime(entry: Ref<CalcWithEntries>) {
-    const computedRef = ref<ComputedWorkTime>({ entries: [], summaryByTag: {} })
-
-    function doCompute() {
-      const calc = entry.value
-      const workDaysObj: WorkDays = {}
-      if (calc.mode === 'tasks') {
-        const group = []
-        for (const [idx, workDay] of calc.entries.entries()) {
-          if (workDay) {
-            group.push({
-              ...workDay,
-              idx,
-            })
-          }
-        }
-
-        workDaysObj[calc.name] = group
-      } else {
-        for (const [idx, workDay] of calc.entries.entries()) {
-          if (workDay) {
-            if (!workDaysObj[workDay.name]) {
-              workDaysObj[workDay.name] = []
-            }
-            workDaysObj[workDay.name].push({
-              ...workDay,
-              idx,
-            })
-          }
-        }
-      }
-
-      try {
-        const res = computeWorkTime(
-          workDaysObj,
-          calc.savedUpTime,
-          calc.defaultFrom,
-          calc.defaultTo,
-          calc.workTime,
-          now.value,
-          calc.precision,
-        )
-        res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
-        computedRef.value = res
-      } catch (e) {
-        // Ignored
-      }
-    }
-
-    const nowWithNowPrecision = computed(() => dateToMinutesRounded(now.value, entry.value.precision))
-
-    watch(entry, doCompute, { immediate: true, deep: true })
-    watch(nowWithNowPrecision, doCompute)
-
-    return computedRef
-  }
-
-  function newCalcWithWatchers(id: string, mode: 'hours' | 'tasks') {
-    const defaultCalc = makeNewCalc(mode)
-    const entry = ref(defaultCalc)
-
-    const watcher = watcherForCalc(id, defaultCalc, entry)
-    const computedTime = makeComputedTime(entry)
-
-    // Wrap the watcher in a ref so that it can be skipped during hydration
-    return { entry, computedTime: skipHydrate(computedTime), watcher: skipHydrate(ref(watcher)) }
-  }
-
-  function randomColor() {
-    return '#' + Math.floor(Math.random() * 16777215).toString(16)
-  }
-
-  function dateToDateString(d: Date) {
-    try {
-      const isoStr = d.toISOString()
-      return isoStr.substring(0, isoStr.search('T'))
-    } catch (e) {
-      return null
-    }
-  }
-
-  function defaultEntryName(mode: 'hours' | 'tasks'): string {
-    if (mode === 'hours') {
-      return dateToDateString(new Date()) ?? ''
-    } else {
-      return ''
-    }
-  }
-
-  const lastUpdated = ref(new Map<string, number>())
-  const saveFiles = ref(new Map<string, File>())
-
+  const calcsLastUpdated = ref(0)
   const calcOrder = ref<string[]>([])
+  const allCalcs = ref<Map<string, CalcSummary>>(new Map())
+  const loading = ref(true)
 
-  const calcs = shallowRef<
-    Map<string, { entry: Ref<CalcWithEntries>; computedTime: Ref<ComputedWorkTime>; watcher: Ref<WatchHandle> }>
-  >(new Map())
+  const nuxt = useNuxtApp()
 
-  function calcName(calcId: string, idx: number) {
-    const calc = calcs.value.get(calcId)?.entry?.value
-    return calc?.name?.length ? calc?.name : `Calc${idx + 1}`
-  }
+  async function addCalc() {
+    const defaultCalc = makeNewCalc('hours', presetStore.currentPreset)
+    try {
+      const res = await $fetch('/api/calc', {
+        method: 'POST',
+        body: defaultCalc,
+      })
 
-  const useCalc = (id: Ref<string>) => {
-    const calc = computed<CalcWithEntries, CalcWithEntries>({
-      get: () => {
-        const existing = calcs.value.get(id.value)?.entry?.value
-        if (existing) {
-          return existing
-        }
+      calcOrder.value.push(res.publicId)
+      calcsLastUpdated.value = Date.now()
 
-        throw new Error(`Calc ${id.value} not found`)
-      },
-      set: (value) => {
-        const c = calcs.value.get(id.value)
-        if (c) {
-          c.entry.value = value
-        }
-      },
-    })
-
-    const computedCalc = computed(() => calcs.value.get(id.value)?.computedTime?.value ?? null)
-
-    function setSettingsToDefaults() {
-      const defaultVals = defaults(calc.value.mode)
-      calc.value.workTime = defaultVals.workTime
-      calc.value.defaultFrom = defaultVals.defaultFrom
-      calc.value.defaultTo = defaultVals.defaultTo
-      calc.value.precision = defaultVals.precision
-    }
-
-    function setMode(mode: 'hours' | 'tasks') {
-      const oldNameDefault = nameDefault(calc.value.mode)
-
-      calc.value.mode = mode
-      setSettingsToDefaults()
-      if (calc.value.name === oldNameDefault) {
-        calc.value.name = nameDefault(mode)
+      await navigateTo({ name: 'calculation', params: { calculation: res.publicId } })
+      return res.publicId
+    } catch (e) {
+      if (import.meta.client) {
+        nuxt.vueApp.runWithContext(() => useToast().create({ body: 'Failed to create calc', variant: 'danger' }))
+        console.error('Failed to create calc', e)
+        throw e
       }
+      throw e
     }
-
-    function fillWorkdaysBase(start: Temporal.PlainDate) {
-      const holidayRules = presetStore.currentPreset.holidayRules
-
-      const monthDates: Temporal.PlainDate[] = []
-      let date = start
-      let i = 0
-      while (date.month === start.month) {
-        monthDates.push(date)
-        date = date.add({ days: 1 })
-        i += 1
-        if (i > 31) {
-          throw new Error(`Did not stop when expected ${date}`)
-        }
-      }
-
-      return monthDates.filter((d) => !isHoliday(d, holidayRules))
-    }
-
-    const ret = {
-      calc,
-      computedCalc,
-      calcName(idx: number) {
-        return calcName(id.value, idx)
-      },
-      switchMode() {
-        if (calc.value.mode === 'hours') {
-          setMode('tasks')
-        } else {
-          setMode('hours')
-        }
-      },
-      async loadFromFile(file: File) {
-        calc.value = {
-          ...calc.value,
-          ...decodeCalcFromString(await file.text()),
-        }
-      },
-      getTagColor(tag: string) {
-        const existing = calc.value.tags.get(tag)
-        if (existing) {
-          return existing
-        }
-
-        const color = randomColor()
-        calc.value.tags.set(tag, color)
-        return color
-      },
-      deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }) {
-        const tag = calc.value.tags.get(tagName)
-        if (tag && presetStore.currentPreset[calc.value.mode].tags.has(tagName) && !deleteConfigured) {
-          return
-        }
-        calc.value.tags.delete(tagName)
-      },
-      addRowAfter(idx: number) {
-        const name = defaultEntryName(calc.value.mode)
-
-        calc.value.entries.splice(idx + 1, 0, {
-          name,
-          from: calc.value.defaultFrom,
-          to: null,
-          subtractedTime: null,
-          customSubtractedTime: false,
-        })
-      },
-      removeRow(idx: number) {
-        calc.value.entries.splice(idx, 1)
-      },
-      clear() {
-        calc.value.entries = [
-          {
-            name: defaultEntryName(calc.value.mode),
-            from: calc.value.defaultFrom,
-            to: calc.value.defaultTo,
-            subtractedTime: null,
-            customSubtractedTime: false,
-          },
-        ]
-      },
-      addTag(index: number, tag: string) {
-        const entry = calc.value.entries[index]
-        if (entry) {
-          entry.tags ??= []
-          entry.tags.push(tag)
-        }
-      },
-      removeTag(index: number, tag: string) {
-        const entry = calc.value.entries[index]
-        entry?.tags?.splice(entry.tags?.indexOf(tag), 1)
-
-        if (calc.value.entries.every((e) => !e.tags?.includes(tag))) {
-          ret.deleteTag(tag, { deleteConfigured: false })
-        }
-      },
-      fillWorkdays() {
-        const dates = fillWorkdaysBase(Temporal.PlainDate.from(calc.value.entries[0].name))
-        calc.value.entries = dates.map((d) => ({
-          name: d.toString(),
-          from: null,
-          to: null,
-          subtractedTime: null,
-          customSubtractedTime: false,
-        }))
-      },
-      fillRemainingWorkdays() {
-        const start = Temporal.PlainDate.from(calc.value.entries[calc.value.entries.length - 1].name).add({ days: 1 })
-        const dates = fillWorkdaysBase(start)
-        calc.value.entries.push(
-          ...dates.map((d) => ({
-            name: d.toString(),
-            from: null,
-            to: null,
-            subtractedTime: null,
-            customSubtractedTime: false,
-          })),
-        )
-      },
-    }
-    return ret
-  }
-
-  function addCalc(newId?: string) {
-    newId ??= crypto.randomUUID()
-    calcOrder.value.push(newId)
-    calcs.value.set(newId, newCalcWithWatchers(newId, 'hours'))
-    triggerRef(calcs)
-    navigateTo({ name: 'calculation', params: { calculation: newId } })
   }
 
   async function closeCalc(id: string) {
@@ -352,6 +46,7 @@ export const useCalcStore = defineStore('calcs', () => {
 
     if (idx !== -1) {
       calcOrder.value.splice(idx, 1)
+      calcsLastUpdated.value = Date.now()
     }
 
     if (needNavigation) {
@@ -368,111 +63,130 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
-  function deleteCalc(id: string) {
-    closeCalc(id).then(() => {
-      const removed = calcs.value.get(id)
-      calcs.value.delete(id)
-
-      if (removed) {
-        removed.watcher.value.stop()
-      }
-
-      triggerRef(calcs)
-
-      if (import.meta.client) {
-        localStorage.removeItem(`calcs.${id}`)
-      }
-    })
-  }
-
   function firstCalc(): string {
     return calcOrder.value[0]
   }
 
-  let resolveLocalStorage: (value: void | PromiseLike<void>) => void = () => {}
-  const waitForLocalStorage = ref<Promise<void>>(
-    new Promise<void>((resolve) => {
-      resolveLocalStorage = resolve
-    }),
-  )
+  const headers = useRequestHeaders(['cookie'])
+  const queryClient = useQueryClient()
+  const session = useUserSession()
+  const scope = effectScope()
 
-  if (import.meta.server) {
-    resolveLocalStorage()
+  async function fetchOpenedCalcs() {
+    const { data: openedRes, suspense } = scope.run(() =>
+      useQuery(
+        {
+          queryKey: ['api', 'calc', 'opened'],
+          queryFn: async () => await $fetch<InternalApi['/api/calc/opened']['get']>('/api/calc/opened', { headers }),
+        },
+        queryClient,
+      ),
+    )!
+    await suspense()
+    if (!openedRes.value) {
+      return // Rely on global error handler
+    }
+
+    calcOrder.value = openedRes.value.opened
+    calcsLastUpdated.value = new Date(openedRes.value.lastUpated).getTime()
   }
 
-  if (import.meta.client) {
-    nextTick(() => {
-      // Hydration can mess up our watchers, so first we need to re-add them
-      for (const [id, calc] of calcs.value) {
-        calc.watcher = skipHydrate(ref(watcherForCalc(id, makeNewCalc('hours'), calc.entry)))
-        calc.computedTime = makeComputedTime(calc.entry)
-      }
+  function fetchLocalOpenedCalcs(toast: ReturnType<typeof useToast>) {
+    const calcsStr = localStorage.getItem('calcs')
+    const calcsLastUpdatedStr = localStorage.getItem('calcsLastUpdated')
+    const calcsLastUpdatedParsed = calcsLastUpdatedStr ? new Date(calcsLastUpdatedStr).getTime() : 1 // 1 so it still loads if it's missing
 
-      const calcsStr = localStorage.getItem('calcs')
-      if (calcsStr) {
-        const calcsArr = JSON.parse(calcsStr) as string[]
-        for (const calcId of calcsArr) {
-          if (!calcs.value.has(calcId)) {
-            calcs.value.set(calcId, newCalcWithWatchers(calcId, 'hours'))
-            calcOrder.value.push(calcId)
-          }
+    if (calcsStr && calcsLastUpdatedParsed > calcsLastUpdated.value) {
+      calcOrder.value = z.string().array().parse(JSON.parse(calcsStr))
+      calcsLastUpdated.value = calcsLastUpdatedParsed
+    }
+
+    watchEffect(async () => {
+      localStorage.setItem('calcs', JSON.stringify(calcOrder.value))
+      localStorage.setItem('calcsLastUpdated', new Date(calcsLastUpdated.value).toISOString())
+      if (session.loggedIn.value) {
+        try {
+          await $fetch('/api/calc/opened', {
+            method: 'PUT',
+            body: {
+              opened: calcOrder.value,
+            },
+          })
+        } catch (e) {
+          toast.create({ body: 'Failed to update opened calcs', variant: 'danger' })
+          console.error('Failed to update opened calcs', e)
         }
       }
-
-      for (let i = 0; i < localStorage.length; i++) {
-        const key = localStorage.key(i)
-        if (!key || !key.startsWith('calcs.')) {
-          continue
-        }
-
-        const id = key.substring('calcs.'.length)
-
-        const dataStr = localStorage.getItem(key)
-        if (!dataStr) {
-          continue
-        }
-
-        const lastUpdatedSchema = z.object({
-          lastUpdated: z.number(),
-          data: z.string(),
-        })
-
-        const data = lastUpdatedSchema.parse(JSON.parse(dataStr))
-
-        if (data.lastUpdated > (lastUpdated.value.get(id) ?? 0)) {
-          const calcFromStorage = decodeCalcFromString(data.data)
-          lastUpdated.value.set(id, data.lastUpdated)
-
-          let calcRef = calcs.value.get(id)
-          if (!calcRef) {
-            calcRef = newCalcWithWatchers(id, 'hours')
-            calcs.value.set(id, calcRef)
-          }
-
-          calcRef.entry.value = calcFromStorage
-        }
-      }
-
-      triggerRef(calcs)
-      resolveLocalStorage()
-
-      watchEffect(() => {
-        localStorage.setItem('calcs', JSON.stringify(calcOrder.value))
-      })
     })
   }
 
+  async function fetchCalcList() {
+    const { data: allServerCalcs, suspense } = scope.run(() =>
+      useQuery(
+        {
+          queryKey: ['api', 'calc', 'list'],
+          queryFn: async () => await $fetch<InternalApi['/api/calc/list']['get']>('/api/calc/list', { headers }),
+        },
+        queryClient,
+      ),
+    )!
+    await suspense()
+    allCalcs.value = new Map()
+    if (!allServerCalcs.value) {
+      return // Rely on global error handler
+    }
+
+    for (const entry of allServerCalcs.value) {
+      allCalcs.value.set(entry.publicId, { name: entry.name, mode: entry.mode })
+    }
+  }
+
+  function fetchLocalCalcList(toast: ReturnType<typeof useToast>) {
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i)
+      if (!key || !key.startsWith('calcs.')) {
+        continue
+      }
+
+      const id = key.substring('calcs.'.length)
+
+      const dataStr = localStorage.getItem(key)
+      if (!dataStr || allCalcs.value.has(id)) {
+        continue
+      }
+
+      const dataSchema = z.object({
+        data: z.string(),
+      })
+
+      const data = dataSchema.parse(JSON.parse(dataStr))
+
+      const calcFromStorage = decodeCalcFromString(data.data)
+      allCalcs.value.set(id, { name: calcFromStorage.name, mode: calcFromStorage.mode })
+    }
+  }
+
+  async function fetchData() {
+    await fetchOpenedCalcs()
+    await fetchCalcList()
+  }
+
+  function fetchLocalData(toast: ReturnType<typeof useToast>) {
+    fetchLocalOpenedCalcs(toast)
+    fetchLocalCalcList(toast)
+
+    loading.value = false
+  }
+
   return {
-    calcs,
+    calcsLastUpdated,
     calcOrder,
-    saveFiles: skipHydrate(saveFiles),
-    waitForLocalStorage: skipHydrate(waitForLocalStorage),
-    lastUpdated,
+    allCalcs,
+    loading,
+    fetchData,
+    fetchLocalData,
     addCalc,
     closeCalc,
-    deleteCalc,
-    calcName,
-    useCalc,
     firstCalc,
   }
 })

@@ -1,5 +1,5 @@
 <template>
-  <span class="badge contrast-color" :style="{ '--contrast-color': calc.getTagColor(tag) }"
+  <span class="badge contrast-color" :style="{ '--contrast-color': props.calcInfo.getTagColor(tag) }"
     >{{ tag
     }}<FontAwesomeIcon
       v-if="!hideDelete"
@@ -12,12 +12,9 @@
 <script setup lang="ts">
 const props = defineProps<{
   tag: string
-  calcId: string
+  calcInfo: CalcInfo
   hideDelete?: boolean
 }>()
-const calcStore = useCalcStore()
-const calc = calcStore.useCalc(computed(() => props.calcId))
-
 const emits = defineEmits<{ (e: 'deleteTag'): void }>()
 </script>
 

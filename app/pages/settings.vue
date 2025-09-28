@@ -19,9 +19,10 @@
       v-if="presetStore.currentPresetId !== 'Default'"
       type="button"
       class="btn btn-danger mt-3"
-      @click="presetStore.deletePreset(presetStore.currentPresetId)"
+      @click="presetStore.deletePreset.mutate(presetStore.currentPresetId)"
     >
       Delete preset
+      <FontAwesomeIcon v-if="presetStore.deletePreset.isPending" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
     </button>
   </form>
 </template>

@@ -6,38 +6,38 @@ const temporalPlainMonthDay = z.codec(z.string(), z.instanceof(Temporal.PlainMon
   encode: (temporal) => temporal.toJSON(),
 })
 
-export const fixedHolidayRule = z.object({
+export const fixedHolidayRuleSchema = z.object({
   type: z.literal('fixed'),
   from: temporalPlainMonthDay,
   to: temporalPlainMonthDay,
 })
-export type FixedHolidayRule = z.infer<typeof fixedHolidayRule>
+export type FixedHolidayRule = z.infer<typeof fixedHolidayRuleSchema>
 
-export const easterHolidayRule = z.object({ type: z.literal('easter') })
-export type EasterHolidayRule = z.infer<typeof easterHolidayRule>
+export const easterHolidayRuleSchema = z.object({ type: z.literal('easter') })
+export type EasterHolidayRule = z.infer<typeof easterHolidayRuleSchema>
 
-export const ascensionHolidayRule = z.object({ type: z.literal('ascension') })
-export type AscensionHolidayRule = z.infer<typeof ascensionHolidayRule>
+export const ascensionHolidayRuleSchema = z.object({ type: z.literal('ascension') })
+export type AscensionHolidayRule = z.infer<typeof ascensionHolidayRuleSchema>
 
-export const pentecostHolidayRule = z.object({ type: z.literal('pentecost') })
-export type PentecostHolidayRule = z.infer<typeof pentecostHolidayRule>
+export const pentecostHolidayRuleSchema = z.object({ type: z.literal('pentecost') })
+export type PentecostHolidayRule = z.infer<typeof pentecostHolidayRuleSchema>
 
-export const christmasHolidayRule = z.object({ type: z.literal('christmas') })
-export type ChristmasHolidayRule = z.infer<typeof christmasHolidayRule>
+export const christmasHolidayRuleSchema = z.object({ type: z.literal('christmas') })
+export type ChristmasHolidayRule = z.infer<typeof christmasHolidayRuleSchema>
 
-export const saturdayHolidayRule = z.object({ type: z.literal('saturday') })
-export type SaturdayHolidayRule = z.infer<typeof saturdayHolidayRule>
+export const saturdayHolidayRuleSchema = z.object({ type: z.literal('saturday') })
+export type SaturdayHolidayRule = z.infer<typeof saturdayHolidayRuleSchema>
 
-export const sundayHolidayRule = z.object({ type: z.literal('sunday') })
-export type SundayHolidayRule = z.infer<typeof sundayHolidayRule>
+export const sundayHolidayRuleSchema = z.object({ type: z.literal('sunday') })
+export type SundayHolidayRule = z.infer<typeof sundayHolidayRuleSchema>
 
-export const holidayRule = z.discriminatedUnion('type', [
-  fixedHolidayRule,
-  easterHolidayRule,
-  ascensionHolidayRule,
-  pentecostHolidayRule,
-  christmasHolidayRule,
-  saturdayHolidayRule,
-  sundayHolidayRule,
+export const holidayRuleSchema = z.discriminatedUnion('type', [
+  fixedHolidayRuleSchema,
+  easterHolidayRuleSchema,
+  ascensionHolidayRuleSchema,
+  pentecostHolidayRuleSchema,
+  christmasHolidayRuleSchema,
+  saturdayHolidayRuleSchema,
+  sundayHolidayRuleSchema,
 ])
-export type HolidayRule = z.infer<typeof holidayRule>
+export type HolidayRule = z.infer<typeof holidayRuleSchema>

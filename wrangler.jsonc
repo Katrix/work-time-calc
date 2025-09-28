@@ -4,9 +4,10 @@
 	"observability": {
 		"enabled": true
 	},
+	"compatibility_date": "2025-12-12",
 	"d1_databases": [
 		{
-			"binding": "work_time_calc",
+			"binding": "DB",
 			"database_name": "work-time-calc",
 			"database_id": "c0da6c79-313a-42ba-bca6-28c3da16ee9d"
 		}

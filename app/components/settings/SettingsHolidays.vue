@@ -2,7 +2,13 @@
   <fieldset>
     <legend>Holidays</legend>
 
-    <BFormCheckboxGroup stacked v-model="checkedHolidays" :options="namedOptions" name="holidays" />
+    <BFormCheckboxGroup
+      stacked
+      v-model="checkedHolidays"
+      :options="namedOptions"
+      name="holidays"
+      @change="markHolidaysUpdates"
+    />
 
     <hr />
 
@@ -16,6 +22,7 @@
         v-model:to="rule.to"
         @add-after="addFixedRuleAfter(idx)"
         @remove="removeRule(idx)"
+        @change="markHolidaysUpdates"
       />
 
       <div v-if="presetStore.currentPreset.holidayRules.filter((rule) => rule.type === 'fixed').length === 0">
@@ -79,9 +86,15 @@ function addFixedRuleAfter(index: number) {
     to: Temporal.PlainMonthDay.from({ month: 1, day: 1 }),
   }
   presetStore.currentPreset.holidayRules.splice(index + 1, 0, rule)
+  markHolidaysUpdates()
 }
 
 function removeRule(index: number) {
   presetStore.currentPreset.holidayRules.splice(index, 1)
+  markHolidaysUpdates()
+}
+
+function markHolidaysUpdates() {
+  presetStore.markUpdate(presetStore.currentPresetId, 'holiday')
 }
 </script>

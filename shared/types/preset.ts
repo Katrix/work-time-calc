@@ -1,16 +1,16 @@
 import z from 'zod'
-import { holidayRule } from './holiday'
+import { holidayRuleSchema } from './holiday'
 
 export const currentPresetVersion = 2
 
-const repoV1 = z.object({
+const repoV1Schema = z.object({
   name: z.string(),
   autocompleteWithoutOwner: z.boolean(),
 })
-export const repoV2 = z.object({
+export const repoV2Schema = z.object({
   autocompleteWithoutRepository: z.boolean(),
 })
-export type Repo = z.infer<typeof repoV2>
+export type Repo = z.infer<typeof repoV2Schema>
 
 const recordMap = <T>(schema: z.ZodType<T>) => {
   return z.codec(z.record(z.string(), schema), z.map(z.string(), schema), {
@@ -19,32 +19,32 @@ const recordMap = <T>(schema: z.ZodType<T>) => {
   })
 }
 
-export const presetPart = z.object({
+export const presetPartSchema = z.object({
   workTime: z.int(),
   defaultFrom: z.int(),
-  defaultTo: z.int(),
+  defaultTo: z.int().nullable(),
   precision: z.int(),
   tags: z.map(z.string(), z.string()).or(recordMap(z.string())),
 })
-export type PresetPart = z.infer<typeof presetPart>
+export type PresetPart = z.infer<typeof presetPartSchema>
 
-const presetGithubV1 = z.object({
+const presetGithubV1Schema = z.object({
   owners: z.string().array(),
-  repos: z.map(z.string(), repoV1.array()).or(recordMap(repoV1.array())),
+  repos: z.map(z.string(), repoV1Schema.array()).or(recordMap(repoV1Schema.array())),
 })
 
-export const presetGithubOwner = z.object({
+export const presetGithubOwnerSchema = z.object({
   active: z.boolean(),
   autocompleteWithoutOwner: z.boolean(),
-  repos: z.map(z.string(), repoV2).or(recordMap(repoV2)),
+  repos: z.map(z.string(), repoV2Schema).or(recordMap(repoV2Schema)),
 })
-export type PresetGithubOwner = z.infer<typeof presetGithubOwner>
+export type PresetGithubOwner = z.infer<typeof presetGithubOwnerSchema>
 
-const presetV1 = z.object({
+const presetV1Schema = z.object({
   version: z.literal(1).transform<typeof currentPresetVersion>(() => currentPresetVersion),
-  hours: presetPart,
-  tasks: presetPart,
-  github: presetGithubV1.transform(
+  hours: presetPartSchema,
+  tasks: presetPartSchema,
+  github: presetGithubV1Schema.transform(
     (github) =>
       new Map(
         [...github.repos.entries()].map(([owner, repos]) => [
@@ -64,16 +64,16 @@ const presetV1 = z.object({
         ]),
       ),
   ),
-  holidayRules: holidayRule.array(),
+  holidayRules: holidayRuleSchema.array(),
 })
-export const presetV2 = z.object({
+export const presetV2Schema = z.object({
   version: z.literal(2),
-  hours: presetPart,
-  tasks: presetPart,
-  github: z.map(z.string(), presetGithubOwner).or(recordMap(presetGithubOwner)),
-  holidayRules: holidayRule.array(),
+  hours: presetPartSchema,
+  tasks: presetPartSchema,
+  github: z.map(z.string(), presetGithubOwnerSchema).or(recordMap(presetGithubOwnerSchema)),
+  holidayRules: holidayRuleSchema.array(),
 })
 
-export type Preset = z.infer<typeof presetV2>
+export type Preset = z.infer<typeof presetV2Schema>
 
-export const allVersionsPreset = z.discriminatedUnion('version', [presetV1, presetV2])
+export const allVersionsPresetSchema = z.discriminatedUnion('version', [presetV1Schema, presetV2Schema])

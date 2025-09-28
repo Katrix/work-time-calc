@@ -13,7 +13,7 @@ export interface ComputedWorkEntry {
   estimate: boolean
   subtractedTime: string
   notes: string
-  idx?: number
+  rank: string
   tags: string[]
 }
 
@@ -76,7 +76,7 @@ export function computeWorkTime(
   workDays: WorkDays,
   leftoverTime: number,
   defaultFrom: number,
-  defaultTo: number,
+  defaultTo: number | null,
   workTime: number,
   now: Date,
   precision: number,
@@ -90,7 +90,7 @@ export function computeWorkTime(
   for (const [, entries] of Object.entries(workDays)) {
     const preEntries = entries.map((entry, idx) => {
       const from = entry.from ?? defaultFrom
-      const to = entry.isTracking ? nowMinutes : entry.to ?? defaultTo
+      const to = entry.isTracking ? nowMinutes : entry.to ?? defaultTo ?? nowMinutes
       return {
         from,
         to,
@@ -140,7 +140,7 @@ export function computeWorkTime(
         estimate: entry.from === null || entry.to === null,
         subtractedTime: strFromMinutes(preEntry.subtracted),
         notes: entry.notes ?? '',
-        idx: entry.idx,
+        rank: entry.rank,
         tags: entry.tags ?? [],
       })
     }

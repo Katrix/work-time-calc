@@ -9,6 +9,7 @@ export default defineNuxtConfig({
     },
   },
   nitro: {
+    preset: 'cloudflare-module',
     prerender: {
       autoSubfolderIndex: false,
     },
@@ -16,22 +17,22 @@ export default defineNuxtConfig({
       deployConfig: true,
       nodeCompat: true,
     },
+    experimental: {
+      wasm: true,
+    },
   },
   modules: [
     '@nuxt/eslint',
     '@nuxt/test-utils',
     '@bootstrap-vue-next/nuxt',
     '@vueuse/nuxt',
-    '@pinia/nuxt',
-    // 'nuxt-security',
+    '@pinia/nuxt', // 'nuxt-security',
     'nuxt-auth-utils',
+    'nuxt-viewport',
+    'nitro-cloudflare-dev',
   ],
   ssr: true,
-  css: [
-    '~/assets/scss/app.scss',
-    'bootstrap-vue-next/dist/bootstrap-vue-next.css',
-    '@fortawesome/fontawesome-svg-core/styles.css',
-  ],
+  css: ['~/assets/scss/app.scss', '@fortawesome/fontawesome-svg-core/styles.css'],
   runtimeConfig: {
     github: {
       appId: '',
@@ -74,7 +75,21 @@ export default defineNuxtConfig({
       },
     },
   },
-  security: {
+  viewport: {
+    breakpoints: {
+      sm: 576,
+      md: 768,
+      lg: 992,
+      xl: 1200,
+      xxl: 1400,
+    },
+    defaultBreakpoints: {
+      mobile: 'md',
+    },
+    fallbackBreakpoint: 'xxl',
+    feature: 'minWidth',
+  },
+  /*security: {
     strict: true,
     removeLoggers: false,
     xssValidator: false,
@@ -89,7 +104,7 @@ export default defineNuxtConfig({
         'script-src': ["'self'", 'https:', "'unsafe-inline'", "'strict-dynamic'", "'nonce-{{nonce}}'", "'unsafe-eval'"],
       },
     },
-  },
+  },*/
   experimental: {
     typedPages: true,
   },

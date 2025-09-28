@@ -1,7 +1,8 @@
 import z from 'zod'
 import { strToMinutes } from '../utils/ComputeWorkTime'
+import { generateNKeysBetween } from 'fractional-indexing'
 
-export const currentCalcVersion = 1
+export const currentCalcVersion = 2
 
 const recordMap = <T>(schema: z.ZodType<T>) => {
   return z.codec(z.record(z.string(), schema), z.map(z.string(), schema), {
@@ -10,60 +11,43 @@ const recordMap = <T>(schema: z.ZodType<T>) => {
   })
 }
 
-export const calcEntry = z.object({
+export const calcEntryV2Schema = z.object({
   name: z.string(),
+  rank: z.string(),
   from: z.int().nullable(),
   to: z.int().nullable(),
   subtractedTime: z.int().nullable(),
   notes: z.string().optional(),
-  idx: z.int().optional(),
   tags: z.string().array().optional(),
   isTracking: z.boolean().optional(),
-  customSubtractedTime: z.boolean().optional(),
 })
-export type CalcEntry = z.infer<typeof calcEntry>
+export type CalcEntry = z.infer<typeof calcEntryV2Schema>
 
-export const calc = z.object({
-  version: z.literal(1),
+export const calcSchema = z.object({
   name: z.string(),
   mode: z.enum(['hours', 'tasks']),
   savedUpTime: z.int(),
   savedUpVacation: z.number(),
   workTime: z.int(),
   defaultFrom: z.int(),
-  defaultTo: z.int(),
+  defaultTo: z.int().nullable(),
   precision: z.int(),
   tags: z.map(z.string(), z.string()).or(recordMap(z.string())),
 })
-export type Calc = z.infer<typeof calc>
+export type Calc = z.infer<typeof calcSchema>
 
-export const calcWithEntries = z.intersection(calc, z.object({ entries: calcEntry.array() }))
-export type CalcWithEntries = z.infer<typeof calcWithEntries>
+export const calcWithEntriesV2Schema = z.object({
+  ...calcSchema.shape,
+  version: z.literal(2),
+  entries: calcEntryV2Schema.array(),
+})
+export type CalcWithEntries = z.infer<typeof calcWithEntriesV2Schema>
 
 export function encodeCalcToString(calc: CalcWithEntries) {
   const data = {
-    version: currentCalcVersion,
-    mode: calc.mode,
-    name: calc.name,
-    savedUpTime: calc.savedUpTime,
-    savedUpVacation: calc.savedUpVacation,
-    workTime: calc.workTime,
-    defaultFrom: calc.defaultFrom,
-    defaultTo: calc.defaultTo,
-    precision: calc.precision,
+    ...calc,
     tags: Object.fromEntries(calc.tags.entries()),
-    workDays: calc.entries.map((e) => ({
-      name: e.name,
-      from: e.from,
-      to: e.to,
-      subtractedTime: e.subtractedTime,
-      customSubtractedTime: e.customSubtractedTime,
-      tags: e.tags,
-      notes: e.notes,
-      idx: e.idx,
-      isTracking: e.isTracking,
-    })),
-  }
+  } satisfies Omit<CalcWithEntries, 'tags'> & { tags: Record<string, string> }
 
   return JSON.stringify(data)
 }
@@ -71,71 +55,77 @@ export function encodeCalcToString(calc: CalcWithEntries) {
 export function decodeCalcFromString(str: string): CalcWithEntries {
   const strDuration = z.string().transform((s) => strToMinutes(s))
 
-  const jsonSchema = z.object({
-    version: z.literal(1).default(1),
-    mode: z.enum(['hours', 'tasks']).optional().default('hours'),
-    name: z.string().optional().default(''),
-    savedUpTime: z.int().optional().or(strDuration),
-    savedUp: strDuration.optional(),
-    savedUpVacation: z
-      .number()
-      .optional()
-      .or(
-        z
-          .string()
-          .transform((s) => Number(s.replaceAll(',', '.')))
-          .optional(),
-      )
-      .default(0),
-    workTime: z.int().or(strDuration),
-    defaultFrom: z.int().or(strDuration),
-    defaultTo: z.int().or(strDuration),
-    precision: z.int().optional().default(5),
-    tags: z
-      .map(z.string(), z.string())
-      .or(recordMap(z.string()))
-      .default(() => new Map()),
-    workDays: z.array(
-      z.object({
-        name: z.string().optional(),
-        day: z.string().optional(),
-        from: z.int().or(strDuration).nullable(),
-        to: z.int().or(strDuration).nullable(),
-        subtractedTime: z.int().nullable().or(strDuration.nullable().default(null)),
-        customSubtractedTime: z.boolean().optional().default(false),
-        tags: z.array(z.string()).optional(),
-        notes: z.string().optional(),
-        idx: z.int().optional(),
-        isTracking: z.boolean().optional(),
-      }),
-    ),
-  })
+  const jsonSchemaV1 = z
+    .object({
+      version: z.literal(1).default(1),
+      mode: z.enum(['hours', 'tasks']).optional().default('hours'),
+      name: z.string().optional().default(''),
+      savedUpTime: z.int().optional().or(strDuration),
+      savedUp: strDuration.optional(),
+      savedUpVacation: z
+        .number()
+        .optional()
+        .or(
+          z
+            .string()
+            .transform((s) => Number(s.replaceAll(',', '.')))
+            .optional(),
+        )
+        .default(0),
+      workTime: z.int().or(strDuration),
+      defaultFrom: z.int().or(strDuration),
+      defaultTo: z.int().or(strDuration),
+      precision: z.int().optional().default(5),
+      tags: z
+        .map(z.string(), z.string())
+        .or(recordMap(z.string()))
+        .default(() => new Map()),
+      workDays: z.array(
+        z.object({
+          name: z.string().optional(),
+          day: z.string().optional(),
+          from: z.int().or(strDuration).nullable(),
+          to: z.int().or(strDuration).nullable(),
+          subtractedTime: z.int().nullable().or(strDuration.nullable().default(null)),
+          tags: z.array(z.string()).optional(),
+          notes: z.string().optional(),
+          idx: z.int().optional(),
+          isTracking: z.boolean().optional(),
+        }),
+      ),
+    })
+    .transform((res) => {
+      const ranks = generateNKeysBetween(null, null, res.workDays.length)
+      return {
+        version: currentCalcVersion,
+        name: res.name,
+        mode: res.mode,
+        savedUpTime: res.savedUpTime ?? res.savedUp ?? 0,
+        savedUpVacation: res.savedUpVacation,
+        workTime: res.workTime,
+        defaultFrom: res.defaultFrom,
+        defaultTo: res.defaultTo,
+        precision: res.precision,
+        tags: res.tags,
+        entries: res.workDays.map((e, i) => {
+          if ('day' in e) {
+            const { day, ...other } = e
+            return {
+              ...other,
+              rank: ranks[i],
+              name: day ?? '',
+            }
+          } else
+            return {
+              ...e,
+              rank: ranks[i],
+              name: e.name ?? '',
+            }
+        }),
+      } satisfies CalcWithEntries
+    })
 
-  const res = jsonSchema.parse(JSON.parse(str))
+  const schema = z.discriminatedUnion('version', [jsonSchemaV1, calcWithEntriesV2Schema])
 
-  return {
-    version: currentCalcVersion,
-    name: res.name,
-    mode: res.mode,
-    savedUpTime: res.savedUpTime ?? res.savedUp ?? 0,
-    savedUpVacation: res.savedUpVacation,
-    workTime: res.workTime,
-    defaultFrom: res.defaultFrom,
-    defaultTo: res.defaultTo,
-    precision: res.precision,
-    tags: res.tags,
-    entries: res.workDays.map((e) => {
-      if ('day' in e) {
-        const { day, ...other } = e
-        return {
-          ...other,
-          name: day ?? '',
-        }
-      } else
-        return {
-          ...e,
-          name: e.name ?? '',
-        }
-    }),
-  }
+  return schema.parse(JSON.parse(str))
 }
