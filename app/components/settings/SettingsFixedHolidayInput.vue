@@ -8,11 +8,11 @@
   >
     <label style="grid-column: from-desc-start / from-desc-end">From:</label>
     <div style="grid-column: from-val-start / from-val-end">
-      <BFormInput type="date" :min="dateMin" :max="dateMax" v-model="fromStr" />
+      <BFormInput type="date" :min="dateMin" :max="dateMax" v-model="fromStr" @change="$emit('change')" />
     </div>
     <label style="grid-column: to-desc-start / to-desc-end">To:</label>
     <div style="grid-column: to-val-start / to-val-end">
-      <BFormInput type="date" :min="dateMin" :max="dateMax" v-model="toStr" />
+      <BFormInput type="date" :min="dateMin" :max="dateMax" v-model="toStr" @change="$emit('change')" />
     </div>
     <div style="grid-column: buttons-start / buttons-end">
       <button type="button" class="btn btn-secondary btn-sm" @click="$emit('addAfter')">
@@ -38,6 +38,7 @@ const to = defineModel<Temporal.PlainMonthDay>('to', { required: true })
 defineEmits<{
   (e: 'addAfter'): void
   (e: 'remove'): void
+  (e: 'change'): void
 }>()
 
 function makeDateStrRef(date: Ref<Temporal.PlainMonthDay>) {
