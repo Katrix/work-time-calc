@@ -43,13 +43,23 @@
 </template>
 
 <script setup lang="ts">
+const presetStore = usePresetStore()
 const calcStore = useCalcStore()
-const intervalId = ref<number>()
+const trackedIntervalId = ref<number>()
 const now = useNow()
+
+await callOnce(async () => await presetStore.fetchData())
+
 onMounted(() => {
-  intervalId.value = setInterval(() => {
+  trackedIntervalId.value = setInterval(() => {
     now.value = new Date()
   }, 1000) as unknown as number
 })
-onUnmounted(() => clearInterval(intervalId.value))
+onUnmounted(() => clearInterval(trackedIntervalId.value))
+
+const debouncedPresetUpdates = useDebounce(
+  computed(() => presetStore.updates),
+  10_000,
+)
+watch(debouncedPresetUpdates, () => presetStore.runUpdate(), { deep: true })
 </script>

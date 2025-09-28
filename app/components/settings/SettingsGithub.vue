@@ -7,7 +7,15 @@
         <template #label>
           <span class="d-flex justify-content-between">
             Owners:
-            <BButton variant="danger" size="sm" @click="presetStore.currentPreset.github.owners = []"
+            <BButton
+              variant="danger"
+              size="sm"
+              @click="
+                () => {
+                  presetStore.currentPreset.github.owners = []
+                  markGithubUpdate()
+                }
+              "
               >Clear all</BButton
             >
           </span>
@@ -18,6 +26,7 @@
           v-model="presetStore.currentPreset.github.owners"
           :options="ownersOptions"
           multiple
+          @change="markGithubUpdate"
         ></BFormSelect>
       </BFormGroup>
 
@@ -52,7 +61,12 @@
               <li v-for="repo in repoArr" :key="owner + repo.name" class="list-group-item">
                 <div style="grid-template-columns: 1fr 2fr auto" class="d-grid align-items-center">
                   <span class="me-4">{{ repo.name }}</span>
-                  <BFormCheckbox v-model="repo.autocompleteWithoutOwner" class="me-4" reverse>
+                  <BFormCheckbox
+                    v-model="repo.autocompleteWithoutOwner"
+                    class="me-4"
+                    reverse
+                    @change="markGithubUpdate"
+                  >
                     Autocomplete without owner:
                   </BFormCheckbox>
                   <BButton variant="danger" size="sm" @click="removeRepo(owner, repo)">
@@ -142,6 +156,7 @@ function addRepo() {
     autocompleteWithoutOwner: false,
   })
   nextTick(() => (currentRepo.value = null))
+  markGithubUpdate()
 }
 
 function removeRepo(owner: string, repo: Repo) {
@@ -159,5 +174,10 @@ function removeRepo(owner: string, repo: Repo) {
   if (repoArr.length === 0) {
     repos.delete(owner)
   }
+  markGithubUpdate()
+}
+
+function markGithubUpdate() {
+  presetStore.markUpdate(presetStore.currentPresetId, 'github')
 }
 </script>
