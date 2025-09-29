@@ -1,49 +1,6 @@
 import { Temporal } from '@js-temporal/polyfill'
 import { easter } from 'date-easter'
 
-export interface HolidayRuleBase {
-  type: string
-}
-
-export interface FixedHolidayRule extends HolidayRuleBase {
-  type: 'fixed'
-  from: Temporal.PlainMonthDay
-  to: Temporal.PlainMonthDay
-}
-
-export interface EasterHolidayRule extends HolidayRuleBase {
-  type: 'easter'
-}
-
-export interface AscensionDayRule extends HolidayRuleBase {
-  type: 'ascension'
-}
-
-export interface PentecostDayRule extends HolidayRuleBase {
-  type: 'pentecost'
-}
-
-export interface ChristmasHolidayRule extends HolidayRuleBase {
-  type: 'christmas'
-}
-
-export interface SaturdayHolidayRule extends HolidayRuleBase {
-  type: 'saturday'
-}
-
-export interface SundayHolidayRule extends HolidayRuleBase {
-  type: 'sunday'
-}
-
-export type HolidayRule =
-  | FixedHolidayRule
-  | EasterHolidayRule
-  | ChristmasHolidayRule
-  | AscensionDayRule
-  | PentecostDayRule
-  | SaturdayHolidayRule
-  | SundayHolidayRule
-
 function easterAlignedHolidays(year: number) {
   const easterSunday = Temporal.PlainDate.from(easter(year))
   return {

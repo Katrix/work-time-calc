@@ -1,14 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill'
-
-export interface WorkRange {
-  day: string
-  from: string | null
-  to: string | null
-  subtractedTime: string | null
-  notes?: string
-  idx?: number
-  tags?: string[]
-}
+import { type WorkRange } from '../types/calc'
 
 export type WorkDays = { [group: string]: WorkRange[] }
 
@@ -26,7 +17,7 @@ export interface ComputedWorkEntry {
   tags: string[]
 }
 
-function toMinutes(str: string): number {
+export function strToMinutes(str: string): number {
   let sign = 1
   if (str.startsWith('-')) {
     str = str.substring(1)
@@ -38,7 +29,7 @@ function toMinutes(str: string): number {
   return sign * Temporal.Duration.from({ hours: Number(hours), minutes: Number(minutes) }).total({ unit: 'minutes' })
 }
 
-function fromMinutes(minutes: number): string {
+export function strFromMinutes(minutes: number): string {
   let negative = false
   if (minutes < 0) {
     minutes = Math.abs(minutes)
@@ -76,18 +67,18 @@ export function computeWorkTime(
   const tagSummaries: Record<string, TagSummary> = {}
   const tagTime: Record<string, number> = {}
 
-  let timeDiff = toMinutes(leftoverTime)
+  let timeDiff = strToMinutes(leftoverTime)
   for (const [, entries] of Object.entries(workDays)) {
     const preEntries = entries.map((entry, idx) => {
-      const from = toMinutes(entry.from ?? defaultFrom)
-      const to = toMinutes(entry.to ?? defaultTo)
+      const from = strToMinutes(entry.from ?? defaultFrom)
+      const to = strToMinutes(entry.to ?? defaultTo)
       return {
         from,
         to,
         workedTime: to - from,
         subtracted:
-          ((entry.subtractedTime ? toMinutes(entry.subtractedTime) : null) ?? idx === entries.length - 1)
-            ? toMinutes(workTime)
+          ((entry.subtractedTime ? strToMinutes(entry.subtractedTime) : null) ?? idx === entries.length - 1)
+            ? strToMinutes(workTime)
             : 0,
       }
     })
@@ -126,11 +117,11 @@ export function computeWorkTime(
         day: entry.day,
         from: entry.from,
         to: entry.to,
-        workedTime: fromMinutes(preEntry.workedTime),
-        timeDiff: fromMinutes(timeDiff),
-        extraTime: (timeDiff < 0 ? '-' : '') + fromMinutes(Math.abs(timeDiff)),
+        workedTime: strFromMinutes(preEntry.workedTime),
+        timeDiff: strFromMinutes(timeDiff),
+        extraTime: (timeDiff < 0 ? '-' : '') + strFromMinutes(Math.abs(timeDiff)),
         estimate: entry.from === null || entry.to === null,
-        subtractedTime: fromMinutes(preEntry.subtracted),
+        subtractedTime: strFromMinutes(preEntry.subtracted),
         notes: entry.notes ?? '',
         idx: entry.idx,
         tags: entry.tags ?? [],
@@ -139,7 +130,7 @@ export function computeWorkTime(
   }
 
   for (const [tag, time] of Object.entries(tagTime)) {
-    tagSummaries[tag].time = fromMinutes(time)
+    tagSummaries[tag].time = strFromMinutes(time)
   }
 
   return { entries: workEntriesComputed, summaryByTag: tagSummaries }

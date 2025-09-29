@@ -1,28 +1,5 @@
 import * as devalue from 'devalue'
 
-export interface PresetPart {
-  workTime: string
-  defaultFrom: string
-  defaultTo: string
-  precision: number
-  tags: Map<string, string>
-  holidayRules: HolidayRule[]
-}
-
-export interface Repo {
-  name: string
-  autocompleteWithoutOwner: boolean
-}
-
-export interface Preset {
-  hours: PresetPart
-  tasks: PresetPart
-  github: {
-    owners: string[]
-    repos: Map<string, Repo[]>
-  }
-}
-
 export const usePresetStore = defineStore('presetStore', () => {
   const presets = ref<Map<string, Preset>>(
     new Map<string, Preset>([

@@ -3,20 +3,6 @@ import type { WatchHandle } from 'vue'
 import * as devalue from 'devalue'
 import { skipHydrate } from 'pinia'
 
-export interface Calc {
-  name: string
-  mode: 'hours' | 'tasks'
-  savedUpTime: string
-  savedUpVacation: string
-  workTime: string
-  defaultFrom: string
-  defaultTo: string
-  precision: number
-  tags: Map<string, { color: string; fromPreset?: boolean }>
-
-  entries: (WorkRange & { customSubtractedTime: boolean; isTracking?: boolean })[]
-}
-
 export const useCalcStore = defineStore('calcs', () => {
   const presetStore = usePresetStore()
 
@@ -34,7 +20,7 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
-  function makeNewCalc(mode: 'hours' | 'tasks'): Calc {
+  function makeNewCalc(mode: 'hours' | 'tasks'): CalcWithEntries {
     const defaultVal = defaults(mode)
 
     return {
@@ -46,7 +32,7 @@ export const useCalcStore = defineStore('calcs', () => {
       defaultFrom: defaultVal.defaultFrom,
       defaultTo: defaultVal.defaultTo,
       precision: defaultVal.precision,
-      tags: new Map([...defaultVal.tags.entries()].map(([k, color]) => [k, { color, fromPreset: true }])),
+      tags: new Map([...defaultVal.tags.entries()]),
       entries: [
         {
           day: defaultEntryName(mode),
@@ -59,7 +45,7 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
-  function watcherForCalc(id: string, defaultCalc: Calc, entry: Ref<Calc>) {
+  function watcherForCalc(id: string, defaultCalc: CalcWithEntries, entry: Ref<CalcWithEntries>) {
     const defaultStr = devalue.stringify(defaultCalc)
     return watch(
       entry,
@@ -86,7 +72,7 @@ export const useCalcStore = defineStore('calcs', () => {
     )
   }
 
-  function makeComputedTime(entry: Ref<Calc>) {
+  function makeComputedTime(entry: Ref<CalcWithEntries>) {
     return computed<ComputedWorkTime>((oldValue) => {
       const calc = entry.value
 
@@ -171,7 +157,7 @@ export const useCalcStore = defineStore('calcs', () => {
   )
 
   const calcs = shallowRef<
-    Map<string, { entry: Ref<Calc>; computedTime: Ref<ComputedWorkTime>; watcher: Ref<WatchHandle> }>
+    Map<string, { entry: Ref<CalcWithEntries>; computedTime: Ref<ComputedWorkTime>; watcher: Ref<WatchHandle> }>
   >(new Map(calcOrder.value.map((id) => [id, newCalcWithWatchers(id, 'hours')])))
 
   function calcName(calcId: string, idx: number) {
@@ -180,7 +166,7 @@ export const useCalcStore = defineStore('calcs', () => {
   }
 
   const useCalc = (id: Ref<string>) => {
-    const calc = computed<Calc, Calc>({
+    const calc = computed<CalcWithEntries, CalcWithEntries>({
       get: () => {
         const existing = calcs.value.get(id.value)?.entry?.value
         if (existing) {
@@ -281,16 +267,16 @@ export const useCalcStore = defineStore('calcs', () => {
       getTagColor(tag: string) {
         const existing = calc.value.tags.get(tag)
         if (existing) {
-          return existing.color
+          return existing
         }
 
         const color = randomColor()
-        calc.value.tags.set(tag, { color })
+        calc.value.tags.set(tag, color)
         return color
       },
       deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }) {
         const tag = calc.value.tags.get(tagName)
-        if (tag && tag.fromPreset && !deleteConfigured) {
+        if (tag && presetStore.currentPreset[calc.value.mode].tags.has(tagName) && !deleteConfigured) {
           return
         }
         calc.value.tags.delete(tagName)
@@ -455,7 +441,7 @@ export const useCalcStore = defineStore('calcs', () => {
         const data = JSON.parse(dataStr) as { lastUpdated: number; data: string }
 
         if (data.lastUpdated > (lastUpdated.value.get(id) ?? 0)) {
-          const calcFromStorage = devalue.parse(data.data) as Calc
+          const calcFromStorage = devalue.parse(data.data) as CalcWithEntries
           lastUpdated.value.set(id, data.lastUpdated)
 
           let calcRef = calcs.value.get(id)
