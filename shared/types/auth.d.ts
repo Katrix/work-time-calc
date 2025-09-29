@@ -9,6 +9,9 @@ declare module '#auth-utils' {
 
   interface SecureSessionData {
     githubAccessToken: string
+    githubRefreshToken?: string
+    githubAccessTokenExpires?: number
+    githubRefreshTokenExpires?: number
   }
 }
 

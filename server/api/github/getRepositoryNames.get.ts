@@ -25,11 +25,7 @@ const query = graphql(`
 
 export default defineCachedEventHandler(
   async (event) => {
-    const session = await getUserSession(event)
-    const accessToken = session.secure?.githubAccessToken
-    if (!accessToken) {
-      throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-    }
+    const accessToken = await useAccessToken(event)
 
     const client = new Client({
       url: 'https://api.github.com/graphql',

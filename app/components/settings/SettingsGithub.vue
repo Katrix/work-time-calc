@@ -94,8 +94,8 @@ const {
   error: repoNameError,
 } = useQuery({
   queryKey: ['api', 'github', 'getRepositoryNames'],
-  queryFn: () => $fetch('/api/github/getRepositoryNames'),
-  enabled: loggedIn,
+  queryFn: ({ signal }) => $fetch('/api/github/getRepositoryNames', { signal }),
+  enabled: computed(() => import.meta.client && loggedIn.value),
 })
 
 const ownersOptions = computed(() => [...new Set((repoNamesData.value ?? []).map((repo) => repo.owner.login))])

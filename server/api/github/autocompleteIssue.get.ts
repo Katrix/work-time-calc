@@ -28,11 +28,7 @@ export default defineEventHandler(async (event) => {
     z.object({ prefix: z.string(), repo: z.string().array() }).parse,
   )
 
-  const session = await getUserSession(event)
-  const accessToken = session.secure?.githubAccessToken
-  if (!accessToken) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const accessToken = await useAccessToken(event)
 
   const client = new Client({
     url: 'https://api.github.com/graphql',
