@@ -1,6 +1,6 @@
 <template>
   <BInputGroup>
-    <BFormInput v-model="subtractedTime" :disabled="!customSubtractedTime" />
+    <CalcInputDuration v-model="subtractedTime" :disabled="!customSubtractedTime" />
 
     <template #prepend>
       <button
@@ -25,6 +25,6 @@
 </template>
 
 <script setup lang="ts">
-const subtractedTime = defineModel<string | null>('subtractedTime', { required: true })
+const subtractedTime = defineModel<number | undefined | null>('subtractedTime', { required: true })
 const customSubtractedTime = defineModel<boolean | undefined>('customSubtractedTime', { required: true })
 </script>

@@ -1,6 +1,11 @@
 <template>
   <BInputGroup>
-    <BFormInput v-model="to" :disabled="isTracking" />
+    <CalcInputDuration
+      :model-value="isTracking ? currentTime(precision) : to"
+      @update:model-value="(v) => (to = v)"
+      :disabled="isTracking"
+      :required="false"
+    />
     <template #append>
       <button class="btn btn-secondary" @click="to = currentTime(precision)">
         <FontAwesomeIcon :icon="['fas', 'clock']" />
@@ -28,7 +33,7 @@
 </template>
 
 <script setup lang="ts">
-const to = defineModel<string | null>('to', { required: true })
+const to = defineModel<number | undefined | null>('to', { required: true })
 const isTracking = defineModel<boolean | undefined>('isTracking', { required: true })
 defineProps<{ precision: number }>()
 </script>

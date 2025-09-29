@@ -7,9 +7,9 @@ export const usePresetStore = defineStore('presetStore', () => {
         'Default',
         {
           hours: {
-            workTime: '08:00',
-            defaultFrom: '08:45',
-            defaultTo: '17:00',
+            workTime: 8 * 60,
+            defaultFrom: 8 * 60 + 45,
+            defaultTo: 17 * 60,
             precision: 5,
             tags: new Map(),
             holidayRules: [
@@ -22,9 +22,9 @@ export const usePresetStore = defineStore('presetStore', () => {
             ],
           },
           tasks: {
-            workTime: '00:00',
-            defaultFrom: '00:00',
-            defaultTo: '00:00',
+            workTime: 0,
+            defaultFrom: 0,
+            defaultTo: 0,
             precision: 10,
             tags: new Map(),
             holidayRules: [],

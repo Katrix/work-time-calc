@@ -2,11 +2,11 @@ import z from 'zod'
 
 export const workRange = z.object({
   name: z.string(),
-  from: z.string().nullable(),
-  to: z.string().nullable(),
-  subtractedTime: z.string().nullable(),
+  from: z.int().nullable(),
+  to: z.int().nullable(),
+  subtractedTime: z.int().nullable(),
   notes: z.string().optional(),
-  idx: z.number().optional(),
+  idx: z.int().optional(),
   tags: z.string().array().optional(),
 })
 export type WorkRange = z.infer<typeof workRange>
@@ -23,12 +23,12 @@ export type CalcEntry = z.infer<typeof calcEntry>
 export const calc = z.object({
   name: z.string(),
   mode: z.enum(['hours', 'tasks']),
-  savedUpTime: z.string(),
-  savedUpVacation: z.string(),
-  workTime: z.string(),
-  defaultFrom: z.string(),
-  defaultTo: z.string(),
-  precision: z.number(),
+  savedUpTime: z.int(),
+  savedUpVacation: z.number(),
+  workTime: z.int(),
+  defaultFrom: z.int(),
+  defaultTo: z.int(),
+  precision: z.int(),
   tags: z.map(z.string(), z.string()),
 })
 export type Calc = z.infer<typeof calc>

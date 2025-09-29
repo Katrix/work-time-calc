@@ -1,6 +1,6 @@
 <template>
   <BInputGroup>
-    <BFormInput v-model="from" />
+    <CalcInputDuration v-model="from" required />
     <template #append>
       <button class="btn btn-secondary" @click="from = currentTime(precision)">
         <FontAwesomeIcon :icon="['fas', 'clock']" />
@@ -10,6 +10,6 @@
 </template>
 
 <script setup lang="ts">
-const from = defineModel<string | null>({ required: true })
+const from = defineModel<number | null | undefined>({ required: true })
 defineProps<{ precision: number }>()
 </script>

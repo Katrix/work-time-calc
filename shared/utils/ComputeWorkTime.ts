@@ -17,16 +17,32 @@ export interface ComputedWorkEntry {
   tags: string[]
 }
 
-export function strToMinutes(str: string): number {
+export function strToMinutesSafe(str: string): number | null | undefined {
   let sign = 1
   if (str.startsWith('-')) {
     str = str.substring(1)
     sign = -1
   }
 
+  if (str.length === 0) {
+    return null
+  }
+
+  if (!/^\d+:\d+$/.test(str)) {
+    return undefined
+  }
+
   const [hours, minutes] = str.split(':', 2)
 
-  return sign * Temporal.Duration.from({ hours: Number(hours), minutes: Number(minutes) }).total({ unit: 'minutes' })
+  return sign * Number(hours) * 60 + Number(minutes)
+}
+
+export function strToMinutes(str: string): number {
+  const res = strToMinutesSafe(str)
+  if (res === null || res === undefined) {
+    throw new Error(`Invalid time string: ${str}`)
+  }
+  return res
 }
 
 export function strFromMinutes(minutes: number): string {
@@ -58,27 +74,27 @@ export interface ComputedWorkTime {
 
 export function computeWorkTime(
   workDays: WorkDays,
-  leftoverTime: string,
-  defaultFrom: string,
-  defaultTo: string,
-  workTime: string,
+  leftoverTime: number,
+  defaultFrom: number,
+  defaultTo: number,
+  workTime: number,
 ): ComputedWorkTime {
   const workEntriesComputed: ComputedWorkEntry[] = []
   const tagSummaries: Record<string, TagSummary> = {}
   const tagTime: Record<string, number> = {}
 
-  let timeDiff = strToMinutes(leftoverTime)
+  let timeDiff = leftoverTime
   for (const [, entries] of Object.entries(workDays)) {
     const preEntries = entries.map((entry, idx) => {
-      const from = strToMinutes(entry.from ?? defaultFrom)
-      const to = strToMinutes(entry.to ?? defaultTo)
+      const from = entry.from ?? defaultFrom
+      const to = entry.to ?? defaultTo
       return {
         from,
         to,
         workedTime: to - from,
         subtracted:
-          ((entry.subtractedTime ? strToMinutes(entry.subtractedTime) : null) ?? idx === entries.length - 1)
-            ? strToMinutes(workTime)
+          ((entry.subtractedTime !== null ? entry.subtractedTime : null) ?? idx === entries.length - 1)
+            ? workTime
             : 0,
       }
     })
@@ -115,8 +131,8 @@ export function computeWorkTime(
 
       workEntriesComputed.push({
         name: entry.name,
-        from: entry.from,
-        to: entry.to,
+        from: strFromMinutes(preEntry.from),
+        to: strFromMinutes(preEntry.to),
         workedTime: strFromMinutes(preEntry.workedTime),
         timeDiff: strFromMinutes(timeDiff),
         extraTime: (timeDiff < 0 ? '-' : '') + strFromMinutes(Math.abs(timeDiff)),
@@ -136,7 +152,7 @@ export function computeWorkTime(
   return { entries: workEntriesComputed, summaryByTag: tagSummaries }
 }
 
-function dateToTimeString(d: Date, precision: number) {
+function dateToMinutes(d: Date, precision: number) {
   const hours = d.getHours()
   const minutes = d.getMinutes()
 
@@ -146,12 +162,13 @@ function dateToTimeString(d: Date, precision: number) {
   const roundedHours = Math.floor(roundedTotalMinutes / 60)
   const roundedMinutes = roundedTotalMinutes - roundedHours * 60
 
-  const roundedHoursStr = roundedHours.toString(10).padStart(2, '0')
-  const roundedMinutesStr = roundedMinutes.toString(10).padStart(2, '0')
+  return roundedHours * 60 + roundedMinutes
+}
 
-  return `${roundedHoursStr}:${roundedMinutesStr}`
+function dateToTimeString(d: Date, precision: number) {
+  return strFromMinutes(dateToMinutes(d, precision))
 }
 
 export function currentTime(precision: number) {
-  return dateToTimeString(new Date(), precision)
+  return dateToMinutes(new Date(), precision)
 }

@@ -8,41 +8,46 @@
 
       <div :key="'modeSwitch'" style="grid-area: mode-switch" class="d-flex">
         <span class="me-2">Tasks</span>
-        <BFormCheckbox :model-value="mode === 'hours'" switch @update:model-value="switchMode()"></BFormCheckbox>
+        <BFormCheckbox :model-value="mode === 'hours'" switch @update:model-value="switchMode()" />
         <span>Hours</span>
       </div>
 
-      <label v-if="mode === 'hours'" style="grid-area: saved-up-time-description" for="savedUpTimeInput"
-        >Saved up time:</label
-      >
+      <label v-if="mode === 'hours'" style="grid-area: saved-up-time-description" for="savedUpTimeInput">
+        Saved up time:
+      </label>
       <div v-if="mode === 'hours'" style="grid-area: saved-up-time-content">
-        <BFormInput id="savedUpTimeInput" v-model="calc.savedUpTime"></BFormInput>
+        <CalcInputDuration id="savedUpTimeInput" v-model="calc.savedUpTime" />
       </div>
 
-      <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description" for="savedUpVacationInput"
-        >Saved up vacation days:</label
-      >
+      <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description" for="savedUpVacationInput">
+        Saved up vacation days:
+      </label>
       <div v-if="mode === 'hours'" style="grid-area: saved-up-vacation-content">
-        <BFormInput id="savedUpVacationInput" v-model="calc.savedUpVacation"></BFormInput>
+        <CalcInputParsed
+          id="savedUpVacationInput"
+          v-model="calc.savedUpVacation"
+          :parse="(s) => Number(s.replaceAll(',', '.'))"
+          :format="(v) => v.toLocaleString('en-US')"
+        />
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: work-time-description" for="workTimeInput">Work time:</label>
       <div v-if="mode === 'hours'" style="grid-area: work-time-content">
-        <BFormInput id="workTimeInput" v-model="calc.workTime"></BFormInput>
+        <CalcInputDuration id="workTimeInput" v-model="calc.workTime" />
       </div>
 
-      <label v-if="mode === 'hours'" style="grid-area: default-work-from-description" for="defaultWorkFromInput"
-        >Default work from:</label
-      >
+      <label v-if="mode === 'hours'" style="grid-area: default-work-from-description" for="defaultWorkFromInput">
+        Default work from:
+      </label>
       <div v-if="mode === 'hours'" style="grid-area: default-work-from-content">
-        <BFormInput id="defaultWorkFromInput" v-model="calc.defaultFrom"></BFormInput>
+        <CalcInputDuration id="defaultWorkFromInput" v-model="calc.defaultFrom" />
       </div>
 
-      <label v-if="mode === 'hours'" style="grid-area: default-work-to-description" for="defaultWorkToInput"
-        >Default work to:</label
-      >
+      <label v-if="mode === 'hours'" style="grid-area: default-work-to-description" for="defaultWorkToInput">
+        Default work to:
+      </label>
       <div v-if="mode === 'hours'" style="grid-area: default-work-to-content">
-        <BFormInput id="defaultWorkToInput" v-model="calc.defaultTo"></BFormInput>
+        <CalcInputDuration id="defaultWorkToInput" v-model="calc.defaultTo" />
       </div>
 
       <label class="visually-hidden" for="inputFile">Input:</label>

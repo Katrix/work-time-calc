@@ -2,6 +2,7 @@ import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 import type { WatchHandle } from 'vue'
 import * as devalue from 'devalue'
 import { skipHydrate } from 'pinia'
+import z from 'zod'
 
 export const useCalcStore = defineStore('calcs', () => {
   const presetStore = usePresetStore()
@@ -26,8 +27,8 @@ export const useCalcStore = defineStore('calcs', () => {
     return {
       name: nameDefault(mode),
       mode: mode,
-      savedUpTime: '00:00',
-      savedUpVacation: '0',
+      savedUpTime: 0,
+      savedUpVacation: 0,
       workTime: defaultVal.workTime,
       defaultFrom: defaultVal.defaultFrom,
       defaultTo: defaultVal.defaultTo,
@@ -38,7 +39,7 @@ export const useCalcStore = defineStore('calcs', () => {
           name: defaultEntryName(mode),
           from: defaultVal.defaultFrom,
           to: null,
-          subtractedTime: null,
+          subtractedTime: 0,
           customSubtractedTime: false,
         },
       ],
@@ -236,41 +237,62 @@ export const useCalcStore = defineStore('calcs', () => {
       },
       async loadFromFile(file: File) {
         const text = await file.text()
-        const json = JSON.parse(text) as {
-          mode?: string
-          name?: string
-          savedUpTime?: string
-          savedUp?: string
-          savedUpVacation?: string
-          workTime: string
-          defaultFrom: string
-          defaultTo: string
-          workDays: (WorkRange & { customSubtractedTime: boolean })[]
-        }
 
-        if (json.mode !== undefined && json.mode !== 'hours' && json.mode !== 'tasks') {
-          throw new Error(`Invalid mode ${json.mode}`)
-        }
+        const strDuration = z.string().transform((s) => strToMinutes(s))
+
+        const jsonSchema = z.object({
+          mode: z.enum(['hours', 'tasks']).optional().default('hours'),
+          name: z.string().optional().default(''),
+          savedUpTime: z.int().optional().or(strDuration),
+          savedUp: strDuration.optional(),
+          savedUpVacation: z
+            .string()
+            .transform((s) => Number(s.replaceAll(',', '.')))
+            .optional()
+            .default(0),
+          workTime: strDuration,
+          defaultFrom: strDuration,
+          defaultTo: strDuration,
+          workDays: z.array(
+            z.object({
+              name: z.string().optional(),
+              day: z.string().optional(),
+              from: z.int().or(strDuration).nullable(),
+              to: z.int().or(strDuration).nullable(),
+              subtractedTime: z.int().nullable().or(strDuration.nullable().default(null)),
+              customSubtractedTime: z.boolean().optional().default(false),
+              tags: z.array(z.string()).optional(),
+              notes: z.string().optional(),
+              idx: z.int().optional(),
+            }),
+          ),
+        })
+
+        const res = jsonSchema.parse(JSON.parse(text))
 
         calc.value = {
           ...calc.value,
-          mode: json.mode ?? 'hours',
-          name: json.name ?? '',
-          savedUpTime: json.savedUpTime ?? json.savedUp ?? '00:00',
-          savedUpVacation: json.savedUpVacation ?? '0',
-          workTime: json.workTime,
-          defaultFrom: json.defaultFrom,
-          defaultTo: json.defaultTo,
-          entries: json.workDays.map((e) => {
+          mode: res.mode,
+          name: res.name,
+          savedUpTime: res.savedUpTime ?? res.savedUp ?? 0,
+          savedUpVacation: res.savedUpVacation,
+          workTime: res.workTime,
+          defaultFrom: res.defaultFrom,
+          defaultTo: res.defaultTo,
+          entries: res.workDays.map((e) => {
             // TODO: Remove once everything is migrated
             if ('day' in e) {
               const { day, ...other } = e
               return {
                 ...other,
-                name: day,
+                name: day ?? '',
               }
-            } else return e
-          }) as (WorkRange & { customSubtractedTime: boolean })[],
+            } else
+              return {
+                ...e,
+                name: e.name ?? '',
+              }
+          }),
         }
       },
       getTagColor(tag: string) {
@@ -297,7 +319,7 @@ export const useCalcStore = defineStore('calcs', () => {
           name,
           from: calc.value.defaultFrom,
           to: null,
-          subtractedTime: null,
+          subtractedTime: 0,
           customSubtractedTime: false,
         })
       },
@@ -310,7 +332,7 @@ export const useCalcStore = defineStore('calcs', () => {
             name: defaultEntryName(calc.value.mode),
             from: calc.value.defaultFrom,
             to: calc.value.defaultTo,
-            subtractedTime: null,
+            subtractedTime: 0,
             customSubtractedTime: false,
           },
         ]
@@ -336,7 +358,7 @@ export const useCalcStore = defineStore('calcs', () => {
           name: d.toString(),
           from: null,
           to: null,
-          subtractedTime: null,
+          subtractedTime: 0,
           customSubtractedTime: false,
         }))
       },
@@ -348,7 +370,7 @@ export const useCalcStore = defineStore('calcs', () => {
             name: d.toString(),
             from: null,
             to: null,
-            subtractedTime: null,
+            subtractedTime: 0,
             customSubtractedTime: false,
           })),
         )

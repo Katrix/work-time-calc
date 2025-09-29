@@ -8,10 +8,10 @@ export const repo = z.object({
 export type Repo = z.infer<typeof repo>
 
 export const presetPart = z.object({
-  workTime: z.string(),
-  defaultFrom: z.string(),
-  defaultTo: z.string(),
-  precision: z.number(),
+  workTime: z.int(),
+  defaultFrom: z.int(),
+  defaultTo: z.int(),
+  precision: z.int(),
   tags: z.map(z.string(), z.string()),
   holidayRules: holidayRule.array(),
 })
