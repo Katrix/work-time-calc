@@ -10,7 +10,7 @@ const refreshTokensSchema = z.object({
 export default defineOAuthGitHubEventHandler({
   config: {
     emailRequired: true,
-    scope: ['read:user', 'user:email', 'repo'],
+    scope: [],
   },
   async onSuccess(event, { user, tokens }) {
     const secure: SecureSessionData = {
