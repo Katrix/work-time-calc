@@ -1,7 +1,7 @@
 import z from 'zod'
 
 export const workRange = z.object({
-  day: z.string(),
+  name: z.string(),
   from: z.string().nullable(),
   to: z.string().nullable(),
   subtractedTime: z.string().nullable(),

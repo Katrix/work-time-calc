@@ -35,7 +35,7 @@ export const useCalcStore = defineStore('calcs', () => {
       tags: new Map([...defaultVal.tags.entries()]),
       entries: [
         {
-          day: defaultEntryName(mode),
+          name: defaultEntryName(mode),
           from: defaultVal.defaultFrom,
           to: null,
           subtractedTime: null,
@@ -92,10 +92,10 @@ export const useCalcStore = defineStore('calcs', () => {
       } else {
         for (const [idx, workDay] of calc.entries.entries()) {
           if (workDay) {
-            if (!workDaysObj[workDay.day]) {
-              workDaysObj[workDay.day] = []
+            if (!workDaysObj[workDay.name]) {
+              workDaysObj[workDay.name] = []
             }
-            workDaysObj[workDay.day].push({
+            workDaysObj[workDay.name].push({
               ...workDay,
               idx,
             })
@@ -261,7 +261,16 @@ export const useCalcStore = defineStore('calcs', () => {
           workTime: json.workTime,
           defaultFrom: json.defaultFrom,
           defaultTo: json.defaultTo,
-          entries: json.workDays,
+          entries: json.workDays.map((e) => {
+            // TODO: Remove once everything is migrated
+            if ('day' in e) {
+              const { day, ...other } = e
+              return {
+                ...other,
+                name: day,
+              }
+            } else return e
+          }) as (WorkRange & { customSubtractedTime: boolean })[],
         }
       },
       getTagColor(tag: string) {
@@ -285,7 +294,7 @@ export const useCalcStore = defineStore('calcs', () => {
         const name = defaultEntryName(calc.value.mode)
 
         calc.value.entries.splice(idx + 1, 0, {
-          day: name,
+          name,
           from: calc.value.defaultFrom,
           to: null,
           subtractedTime: null,
@@ -298,7 +307,7 @@ export const useCalcStore = defineStore('calcs', () => {
       clear() {
         calc.value.entries = [
           {
-            day: defaultEntryName(calc.value.mode),
+            name: defaultEntryName(calc.value.mode),
             from: calc.value.defaultFrom,
             to: calc.value.defaultTo,
             subtractedTime: null,
@@ -322,9 +331,9 @@ export const useCalcStore = defineStore('calcs', () => {
         }
       },
       fillWorkdays() {
-        const dates = fillWorkdaysBase(Temporal.PlainDate.from(calc.value.entries[0].day))
+        const dates = fillWorkdaysBase(Temporal.PlainDate.from(calc.value.entries[0].name))
         calc.value.entries = dates.map((d) => ({
-          day: d.toString(),
+          name: d.toString(),
           from: null,
           to: null,
           subtractedTime: null,
@@ -332,11 +341,11 @@ export const useCalcStore = defineStore('calcs', () => {
         }))
       },
       fillRemainingWorkdays() {
-        const start = Temporal.PlainDate.from(calc.value.entries[calc.value.entries.length - 1].day).add({ days: 1 })
+        const start = Temporal.PlainDate.from(calc.value.entries[calc.value.entries.length - 1].name).add({ days: 1 })
         const dates = fillWorkdaysBase(start)
         calc.value.entries.push(
           ...dates.map((d) => ({
-            day: d.toString(),
+            name: d.toString(),
             from: null,
             to: null,
             subtractedTime: null,

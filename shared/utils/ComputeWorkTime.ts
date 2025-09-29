@@ -4,7 +4,7 @@ import { type WorkRange } from '../types/calc'
 export type WorkDays = { [group: string]: WorkRange[] }
 
 export interface ComputedWorkEntry {
-  day: string
+  name: string
   from: string | null
   to: string | null
   workedTime: string
@@ -105,7 +105,7 @@ export function computeWorkTime(
           tagTime[tag] = 0
         }
 
-        tagSummaries[tag].names.push(entry.day)
+        tagSummaries[tag].names.push(entry.name)
         if (entry.notes) {
           tagSummaries[tag].notes.push(entry.notes)
         }
@@ -114,7 +114,7 @@ export function computeWorkTime(
       }
 
       workEntriesComputed.push({
-        day: entry.day,
+        name: entry.name,
         from: entry.from,
         to: entry.to,
         workedTime: strFromMinutes(preEntry.workedTime),

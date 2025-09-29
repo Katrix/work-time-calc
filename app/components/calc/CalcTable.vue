@@ -26,7 +26,7 @@
       <tr v-for="(item, index) in calc.entries" :class="trClasses(item)">
         <td>
           <CalcInputName
-            v-model="item.day"
+            v-model="item.name"
             :mode="calc.mode"
             @on-autocomplete-issue="(notes) => (item.notes = notes)"
           />
@@ -89,11 +89,11 @@ const { calc, computedCalc, addTag, removeTag, addRowAfter, removeRow } = calcSt
 )
 
 function trClasses(item: WorkRange): string | null {
-  const day = item.day
-  const idx = calc.value.entries.findIndex((v) => v.day === day)
+  const name = item.name
+  const idx = calc.value.entries.findIndex((v) => v.name === name)
   if (idx > 0) {
-    const prevDay = calc.value.entries[idx - 1].day
-    if (new Date(day).getDate() - new Date(prevDay).getDate() > 1) {
+    const prevName = calc.value.entries[idx - 1].name
+    if (new Date(name).getDate() - new Date(prevName).getDate() > 1) {
       return 'table-group-divider'
     }
   }

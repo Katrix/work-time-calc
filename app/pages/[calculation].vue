@@ -80,7 +80,7 @@ function saveCSV() {
   switch (calc.value.mode) {
     case 'hours':
       computedWorkDays = (computedCalc.value?.entries ?? []).map((item) => ({
-        day: item.day,
+        day: item.name,
         from: item.from,
         to: item.to,
         workedTime: item.workedTime,
@@ -91,7 +91,7 @@ function saveCSV() {
       break
     case 'tasks':
       computedWorkDays = (computedCalc.value?.entries ?? []).map((item) => ({
-        task: item.day,
+        task: item.name,
         from: item.from,
         to: item.to,
         workedTime: item.workedTime,
