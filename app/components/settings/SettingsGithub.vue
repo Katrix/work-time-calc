@@ -78,6 +78,8 @@
 </template>
 
 <script setup lang="ts">
+import { useQuery } from '@tanstack/vue-query'
+
 const { loggedIn } = useUserSession()
 const presetStore = usePresetStore()
 
@@ -90,22 +92,11 @@ const {
   data: repoNamesData,
   status: repoNamesStatus,
   error: repoNameError,
-  refresh: repoNamesRefresh,
-} = await useFetch('/api/github/getRepositoryNames', {
-  immediate: false,
+} = useQuery({
+  queryKey: ['api', 'github', 'getRepositoryNames'],
+  queryFn: () => $fetch('/api/github/getRepositoryNames'),
+  enabled: loggedIn,
 })
-
-watch(
-  loggedIn,
-  (loggedIn) => {
-    if (loggedIn) {
-      repoNamesRefresh()
-    }
-  },
-  {
-    immediate: true,
-  },
-)
 
 const ownersOptions = computed(() => [...new Set((repoNamesData.value ?? []).map((repo) => repo.owner.login))])
 

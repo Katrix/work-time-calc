@@ -100,7 +100,13 @@ const emits = defineEmits<{
 
 const debouncedName = debouncedRef(name, 500)
 const { data: currentIssues } = useQuery({
-  queryKey: [debouncedName, computed(() => presetStore.currentPreset.github.repos)],
+  queryKey: [
+    'api',
+    'github',
+    'autocompleteIssue',
+    debouncedName,
+    computed(() => presetStore.currentPreset.github.repos),
+  ],
   queryFn: ({ signal }) =>
     $fetch(`/api/github/autocompleteIssue`, {
       query: {
