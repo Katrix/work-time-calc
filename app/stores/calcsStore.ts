@@ -246,13 +246,18 @@ export const useCalcStore = defineStore('calcs', () => {
           savedUpTime: z.int().optional().or(strDuration),
           savedUp: strDuration.optional(),
           savedUpVacation: z
-            .string()
-            .transform((s) => Number(s.replaceAll(',', '.')))
+            .number()
             .optional()
+            .or(
+              z
+                .string()
+                .transform((s) => Number(s.replaceAll(',', '.')))
+                .optional(),
+            )
             .default(0),
-          workTime: strDuration,
-          defaultFrom: strDuration,
-          defaultTo: strDuration,
+          workTime: z.int().or(strDuration),
+          defaultFrom: z.int().or(strDuration),
+          defaultTo: z.int().or(strDuration),
           workDays: z.array(
             z.object({
               name: z.string().optional(),
