@@ -39,7 +39,7 @@ export const useCalcStore = defineStore('calcs', () => {
           name: defaultEntryName(mode),
           from: defaultVal.defaultFrom,
           to: null,
-          subtractedTime: 0,
+          subtractedTime: null,
           customSubtractedTime: false,
         },
       ],
@@ -324,7 +324,7 @@ export const useCalcStore = defineStore('calcs', () => {
           name,
           from: calc.value.defaultFrom,
           to: null,
-          subtractedTime: 0,
+          subtractedTime: null,
           customSubtractedTime: false,
         })
       },
@@ -337,7 +337,7 @@ export const useCalcStore = defineStore('calcs', () => {
             name: defaultEntryName(calc.value.mode),
             from: calc.value.defaultFrom,
             to: calc.value.defaultTo,
-            subtractedTime: 0,
+            subtractedTime: null,
             customSubtractedTime: false,
           },
         ]
@@ -363,7 +363,7 @@ export const useCalcStore = defineStore('calcs', () => {
           name: d.toString(),
           from: null,
           to: null,
-          subtractedTime: 0,
+          subtractedTime: null,
           customSubtractedTime: false,
         }))
       },
@@ -375,7 +375,7 @@ export const useCalcStore = defineStore('calcs', () => {
             name: d.toString(),
             from: null,
             to: null,
-            subtractedTime: 0,
+            subtractedTime: null,
             customSubtractedTime: false,
           })),
         )
