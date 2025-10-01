@@ -34,7 +34,7 @@ export function strToMinutesSafe(str: string): number | null | undefined {
 
   const [hours, minutes] = str.split(':', 2)
 
-  return sign * Number(hours) * 60 + Number(minutes)
+  return sign * (Number(hours) * 60 + Number(minutes))
 }
 
 export function strToMinutes(str: string): number {
@@ -93,9 +93,7 @@ export function computeWorkTime(
         to,
         workedTime: to - from,
         subtracted:
-          ((entry.subtractedTime !== null ? entry.subtractedTime : null) ?? idx === entries.length - 1)
-            ? workTime
-            : 0,
+          (entry.subtractedTime !== null ? entry.subtractedTime : null) ?? (idx === entries.length - 1 ? workTime : 0),
       }
     })
     for (let i = preEntries.length - 1; i >= 0; i--) {
@@ -153,6 +151,10 @@ export function computeWorkTime(
 }
 
 function dateToMinutes(d: Date, precision: number) {
+  if (!Number.isInteger(precision) || precision <= 0) {
+    throw new Error(`Invalid precision: ${precision}`)
+  }
+
   const hours = d.getHours()
   const minutes = d.getMinutes()
 
