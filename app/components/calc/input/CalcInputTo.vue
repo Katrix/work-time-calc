@@ -1,6 +1,7 @@
 <template>
   <BInputGroup>
     <CalcInputDuration
+      :key="dummy"
       :model-value="isTracking ? currentTime(precision) : to"
       @update:model-value="(v) => (to = v)"
       :disabled="isTracking"
@@ -36,4 +37,15 @@
 const to = defineModel<number | undefined | null>('to', { required: true })
 const isTracking = defineModel<boolean | undefined>('isTracking', { required: true })
 defineProps<{ precision: number }>()
+const dummy = ref(0)
+
+const intervalId = ref(0)
+
+onMounted(() => {
+  intervalId.value = setInterval(() => {
+    dummy.value = Math.random()
+  }, 1000) as unknown as number
+})
+
+onUnmounted(() => clearInterval(intervalId.value))
 </script>

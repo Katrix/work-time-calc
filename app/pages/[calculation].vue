@@ -16,26 +16,6 @@ const calcStore = useCalcStore()
 
 const { calc, computedCalc, loadFromFile } = calcStore.useCalc(calcId)
 
-const trackingFunId = ref<number>()
-
-onMounted(() => {
-  function updateTracking() {
-    const t = currentTime(calc.value.precision)
-    for (const workDay of calc.value.entries) {
-      if (workDay.isTracking) {
-        workDay.to = t
-      }
-    }
-  }
-
-  trackingFunId.value = setInterval(updateTracking, 500) as unknown as number
-  updateTracking()
-})
-
-onUnmounted(() => {
-  clearInterval(trackingFunId.value)
-})
-
 function fileName(extension: string) {
   return calc.value.name.length
     ? `${calc.value.name}.${extension}`
