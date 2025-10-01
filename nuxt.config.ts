@@ -64,6 +64,18 @@ export default defineNuxtConfig({
       },
     },
   },
+  gqlCodegen: {
+    schema: 'github-schema.graphql',
+    generates: {
+      './server/gql/github/': {
+        preset: 'client',
+        config: {
+          useTypeImports: true,
+        },
+        plugins: [],
+      },
+    },
+  },
   security: {
     strict: true,
     removeLoggers: false,

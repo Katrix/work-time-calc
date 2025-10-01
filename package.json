@@ -9,7 +9,6 @@
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
     "typecheck": "nuxt typecheck",
-    "gen-gql": "graphql-codegen",
     "test": "vitest run --config vitest.config.ts",
     "test:watch": "vitest run --config vitest.config.ts",
     "lint": "eslint",
