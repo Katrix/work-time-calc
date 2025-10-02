@@ -25,7 +25,14 @@ const query = graphql(`
 export default defineEventHandler(async (event) => {
   const { prefix, repo: reposToSearch } = await getValidatedQuery(
     event,
-    z.object({ prefix: z.string(), repo: z.string().array() }).parse,
+    z.object({
+      prefix: z.string(),
+      repo: z
+        .string()
+        .array()
+        .or(z.string().transform((s) => [s]))
+        .optional(),
+    }).parse,
   )
 
   const accessToken = await useAccessToken(event)
@@ -42,7 +49,7 @@ export default defineEventHandler(async (event) => {
     exchanges: [fetchExchange],
   })
 
-  if (reposToSearch.length === 0) {
+  if (!reposToSearch || reposToSearch.length === 0) {
     return []
   }
   const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' ')

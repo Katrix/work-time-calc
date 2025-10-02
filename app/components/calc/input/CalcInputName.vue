@@ -127,6 +127,7 @@ const { data: currentIssues } = useQuery({
       debouncedName.value.length > 0,
   ),
   staleTime: 1000 * 60 * 5,
+  retry: computed(() => false),
 })
 
 function onFocus() {
