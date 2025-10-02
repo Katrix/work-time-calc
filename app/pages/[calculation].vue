@@ -30,19 +30,8 @@ async function load() {
 }
 
 function save() {
-  const data = {
-    mode: calc.value.mode,
-    name: calc.value.name,
-    savedUpTime: calc.value.savedUpTime,
-    savedUpVacation: calc.value.savedUpVacation,
-    workTime: calc.value.workTime,
-    defaultFrom: calc.value.defaultFrom,
-    defaultTo: calc.value.defaultTo,
-    workDays: calc.value.entries,
-  }
-
   // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
-  const blob = new Blob([JSON.stringify(data)], { type: 'application/json' })
+  const blob = new Blob([JSON.stringify(encodeCalcToString(calc.value))], { type: 'application/json' })
   const a = document.createElement('a')
   const url = URL.createObjectURL(blob)
   a.href = url

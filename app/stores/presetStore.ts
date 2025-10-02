@@ -1,4 +1,6 @@
 import * as devalue from 'devalue'
+import z from 'zod'
+import { allVersionsPreset } from '#shared/types/preset'
 
 export const usePresetStore = defineStore('presetStore', () => {
   const presets = ref<Map<string, Preset>>(
@@ -6,7 +8,7 @@ export const usePresetStore = defineStore('presetStore', () => {
       [
         'Default',
         {
-          version: 1,
+          version: currentPresetVersion,
           hours: {
             workTime: 8 * 60,
             defaultFrom: 8 * 60 + 45,
@@ -32,8 +34,8 @@ export const usePresetStore = defineStore('presetStore', () => {
           },
           github: {
             owners: [],
-            repos: new Map()
-          }
+            repos: new Map(),
+          },
         },
       ],
     ]),
@@ -58,9 +60,17 @@ export const usePresetStore = defineStore('presetStore', () => {
     const presetsStr = localStorage.getItem('presets')
     nextTick(() => {
       if (presetsStr) {
-        const presetsObj = JSON.parse(presetsStr)
-        if (presetsObj.lastUpdated > lastUpdated.value) {
-          presets.value = devalue.parse(presetsObj.data) as Map<string, Preset>
+        const schema = z.object({
+          lastUpdated: z.number(),
+          data: z.string(),
+        })
+
+        const presetsObj = schema.safeParse(JSON.parse(presetsStr))
+        if (presetsObj.data && presetsObj.data.lastUpdated > lastUpdated.value) {
+          presets.value = z.map(z.string(), allVersionsPreset).parse(devalue.parse(presetsObj.data.data))
+        }
+        if (presetsObj.error) {
+          console.error('Error parsing presets', presetsObj.error)
         }
       }
     })

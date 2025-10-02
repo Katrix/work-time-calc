@@ -1,6 +1,5 @@
 import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 import type { WatchHandle } from 'vue'
-import * as devalue from 'devalue'
 import { skipHydrate } from 'pinia'
 import z from 'zod'
 
@@ -26,6 +25,7 @@ export const useCalcStore = defineStore('calcs', () => {
     const defaultVal = defaults(mode)
 
     return {
+      version: currentCalcVersion,
       name: nameDefault(mode),
       mode: mode,
       savedUpTime: 0,
@@ -48,21 +48,21 @@ export const useCalcStore = defineStore('calcs', () => {
   }
 
   function watcherForCalc(id: string, defaultCalc: CalcWithEntries, entry: Ref<CalcWithEntries>) {
-    const defaultStr = devalue.stringify(defaultCalc)
+    const defaultStr = encodeCalcToString(defaultCalc)
     return watch(
       entry,
       () => {
         lastUpdated.value.set(id, Date.now())
 
         if (import.meta.client) {
-          const serializedData = devalue.stringify(entry.value)
+          const serializedData = encodeCalcToString(entry.value)
 
           if (serializedData !== defaultStr) {
             localStorage.setItem(
               `calcs.${id}`,
               JSON.stringify({
                 lastUpdated: Date.now(),
-                data: devalue.stringify(entry.value),
+                data: serializedData,
               }),
             )
           }
@@ -106,7 +106,15 @@ export const useCalcStore = defineStore('calcs', () => {
       }
 
       try {
-        const res = computeWorkTime(workDaysObj, calc.savedUpTime, calc.defaultFrom, calc.defaultTo, calc.workTime, now.value, calc.precision)
+        const res = computeWorkTime(
+          workDaysObj,
+          calc.savedUpTime,
+          calc.defaultFrom,
+          calc.defaultTo,
+          calc.workTime,
+          now.value,
+          calc.precision,
+        )
         res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
         return res
       } catch (e) {
@@ -237,68 +245,9 @@ export const useCalcStore = defineStore('calcs', () => {
         }
       },
       async loadFromFile(file: File) {
-        const text = await file.text()
-
-        const strDuration = z.string().transform((s) => strToMinutes(s))
-
-        const jsonSchema = z.object({
-          mode: z.enum(['hours', 'tasks']).optional().default('hours'),
-          name: z.string().optional().default(''),
-          savedUpTime: z.int().optional().or(strDuration),
-          savedUp: strDuration.optional(),
-          savedUpVacation: z
-            .number()
-            .optional()
-            .or(
-              z
-                .string()
-                .transform((s) => Number(s.replaceAll(',', '.')))
-                .optional(),
-            )
-            .default(0),
-          workTime: z.int().or(strDuration),
-          defaultFrom: z.int().or(strDuration),
-          defaultTo: z.int().or(strDuration),
-          workDays: z.array(
-            z.object({
-              name: z.string().optional(),
-              day: z.string().optional(),
-              from: z.int().or(strDuration).nullable(),
-              to: z.int().or(strDuration).nullable(),
-              subtractedTime: z.int().nullable().or(strDuration.nullable().default(null)),
-              customSubtractedTime: z.boolean().optional().default(false),
-              tags: z.array(z.string()).optional(),
-              notes: z.string().optional(),
-              idx: z.int().optional(),
-            }),
-          ),
-        })
-
-        const res = jsonSchema.parse(JSON.parse(text))
-
         calc.value = {
           ...calc.value,
-          mode: res.mode,
-          name: res.name,
-          savedUpTime: res.savedUpTime ?? res.savedUp ?? 0,
-          savedUpVacation: res.savedUpVacation,
-          workTime: res.workTime,
-          defaultFrom: res.defaultFrom,
-          defaultTo: res.defaultTo,
-          entries: res.workDays.map((e) => {
-            // TODO: Remove once everything is migrated
-            if ('day' in e) {
-              const { day, ...other } = e
-              return {
-                ...other,
-                name: day ?? '',
-              }
-            } else
-              return {
-                ...e,
-                name: e.name ?? '',
-              }
-          }),
+          ...decodeCalcFromString(await file.text()),
         }
       },
       getTagColor(tag: string) {
@@ -475,10 +424,15 @@ export const useCalcStore = defineStore('calcs', () => {
           continue
         }
 
-        const data = JSON.parse(dataStr) as { lastUpdated: number; data: string }
+        const lastUpdatedSchema = z.object({
+          lastUpdated: z.number(),
+          data: z.string(),
+        })
+
+        const data = lastUpdatedSchema.parse(JSON.parse(dataStr))
 
         if (data.lastUpdated > (lastUpdated.value.get(id) ?? 0)) {
-          const calcFromStorage = devalue.parse(data.data) as CalcWithEntries
+          const calcFromStorage = decodeCalcFromString(data.data)
           lastUpdated.value.set(id, data.lastUpdated)
 
           let calcRef = calcs.value.get(id)
