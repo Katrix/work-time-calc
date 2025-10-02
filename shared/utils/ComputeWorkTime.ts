@@ -1,7 +1,7 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { type WorkRange } from '../types/calc'
+import { type CalcEntry } from '../types/calc'
 
-export type WorkDays = { [group: string]: WorkRange[] }
+export type WorkDays = { [group: string]: CalcEntry[] }
 
 export interface ComputedWorkEntry {
   name: string
@@ -78,16 +78,19 @@ export function computeWorkTime(
   defaultFrom: number,
   defaultTo: number,
   workTime: number,
+  now: Date,
+  precision: number,
 ): ComputedWorkTime {
   const workEntriesComputed: ComputedWorkEntry[] = []
   const tagSummaries: Record<string, TagSummary> = {}
   const tagTime: Record<string, number> = {}
+  const nowMinutes = dateToMinutesRounded(now, precision)
 
   let timeDiff = leftoverTime
   for (const [, entries] of Object.entries(workDays)) {
     const preEntries = entries.map((entry, idx) => {
       const from = entry.from ?? defaultFrom
-      const to = entry.to ?? defaultTo
+      const to = entry.isTracking ? nowMinutes : entry.to ?? defaultTo
       return {
         from,
         to,

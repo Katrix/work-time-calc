@@ -1,6 +1,6 @@
 import z from 'zod'
 
-export const workRange = z.object({
+export const calcEntry = z.object({
   name: z.string(),
   from: z.int().nullable(),
   to: z.int().nullable(),
@@ -8,16 +8,9 @@ export const workRange = z.object({
   notes: z.string().optional(),
   idx: z.int().optional(),
   tags: z.string().array().optional(),
+  isTracking: z.boolean().optional(),
+  customSubtractedTime: z.boolean().optional(),
 })
-export type WorkRange = z.infer<typeof workRange>
-
-export const calcEntry = z.intersection(
-  workRange,
-  z.object({
-    customSubtractedTime: z.boolean(),
-    isTracking: z.boolean().optional(),
-  }),
-)
 export type CalcEntry = z.infer<typeof calcEntry>
 
 export const calc = z.object({

@@ -6,6 +6,7 @@ import z from 'zod'
 
 export const useCalcStore = defineStore('calcs', () => {
   const presetStore = usePresetStore()
+  const now = useNow()
 
   function defaults(mode: 'hours' | 'tasks') {
     return presetStore.currentPreset[mode]
@@ -105,7 +106,7 @@ export const useCalcStore = defineStore('calcs', () => {
       }
 
       try {
-        const res = computeWorkTime(workDaysObj, calc.savedUpTime, calc.defaultFrom, calc.defaultTo, calc.workTime)
+        const res = computeWorkTime(workDaysObj, calc.savedUpTime, calc.defaultFrom, calc.defaultTo, calc.workTime, now.value, calc.precision)
         res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
         return res
       } catch (e) {

@@ -88,7 +88,7 @@ const { calc, computedCalc, addTag, removeTag, addRowAfter, removeRow } = calcSt
   computed(() => props.calcId),
 )
 
-function trClasses(item: WorkRange): string | null {
+function trClasses(item: CalcEntry): string | null {
   const name = item.name
   const idx = calc.value.entries.findIndex((v) => v.name === name)
   if (idx > 0) {

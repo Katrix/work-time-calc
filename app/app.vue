@@ -44,4 +44,12 @@
 
 <script setup lang="ts">
 const calcStore = useCalcStore()
+const intervalId = ref<number>()
+const now = useNow()
+onMounted(() => {
+  intervalId.value = setInterval(() => {
+    now.value = new Date()
+  }, 1000) as unknown as number
+})
+onUnmounted(() => clearInterval(intervalId.value))
 </script>

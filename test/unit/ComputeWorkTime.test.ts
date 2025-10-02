@@ -76,12 +76,10 @@ describe('strFromMinutes', () => {
 describe('computeWorkTime', () => {
   it('single full-day entry subtracts default workTime on last entry', () => {
     const workDays: WorkDays = {
-      Mon: [
-        { name: 'Work', from: m('09:00'), to: m('17:00'), subtractedTime: null },
-      ],
+      Mon: [{ name: 'Work', from: m('09:00'), to: m('17:00'), subtractedTime: null }],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries).toHaveLength(1)
     const e = res.entries[0]
@@ -96,12 +94,10 @@ describe('computeWorkTime', () => {
 
   it('uses defaults when from/to are null and sets estimate=true', () => {
     const workDays: WorkDays = {
-      entry: [
-        { name: 'Defaulted', from: null, to: null, subtractedTime: null },
-      ],
+      entry: [{ name: 'Defaulted', from: null, to: null, subtractedTime: null }],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries[0].from).toBe('09:00')
     expect(res.entries[0].to).toBe('17:00')
@@ -116,20 +112,18 @@ describe('computeWorkTime', () => {
       ],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
-    expect(res.entries.map(e => e.workedTime)).toEqual(['07:00', '01:00'])
+    expect(res.entries.map((e) => e.workedTime)).toEqual(['07:00', '01:00'])
     expect(res.entries[1].timeDiff).toBe('00:00')
   })
 
   it('respects custom subtractedTime = 0 (no default subtraction)', () => {
     const workDays: WorkDays = {
-      entry: [
-        { name: 'Short', from: m('09:00'), to: m('10:00'), subtractedTime: 0 },
-      ],
+      entry: [{ name: 'Short', from: m('09:00'), to: m('10:00'), subtractedTime: 0 }],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries[0].workedTime).toBe('01:00')
     expect(res.entries[0].subtractedTime).toBe('00:00')
@@ -139,12 +133,10 @@ describe('computeWorkTime', () => {
 
   it('respects custom subtractedTime != 0 (custom subtraction)', () => {
     const workDays: WorkDays = {
-      Fri: [
-        { name: 'One hour', from: m('09:00'), to: m('17:00'), subtractedTime: m('04:00') },
-      ],
+      Fri: [{ name: 'One hour', from: m('09:00'), to: m('17:00'), subtractedTime: m('04:00') }],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries[0].workedTime).toBe('08:00')
     expect(res.entries[0].timeDiff).toBe('04:00')
@@ -159,7 +151,7 @@ describe('computeWorkTime', () => {
       ],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.summaryByTag['projA'].time).toBe('02:00')
     expect(res.summaryByTag['projA'].names).toEqual(['Task A', 'Task B'])
@@ -169,12 +161,10 @@ describe('computeWorkTime', () => {
 
   it('produces negative extraTime when overall timeDiff is negative', () => {
     const workDays: WorkDays = {
-      Fri: [
-        { name: 'One hour', from: m('09:00'), to: m('10:00'), subtractedTime: m('02:00') },
-      ],
+      Fri: [{ name: 'One hour', from: m('09:00'), to: m('10:00'), subtractedTime: m('02:00') }],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries[0].workedTime).toBe('01:00')
     expect(res.entries[0].timeDiff).toBe('-01:00')
@@ -189,7 +179,7 @@ describe('computeWorkTime', () => {
       ],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries[0].subtractedTime).toBe('00:00')
     expect(res.entries[1].subtractedTime).toBe('08:00')
@@ -201,17 +191,15 @@ describe('computeWorkTime', () => {
         { name: 'A1', from: m('09:00'), to: m('11:00'), subtractedTime: null },
         { name: 'A2', from: m('11:00'), to: m('12:00'), subtractedTime: null },
       ],
-      group2: [
-        { name: 'B1', from: m('13:00'), to: m('14:00'), subtractedTime: null },
-      ],
+      group2: [{ name: 'B1', from: m('13:00'), to: m('14:00'), subtractedTime: null }],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     // Group A: only A2 gets default subtraction; Group B: B1 is last so gets default
-    const eA1 = res.entries.find(e => e.name === 'A1')!
-    const eA2 = res.entries.find(e => e.name === 'A2')!
-    const eB1 = res.entries.find(e => e.name === 'B1')!
+    const eA1 = res.entries.find((e) => e.name === 'A1')!
+    const eA2 = res.entries.find((e) => e.name === 'A2')!
+    const eB1 = res.entries.find((e) => e.name === 'B1')!
     expect(eA1.subtractedTime).toBe('00:00')
     expect(eA2.subtractedTime).toBe('08:00')
     expect(eB1.subtractedTime).toBe('08:00')
@@ -229,7 +217,7 @@ describe('computeWorkTime', () => {
       ],
     }
 
-    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'))
+    const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
     expect(res.entries[0].idx).toBe(5)
     expect(res.entries[1].idx).toBe(7)

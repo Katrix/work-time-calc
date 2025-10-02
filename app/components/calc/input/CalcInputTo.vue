@@ -1,7 +1,7 @@
 <template>
   <BInputGroup>
     <CalcInputDuration
-      :model-value="isTracking ? dateToMinutesRounded(currentDate, precision) : to"
+      :model-value="isTracking ? dateToMinutesRounded(now, precision) : to"
       @update:model-value="(v) => (to = v)"
       :disabled="isTracking"
       :required="false"
@@ -36,15 +36,5 @@
 const to = defineModel<number | undefined | null>('to', { required: true })
 const isTracking = defineModel<boolean | undefined>('isTracking', { required: true })
 defineProps<{ precision: number }>()
-
-const currentDate = ref(new Date())
-const intervalId = ref(0)
-
-onMounted(() => {
-  intervalId.value = setInterval(() => {
-    currentDate.value = new Date()
-  }, 1000) as unknown as number
-})
-
-onUnmounted(() => clearInterval(intervalId.value))
+const now = useNow()
 </script>
