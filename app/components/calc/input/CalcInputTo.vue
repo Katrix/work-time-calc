@@ -22,7 +22,16 @@
       >
         <FontAwesomeIcon :icon="['fas', 'hourglass-start']" />
       </button>
-      <button class="btn btn-primary" v-else-if="isTracking" @click="isTracking = false">
+      <button
+        class="btn btn-primary"
+        v-else-if="isTracking"
+        @click="
+          () => {
+            to = currentTime(precision)
+            isTracking = false
+          }
+        "
+      >
         <FontAwesomeIcon :icon="['fas', 'hourglass-half']" />
       </button>
       <button class="btn btn-secondary" v-else disabled>
