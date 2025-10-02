@@ -150,15 +150,16 @@ export function computeWorkTime(
   return { entries: workEntriesComputed, summaryByTag: tagSummaries }
 }
 
-function dateToMinutes(d: Date, precision: number) {
+function dateToMinutes(d: Date) {
+  return d.getHours() * 60 + d.getMinutes()
+}
+
+export function dateToMinutesRounded(d: Date, precision: number) {
   if (!Number.isInteger(precision) || precision <= 0) {
     throw new Error(`Invalid precision: ${precision}`)
   }
 
-  const hours = d.getHours()
-  const minutes = d.getMinutes()
-
-  const totalMinutes = hours * 60 + minutes
+  const totalMinutes = dateToMinutes(d)
 
   const roundedTotalMinutes = Math.round(totalMinutes / precision) * precision
   const roundedHours = Math.floor(roundedTotalMinutes / 60)
@@ -167,10 +168,10 @@ function dateToMinutes(d: Date, precision: number) {
   return roundedHours * 60 + roundedMinutes
 }
 
-function dateToTimeString(d: Date, precision: number) {
-  return strFromMinutes(dateToMinutes(d, precision))
+function dateToTimeRoundedString(d: Date, precision: number) {
+  return strFromMinutes(dateToMinutesRounded(d, precision))
 }
 
 export function currentTime(precision: number) {
-  return dateToMinutes(new Date(), precision)
+  return dateToMinutesRounded(new Date(), precision)
 }
