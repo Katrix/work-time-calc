@@ -3,8 +3,8 @@ import z from 'zod'
 
 const refreshTokensSchema = z.object({
   refresh_token: z.string().optional(),
-  expires_in: z.number().optional(),
-  refresh_token_expires_in: z.number().optional(),
+  expires_in: z.number().or(z.coerce.number()).optional(),
+  refresh_token_expires_in: z.number().or(z.coerce.number()).optional(),
 })
 
 export default defineOAuthGitHubEventHandler({

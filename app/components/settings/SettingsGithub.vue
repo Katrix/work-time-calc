@@ -96,6 +96,7 @@ const {
   queryKey: ['api', 'github', 'getRepositoryNames'],
   queryFn: ({ signal }) => $fetch('/api/github/getRepositoryNames', { signal }),
   enabled: computed(() => import.meta.client && loggedIn.value),
+  retry: computed(() => false),
 })
 
 const ownersOptions = computed(() => [...new Set((repoNamesData.value ?? []).map((repo) => repo.owner.login))])
