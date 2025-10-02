@@ -6,6 +6,7 @@ export const usePresetStore = defineStore('presetStore', () => {
       [
         'Default',
         {
+          version: 1,
           hours: {
             workTime: 8 * 60,
             defaultFrom: 8 * 60 + 45,
