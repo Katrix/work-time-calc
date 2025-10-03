@@ -2,24 +2,24 @@
   <table class="table table-dark table-striped">
     <thead>
       <tr v-if="calc.mode === 'hours'">
-        <th scope="col" style="min-width: 130px">Day</th>
-        <th scope="col" style="min-width: 120px">Arrived</th>
-        <th scope="col" style="min-width: 160px">Left</th>
-        <th scope="col" style="min-width: 60px">Worked time</th>
-        <th scope="col" style="min-width: 60px">Extra time</th>
-        <th scope="col" style="min-width: 125px">Subtracted time</th>
-        <th scope="col" style="min-width: 200px">Notes</th>
-        <th scope="col" style="min-width: 100px">Add/Remove row</th>
+        <th scope="col" style="min-width: 8em">Day</th>
+        <th scope="col" style="min-width: 8em; max-width: 12em; width: 12em">Arrived</th>
+        <th scope="col" style="min-width: 11em; max-width: 12em; width: 12em">Left</th>
+        <th scope="col" style="min-width: 4em; max-width: 8em; width: 8em">Worked time</th>
+        <th scope="col" style="min-width: 4em; max-width: 8em; width: 8em">Extra time</th>
+        <th scope="col" style="min-width: 8em; max-width: 12em; width: 12em">Subtracted time</th>
+        <th scope="col" style="min-width: 8em">Notes</th>
+        <th scope="col" style="min-width: 8em; max-width: 8em; width: 8em">Add/Remove row</th>
       </tr>
       <tr v-else>
-        <th scope="col" style="min-width: 240px">Task</th>
-        <th scope="col" style="min-width: 120px">From</th>
-        <th scope="col" style="min-width: 160px">To</th>
-        <th scope="col" style="min-width: 60px">Worked time</th>
-        <th scope="col" style="min-width: 60px">Total time</th>
-        <th scope="col" style="min-width: 60px; max-width: 160px">Tags</th>
-        <th scope="col" style="min-width: 200px">Notes</th>
-        <th scope="col" style="min-width: 100px">Add/Remove row</th>
+        <th scope="col" style="min-width: 8em">Task</th>
+        <th scope="col" style="min-width: 8em; width: 12em; max-width: 12em">From</th>
+        <th scope="col" style="min-width: 11em; width: 12em; max-width: 12em">To</th>
+        <th scope="col" style="min-width: 4em; width: 8em; max-width: 8em">Worked time</th>
+        <th scope="col" style="min-width: 4em; width: 8em; max-width: 8em">Total time</th>
+        <th scope="col" style="min-width: 4em; max-width: 10em">Tags</th>
+        <th scope="col" style="min-width: 8em">Notes</th>
+        <th scope="col" style="min-width: 8em; max-width: 8em; width: 8em">Add/Remove row</th>
       </tr>
     </thead>
     <tbody>
