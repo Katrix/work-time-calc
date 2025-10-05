@@ -22,7 +22,6 @@ export const presetPart = z.object({
   defaultTo: z.int(),
   precision: z.int(),
   tags: z.map(z.string(), z.string()).or(recordMap(z.string())),
-  holidayRules: holidayRule.array(),
 })
 export type PresetPart = z.infer<typeof presetPart>
 
@@ -37,6 +36,7 @@ export const preset = z.object({
   hours: presetPart,
   tasks: presetPart,
   github: presetGithub,
+  holidayRules: holidayRule.array(),
 })
 export type Preset = z.infer<typeof preset>
 

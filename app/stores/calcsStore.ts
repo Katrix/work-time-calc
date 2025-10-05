@@ -214,7 +214,7 @@ export const useCalcStore = defineStore('calcs', () => {
     }
 
     function fillWorkdaysBase(start: Temporal.PlainDate) {
-      const holidayRules = presetStore.currentPreset[calc.value.mode].holidayRules
+      const holidayRules = presetStore.currentPreset.holidayRules
 
       const monthDates: Temporal.PlainDate[] = []
       let date = start

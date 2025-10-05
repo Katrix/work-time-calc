@@ -2,44 +2,39 @@ import * as devalue from 'devalue'
 import z from 'zod'
 import { allVersionsPreset } from '#shared/types/preset'
 
+const defaultPresetName = 'Default'
+const defaultPreset: Preset = {
+  version: currentPresetVersion,
+  hours: {
+    workTime: 8 * 60,
+    defaultFrom: 8 * 60 + 45,
+    defaultTo: 17 * 60,
+    precision: 5,
+    tags: new Map(),
+  },
+  tasks: {
+    workTime: 0,
+    defaultFrom: 0,
+    defaultTo: 0,
+    precision: 10,
+    tags: new Map(),
+  },
+  github: {
+    owners: [],
+    repos: new Map(),
+  },
+  holidayRules: [
+    { type: 'christmas' },
+    { type: 'easter' },
+    { type: 'ascension' },
+    { type: 'pentecost' },
+    { type: 'saturday' },
+    { type: 'sunday' },
+  ],
+}
+
 export const usePresetStore = defineStore('presetStore', () => {
-  const presets = ref<Map<string, Preset>>(
-    new Map<string, Preset>([
-      [
-        'Default',
-        {
-          version: currentPresetVersion,
-          hours: {
-            workTime: 8 * 60,
-            defaultFrom: 8 * 60 + 45,
-            defaultTo: 17 * 60,
-            precision: 5,
-            tags: new Map(),
-            holidayRules: [
-              { type: 'christmas' },
-              { type: 'easter' },
-              { type: 'ascension' },
-              { type: 'pentecost' },
-              { type: 'saturday' },
-              { type: 'sunday' },
-            ],
-          },
-          tasks: {
-            workTime: 0,
-            defaultFrom: 0,
-            defaultTo: 0,
-            precision: 10,
-            tags: new Map(),
-            holidayRules: [],
-          },
-          github: {
-            owners: [],
-            repos: new Map(),
-          },
-        },
-      ],
-    ]),
-  )
+  const presets = ref<Map<string, Preset>>(new Map<string, Preset>([[defaultPresetName, defaultPreset]]))
   const lastUpdated = ref(0)
   watch(
     presets,
@@ -76,7 +71,7 @@ export const usePresetStore = defineStore('presetStore', () => {
     })
   }
 
-  const currentPresetId = ref('Default')
+  const currentPresetId = ref(defaultPresetName)
   const currentPreset = computed<Preset, Preset>({
     get() {
       return presets.value.get(currentPresetId.value)!
@@ -94,12 +89,12 @@ export const usePresetStore = defineStore('presetStore', () => {
   }
 
   function deletePreset(name: string) {
-    if (name === 'Default') {
+    if (name === defaultPresetName) {
       return
     }
     presets.value.delete(name)
     if (currentPresetId.value === name) {
-      currentPresetId.value = 'Default'
+      currentPresetId.value = defaultPresetName
     }
   }
 
