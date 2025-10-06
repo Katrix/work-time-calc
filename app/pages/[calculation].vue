@@ -31,7 +31,7 @@ async function load() {
 
 function save() {
   // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
-  const blob = new Blob([JSON.stringify(encodeCalcToString(calc.value))], { type: 'application/json' })
+  const blob = new Blob([encodeCalcToString(calc.value)], { type: 'application/json' })
   const a = document.createElement('a')
   const url = URL.createObjectURL(blob)
   a.href = url
