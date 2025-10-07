@@ -12,6 +12,10 @@ import {
   faTimes,
   faTimesCircle,
   faSpinner,
+  faFolderTree,
+  faFolder,
+  faFile,
+  faCalendar
 } from '@fortawesome/free-solid-svg-icons'
 
 config.autoAddCss = false
@@ -28,6 +32,10 @@ library.add(
   faTimes,
   faTimesCircle,
   faSpinner,
+  faFolderTree,
+  faFolder,
+  faFile,
+  faCalendar
 )
 
 export default defineNuxtPlugin((nuxtApp) => {
