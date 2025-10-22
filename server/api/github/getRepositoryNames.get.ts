@@ -1,12 +1,18 @@
 import { graphql } from '~~/server/gql/github'
 import { Client, fetchExchange } from '@urql/core'
-import { defineCachedEventHandler } from 'nitropack/runtime/internal/cache'
 import type { GithubRepoInfo } from '#shared/types/github'
 
 const query = graphql(`
   query GetRepositories($pageSize: Int = 100, $after: String) {
     viewer {
-      repositories(first: $pageSize, after: $after, hasIssuesEnabled: true, orderBy: { field: NAME, direction: ASC }) {
+      repositories(
+        first: $pageSize
+        after: $after
+        hasIssuesEnabled: true
+        orderBy: { field: NAME, direction: ASC }
+        affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
+        ownerAffiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
+      ) {
         pageInfo {
           endCursor
           hasNextPage
