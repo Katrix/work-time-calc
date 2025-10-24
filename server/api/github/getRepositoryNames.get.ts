@@ -1,9 +1,10 @@
 import { graphql } from '~~/server/gql/github'
-import { Client, fetchExchange } from '@urql/core'
+import { type AnyVariables, Client, fetchExchange, type OperationResult } from '@urql/core'
 import type { GithubRepoInfo } from '#shared/types/github'
+import { type PageInfo, RepositoryPrivacy } from '~~/server/gql/github/graphql'
 
 const query = graphql(`
-  query GetRepositories($pageSize: Int = 100, $after: String) {
+  query GetRepositories($pageSize: Int = 100, $after: String, $privacy: RepositoryPrivacy = null) {
     viewer {
       repositories(
         first: $pageSize
@@ -12,6 +13,7 @@ const query = graphql(`
         orderBy: { field: NAME, direction: ASC }
         affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
         ownerAffiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
+        privacy: $privacy
       ) {
         pageInfo {
           endCursor
@@ -29,6 +31,69 @@ const query = graphql(`
   }
 `)
 
+const getFirstOrgsQuery = graphql(`
+  query GetOrgs($pageSize: Int = 100, $after: String, $repoPageSize: Int = 100) {
+    viewer {
+      organizations(first: $pageSize, after: $after) {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        nodes {
+          repositories(
+            first: $repoPageSize
+            hasIssuesEnabled: true
+            orderBy: { field: NAME, direction: ASC }
+            affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
+            ownerAffiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
+          ) {
+            pageInfo {
+              endCursor
+              hasNextPage
+            }
+            nodes {
+              owner {
+                login
+              }
+              name
+              url
+            }
+          }
+        }
+      }
+    }
+  }
+`)
+
+async function queryPaginated<QueryRes, Variables extends AnyVariables>(
+  doQuery: (after: string | null | undefined) => Promise<OperationResult<QueryRes, Variables>>,
+  getPageInfo: (data: QueryRes) => Pick<PageInfo, 'hasNextPage' | 'endCursor'>,
+): Promise<QueryRes[]> {
+  let after: string | null | undefined = null
+  let hasNextPage = true
+
+  let results: QueryRes[] = []
+  do {
+    const res = await doQuery(after)
+    if (!res.data) {
+      console.log('GraphQL error', res.error?.message, res.error)
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Failed to fetch repositories. Error: ' + (res.error?.message ?? 'Unknown error'),
+      })
+    }
+
+    results.push(res.data)
+
+    const pageInfo = getPageInfo(res.data)
+
+    hasNextPage = pageInfo.hasNextPage
+    after = pageInfo.endCursor
+  } while (hasNextPage)
+
+  return results
+}
+
 export default defineEventHandler(async (event) => {
   const accessToken = await useAccessToken(event)
 
@@ -44,24 +109,34 @@ export default defineEventHandler(async (event) => {
     exchanges: [fetchExchange],
   })
 
-  let after: string | null | undefined = null
-  let hasNextPage = true
-  const result: GithubRepoInfo[] = []
-  do {
-    const res = await client.query(query, { pageSize: 100, after }).toPromise()
-    if (!res.data) {
-      console.log('GraphQL error', res.error?.message, res.error, accessToken)
-      throw createError({
-        statusCode: 500,
-        statusMessage: 'Failed to fetch repositories. Error: ' + (res.error?.message ?? 'Unknown error'),
-      })
-    }
+  const rawResults = await queryPaginated(
+    (after) => client.query(query, { pageSize: 100, after, privacy: null }).toPromise(),
+    (data) => data.viewer.repositories.pageInfo,
+  )
 
-    result.push(...(res.data.viewer.repositories.nodes ?? []).flatMap((n) => (n !== null ? [n] : [])))
+  const result: GithubRepoInfo[] = rawResults
+    .map((r) => r.viewer.repositories.nodes ?? [])
+    .flat()
+    .flatMap((n) => (n !== null ? [n] : []))
 
-    hasNextPage = res.data.viewer.repositories.pageInfo.hasNextPage
-    after = res.data.viewer.repositories.pageInfo.endCursor
-  } while (hasNextPage)
+  console.log(
+    (
+      await queryPaginated(
+        (after) => client.query(query, { pageSize: 100, after, privacy: RepositoryPrivacy.Private }).toPromise(),
+        (data) => data.viewer.repositories.pageInfo,
+      )
+    )
+      .map((r) => r.viewer.repositories.nodes ?? [])
+      .flat()
+      .flatMap((n) => (n !== null ? [n] : [])),
+  )
+
+  console.log(
+    await queryPaginated(
+      (after) => client.query(getFirstOrgsQuery, { pageSize: 100, after, repoPageSize: 100 }).toPromise(),
+      (data) => data.viewer.organizations.pageInfo,
+    ),
+  )
 
   return result
 })
