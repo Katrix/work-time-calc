@@ -1,10 +1,10 @@
 import { graphql } from '~~/server/gql/github'
 import { type AnyVariables, Client, fetchExchange, type OperationResult } from '@urql/core'
 import type { GithubRepoInfo } from '#shared/types/github'
-import { type PageInfo, RepositoryPrivacy } from '~~/server/gql/github/graphql'
+import { type PageInfo } from '~~/server/gql/github/graphql'
 
 const query = graphql(`
-  query GetRepositories($pageSize: Int = 100, $after: String, $privacy: RepositoryPrivacy = null) {
+  query GetRepositories($pageSize: Int = 100, $after: String) {
     viewer {
       repositories(
         first: $pageSize
@@ -13,68 +13,6 @@ const query = graphql(`
         orderBy: { field: NAME, direction: ASC }
         affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
         ownerAffiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
-        privacy: $privacy
-      ) {
-        pageInfo {
-          endCursor
-          hasNextPage
-        }
-        nodes {
-          owner {
-            login
-          }
-          name
-          url
-        }
-      }
-    }
-  }
-`)
-
-const getFirstOrgsQuery = graphql(`
-  query GetOrgs($pageSize: Int = 100, $after: String, $repoPageSize: Int = 100) {
-    viewer {
-      organizations(first: $pageSize, after: $after) {
-        pageInfo {
-          endCursor
-          hasNextPage
-        }
-        nodes {
-          login
-          repositories(
-            first: $repoPageSize
-            hasIssuesEnabled: true
-            orderBy: { field: NAME, direction: ASC }
-            affiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
-            ownerAffiliations: [OWNER, ORGANIZATION_MEMBER, COLLABORATOR]
-          ) {
-            pageInfo {
-              endCursor
-              hasNextPage
-            }
-            nodes {
-              owner {
-                login
-              }
-              name
-              url
-            }
-          }
-        }
-      }
-    }
-  }
-`)
-
-const contributedToQuery = graphql(`
-  query ContributedTo($pageSize: Int = 100, $after: String) {
-    viewer {
-      repositoriesContributedTo(
-        first: $pageSize
-        after: $after
-        hasIssues: true
-        orderBy: { field: NAME, direction: ASC }
-        includeUserRepositories: true
       ) {
         pageInfo {
           endCursor
@@ -137,7 +75,7 @@ export default defineEventHandler(async (event) => {
   })
 
   const rawResults = await queryPaginated(
-    (after) => client.query(query, { pageSize: 100, after, privacy: null }).toPromise(),
+    (after) => client.query(query, { pageSize: 100, after }).toPromise(),
     (data) => data.viewer.repositories.pageInfo,
   )
 
@@ -145,27 +83,6 @@ export default defineEventHandler(async (event) => {
     .map((r) => r.viewer.repositories.nodes ?? [])
     .flat()
     .flatMap((n) => (n !== null ? [n] : []))
-
-  console.log(
-    await queryPaginated(
-      (after) => client.query(query, { pageSize: 100, after, privacy: RepositoryPrivacy.Private }).toPromise(),
-      (data) => data.viewer.repositories.pageInfo,
-    ),
-  )
-
-  console.log(
-    await queryPaginated(
-      (after) => client.query(getFirstOrgsQuery, { pageSize: 100, after, repoPageSize: 100 }).toPromise(),
-      (data) => data.viewer.organizations.pageInfo,
-    ),
-  )
-
-  console.log(
-    await queryPaginated(
-      (after) => client.query(contributedToQuery, { pageSize: 100, after }).toPromise(),
-      (data) => data.viewer.repositoriesContributedTo.pageInfo,
-    ),
-  )
 
   return result
 })
