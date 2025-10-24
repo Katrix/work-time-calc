@@ -40,6 +40,7 @@ const getFirstOrgsQuery = graphql(`
           hasNextPage
         }
         nodes {
+          login
           repositories(
             first: $repoPageSize
             hasIssuesEnabled: true
@@ -59,6 +60,32 @@ const getFirstOrgsQuery = graphql(`
               url
             }
           }
+        }
+      }
+    }
+  }
+`)
+
+const contributedToQuery = graphql(`
+  query ContributedTo($pageSize: Int = 100, $after: String) {
+    viewer {
+      repositoriesContributedTo(
+        first: $pageSize
+        after: $after
+        hasIssues: true
+        orderBy: { field: NAME, direction: ASC }
+        includeUserRepositories: true
+      ) {
+        pageInfo {
+          endCursor
+          hasNextPage
+        }
+        nodes {
+          owner {
+            login
+          }
+          name
+          url
         }
       }
     }
@@ -120,21 +147,23 @@ export default defineEventHandler(async (event) => {
     .flatMap((n) => (n !== null ? [n] : []))
 
   console.log(
-    (
-      await queryPaginated(
-        (after) => client.query(query, { pageSize: 100, after, privacy: RepositoryPrivacy.Private }).toPromise(),
-        (data) => data.viewer.repositories.pageInfo,
-      )
-    )
-      .map((r) => r.viewer.repositories.nodes ?? [])
-      .flat()
-      .flatMap((n) => (n !== null ? [n] : [])),
+    await queryPaginated(
+      (after) => client.query(query, { pageSize: 100, after, privacy: RepositoryPrivacy.Private }).toPromise(),
+      (data) => data.viewer.repositories.pageInfo,
+    ),
   )
 
   console.log(
     await queryPaginated(
       (after) => client.query(getFirstOrgsQuery, { pageSize: 100, after, repoPageSize: 100 }).toPromise(),
       (data) => data.viewer.organizations.pageInfo,
+    ),
+  )
+
+  console.log(
+    await queryPaginated(
+      (after) => client.query(contributedToQuery, { pageSize: 100, after }).toPromise(),
+      (data) => data.viewer.repositoriesContributedTo.pageInfo,
     ),
   )
 
