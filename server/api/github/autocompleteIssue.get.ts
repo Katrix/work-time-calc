@@ -1,26 +1,5 @@
 import z from 'zod'
-import { graphql } from '~~/server/gql/github'
-import { Client, fetchExchange } from '@urql/core'
-
-const query = graphql(`
-  query AutocompleteIssues($query: String!, $first: Int) {
-    search(type: ISSUE, query: $query, first: $first) {
-      nodes {
-        ... on Issue {
-          __typename
-          title
-          number
-          repository {
-            name
-            owner {
-              login
-            }
-          }
-        }
-      }
-    }
-  }
-`)
+import { Octokit } from 'octokit'
 
 export default defineEventHandler(async (event) => {
   const { prefix, repo: reposToSearch } = await getValidatedQuery(
@@ -37,47 +16,35 @@ export default defineEventHandler(async (event) => {
 
   const accessToken = await useAccessToken(event)
 
-  const client = new Client({
-    url: 'https://api.github.com/graphql',
-    fetchOptions: {
-      headers: {
-        authorization: `Bearer ${accessToken}`,
-        'user-agent': 'Work-time-calc',
-      },
-    },
-    preferGetMethod: false,
-    exchanges: [fetchExchange],
-  })
+  const octokit = new Octokit({ userAgent: 'Work-time-calc', auth: accessToken })
 
   if (!reposToSearch || reposToSearch.length === 0) {
     return []
   }
-  const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' ')
+  const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' OR ')
 
   // TODO: Use RegExp.escape() when it's available
 
-  const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title ${repoFilters}`
-  const res = await client.query(query, { query: searchQuery, first: 20 }).toPromise()
+  const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title (${repoFilters})`
 
-  if (!res.data) {
-    console.log('GraphQL error', res.error?.message, res.error)
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Failed to fetch issues. Error: ' + (res.error?.message ?? 'Unknown error'),
-    })
-  }
+  const res = await octokit.rest.search.issuesAndPullRequests({
+    advanced_search: 'true',
+    q: searchQuery,
+    first: 20,
+  })
 
-  const nodes = res.data.search.nodes
-  if (!nodes) {
-    return []
-  }
-
-  return nodes
-    .flatMap((n) => (n?.__typename === 'Issue' ? [n] : []))
-    .map((n) => ({
+  return res.data.items.map((n) => {
+    const url = n.html_url
+    const urlParts = url.split('/')
+    urlParts.pop() // Issue number
+    urlParts.pop() // Issues
+    const repo = urlParts.pop()
+    const owner = urlParts.pop()
+    return {
       title: n.title,
       number: n.number,
-      repositoryOwner: n.repository.owner.login,
-      repository: n.repository.name,
-    }))
+      repositoryOwner: owner ?? '',
+      repository: repo ?? '',
+    }
+  })
 })

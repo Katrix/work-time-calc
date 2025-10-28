@@ -20,9 +20,9 @@ export default defineNuxtConfig({
   ],
   runtimeConfig: {
     github: {
-      clientId: '',
-      clientSecret: '',
-    },
+      appId: '',
+      privateKey: ''
+    }
   },
   hub: {
     cache: true,
@@ -61,18 +61,6 @@ export default defineNuxtConfig({
       title: 'Work-time-calc',
       htmlAttrs: {
         lang: 'en',
-      },
-    },
-  },
-  gqlCodegen: {
-    schema: 'github-schema.graphql',
-    generates: {
-      './server/gql/github/': {
-        preset: 'client',
-        config: {
-          useTypeImports: true,
-        },
-        plugins: [],
       },
     },
   },
