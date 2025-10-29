@@ -7,55 +7,49 @@
         <template #label>
           <span class="d-flex justify-content-between">
             Owners:
-            <BButton variant="danger" size="sm" @click="presetStore.currentPreset.github.owners = []"
-              >Clear all</BButton
-            >
+            <BButton variant="danger" size="sm" @click="setAllReposInactive()">Clear all</BButton>
           </span>
         </template>
 
-        <BFormSelect
-          id="githubRepoOwners"
-          v-model="presetStore.currentPreset.github.owners"
-          :options="ownersOptions"
-          multiple
-        ></BFormSelect>
+        <BFormSelect id="githubRepoOwners" v-model="activeOwnerStrs" :options="ownersOptions" multiple></BFormSelect>
       </BFormGroup>
 
       <div class="col-xl-8">
-        <BFormGroup
-          v-if="presetStore.currentPreset.github.owners.length !== 0"
-          label="Repositories:"
-          label-for="githubRepositories"
-        >
+        <BFormGroup v-if="activeOwners.length !== 0" label="Repositories:" label-for="githubRepositories">
           <BFormSelect
             id="githubRepositories"
             @change="addRepo"
             v-model="currentRepo"
             :options="repoOptions"
             :style="{
-              borderBottomLeftRadius: activeRepos.length !== 0 ? 0 : undefined,
-              borderBottomRightRadius: activeRepos.length !== 0 ? 0 : undefined,
-              borderBottom: activeRepos.length !== 0 ? 0 : undefined,
+              borderBottomLeftRadius: activeOwners.length !== 0 ? 0 : undefined,
+              borderBottomRightRadius: activeOwners.length !== 0 ? 0 : undefined,
+              borderBottom: activeOwners.length !== 0 ? 0 : undefined,
             }"
           ></BFormSelect>
         </BFormGroup>
 
         <ul class="list-group">
           <li
-            v-for="([owner, repoArr], idx) in activeRepos"
-            :key="owner"
+            v-for="([ownerName, owner], idx) in activeOwners"
+            :key="ownerName"
             class="list-group-item"
             :style="{ borderTopLeftRadius: idx === 0 ? 0 : undefined, borderTopRightRadius: idx === 0 ? 0 : undefined }"
           >
-            <span>{{ owner }}/</span>
+            <div class="d-flex justify-content-between">
+              <span>{{ ownerName }}/</span>
+              <BFormCheckbox v-model="owner.autocompleteWithoutOwner" class="me-4" reverse>
+                Autocomplete without owner:
+              </BFormCheckbox>
+            </div>
             <ul class="list-group list-group-flush">
-              <li v-for="repo in repoArr" :key="owner + repo.name" class="list-group-item">
+              <li v-for="[repoName, repo] in owner.repos" :key="ownerName + repoName" class="list-group-item">
                 <div style="grid-template-columns: 1fr 2fr auto" class="d-grid align-items-center">
-                  <span class="me-4">{{ repo.name }}</span>
-                  <BFormCheckbox v-model="repo.autocompleteWithoutOwner" class="me-4" reverse>
-                    Autocomplete without owner:
+                  <span class="me-4">{{ repoName }}</span>
+                  <BFormCheckbox v-model="repo.autocompleteWithoutRepository" class="me-4" reverse>
+                    Autocomplete without repository:
                   </BFormCheckbox>
-                  <BButton variant="danger" size="sm" @click="removeRepo(owner, repo)">
+                  <BButton variant="danger" size="sm" @click="removeRepo(ownerName, repoName)">
                     <FontAwesomeIcon :icon="['fas', 'times']" />
                   </BButton>
                 </div>
@@ -83,11 +77,6 @@ import { useQuery } from '@tanstack/vue-query'
 const { loggedIn } = useUserSession()
 const presetStore = usePresetStore()
 
-interface Repo {
-  name: string
-  autocompleteWithoutOwner: boolean
-}
-
 const {
   data: repoNamesData,
   status: repoNamesStatus,
@@ -105,59 +94,78 @@ const repoOptions = computed(() => {
   const github = presetStore.currentPreset.github
   return [
     { value: null, text: 'Add a repository' },
-    ...github.owners.map((owner) => {
-      const existingRepos = (github.repos.get(owner) ?? []).map((repo) => repo.name)
+    ...[...github.entries()].map(([ownerName, owner]) => {
       const repos = (repoNamesData.value ?? []).filter(
-        (repo) => repo.owner.login === owner && !existingRepos.includes(repo.name),
+        (repo) => repo.owner.login === ownerName && !owner.repos.has(repo.name),
       )
       return {
-        label: owner,
+        label: ownerName,
         options: repos.map((repo) => ({ text: repo.name, value: repo })),
       }
     }),
   ]
 })
 const currentRepo = ref<GithubRepoInfo | null>(null)
-const activeRepos = computed(() => {
-  const github = presetStore.currentPreset.github
-  return [...github.repos.entries()].filter(([owner]) => github.owners.includes(owner))
+const activeOwners = computed(() => {
+  return [...presetStore.currentPreset.github.entries()].filter(([, e]) => e.active)
+})
+
+const activeOwnerStrs = computed({
+  get: () => activeOwners.value.map(([ownerName]) => ownerName),
+  set(v) {
+    const owners = presetStore.currentPreset.github
+    owners.forEach((owner, ownerName) => {
+      owner.active = v.includes(ownerName)
+    })
+
+    v.forEach((ownerName) => {
+      if (!owners.has(ownerName)) {
+        owners.set(ownerName, {
+          active: true,
+          autocompleteWithoutOwner: false,
+          repos: new Map(),
+        })
+      }
+    })
+  },
 })
 
 function addRepo() {
   if (currentRepo.value === null) {
     return
   }
-  const repos = presetStore.currentPreset.github.repos
+  const owners = presetStore.currentPreset.github
 
   const repo = currentRepo.value
 
-  let repoArr = repos.get(repo.owner.login)
-  if (!repoArr) {
-    repoArr = []
-    repos.set(repo.owner.login, repoArr)
+  let owner = owners.get(repo.owner.login)
+  if (!owner) {
+    owner = {
+      active: true,
+      autocompleteWithoutOwner: false,
+      repos: new Map(),
+    }
+    owners.set(repo.owner.login, owner)
   }
 
-  repoArr.push({
-    name: repo.name,
-    autocompleteWithoutOwner: false,
+  owner.repos.set(repo.name, {
+    autocompleteWithoutRepository: false,
   })
   nextTick(() => (currentRepo.value = null))
 }
 
-function removeRepo(owner: string, repo: Repo) {
-  const repos = presetStore.currentPreset.github.repos
-  const repoArr = repos.get(owner)
-  if (!repoArr) {
+function removeRepo(owner: string, repoName: string) {
+  const githubOwner = presetStore.currentPreset.github.get(owner)
+  if (!githubOwner) {
     return
   }
 
-  const idx = repoArr.indexOf(repo)
-  if (idx === -1) {
-    return
-  }
-  repoArr.splice(idx, 1)
-  if (repoArr.length === 0) {
-    repos.delete(owner)
-  }
+  githubOwner.repos.delete(repoName)
+}
+
+function setAllReposInactive() {
+  presetStore.currentPreset.github.forEach((owner) => {
+    owner.active = false
+  })
 }
 </script>

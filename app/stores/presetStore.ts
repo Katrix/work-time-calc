@@ -19,10 +19,7 @@ const defaultPreset: Preset = {
     precision: 10,
     tags: new Map(),
   },
-  github: {
-    owners: [],
-    repos: new Map(),
-  },
+  github: new Map(),
   holidayRules: [
     { type: 'christmas' },
     { type: 'easter' },

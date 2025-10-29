@@ -79,16 +79,24 @@ const selectedDropdown = ref<number | null>(null)
 const name = defineModel<string>({ required: true })
 
 const autocompleteOptions = computed(() => {
-  const reposByOwner = presetStore.currentPreset.github.repos
   return (
     currentIssues.value?.map((issue) => {
-      const repos = reposByOwner.get(issue.repositoryOwner)
-      const repo = repos?.find((repo) => repo.name === issue.repository)
-      const justIssueReference = `${issue.repository}/#${issue.number}`
-      const partial = `${justIssueReference} (${issue.title})`
+      const githubOwner = presetStore.currentPreset.github.get(issue.repositoryOwner)
+      const repo = githubOwner?.repos?.get(issue.repository)
+
+      const issueNumber = `#${issue.number}`
+      const issueReference =
+        githubOwner?.autocompleteWithoutOwner && repo?.autocompleteWithoutRepository
+          ? issueNumber
+          : `${issue.repository}/${issueNumber}`
+      const issueReferenceWithOwner = githubOwner?.autocompleteWithoutOwner
+        ? issueReference
+        : `${issue.repositoryOwner}/${issueReference}`
+
       return {
-        text: repo?.autocompleteWithoutOwner ? `${issue.repositoryOwner}/${partial}` : partial,
-        value: justIssueReference,
+        text: `${issueReferenceWithOwner} (${issue.title})`,
+        value: issueReferenceWithOwner,
+        title: issue.title,
       }
     }) ?? []
   )
@@ -100,20 +108,14 @@ const emits = defineEmits<{
 
 const debouncedName = debouncedRef(name, 500)
 const { data: currentIssues } = useQuery({
-  queryKey: [
-    'api',
-    'github',
-    'autocompleteIssue',
-    debouncedName,
-    computed(() => presetStore.currentPreset.github.repos),
-  ],
+  queryKey: ['api', 'github', 'autocompleteIssue', debouncedName, computed(() => presetStore.currentPreset.github)],
   queryFn: ({ signal }) =>
     $fetch(`/api/github/autocompleteIssue`, {
       query: {
         prefix: debouncedName.value,
-        repo: [...presetStore.currentPreset.github.repos.entries()].flatMap(([owner, repos]) =>
-          repos.map((repo) => `${owner}/${repo.name}`),
-        ),
+        repo: [...presetStore.currentPreset.github.entries()]
+          .filter(([, e]) => e.active)
+          .flatMap(([ownerStr, owner]) => [...owner.repos.keys()].map((repo) => `${ownerStr}/${repo}`)),
       },
       retry: false,
       signal,
@@ -172,13 +174,10 @@ function setFocused(change: number) {
 
 function onSelectAutocomplete(idx: number | null) {
   if (idx !== null) {
-    name.value = autocompleteOptions.value[idx].value
-    const issue = currentIssues.value?.find(
-      (i) => `${i.repository}/#${i.number}` === name.value || `${i.repositoryOwner}/${i.repository}/#${i.number}`,
-    )
-    if (issue) {
-      emits('onAutocompleteIssue', issue.title)
-    }
+    const selected = autocompleteOptions.value[idx]
+    name.value = selected.value
+    emits('onAutocompleteIssue', selected.title)
+
     dropdownVisible.value = false
     selectedDropdown.value = null
   }
