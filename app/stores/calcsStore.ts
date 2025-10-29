@@ -159,16 +159,11 @@ export const useCalcStore = defineStore('calcs', () => {
   const lastUpdated = ref(new Map<string, number>())
   const saveFiles = ref(new Map<string, File>())
 
-  const calcOrder = ref<string[]>(
-    (() => {
-      const route = useRoute()
-      return route.name === 'calculation' ? [route.params.calculation] : []
-    })(),
-  )
+  const calcOrder = ref<string[]>([])
 
   const calcs = shallowRef<
     Map<string, { entry: Ref<CalcWithEntries>; computedTime: Ref<ComputedWorkTime>; watcher: Ref<WatchHandle> }>
-  >(new Map(calcOrder.value.map((id) => [id, newCalcWithWatchers(id, 'hours')])))
+  >(new Map())
 
   function calcName(calcId: string, idx: number) {
     const calc = calcs.value.get(calcId)?.entry?.value
@@ -343,10 +338,6 @@ export const useCalcStore = defineStore('calcs', () => {
   }
 
   function removeCalc(id: string) {
-    if (calcs.value.size === 1) {
-      return
-    }
-
     const route = useRoute()
     const needNavigation = route.name === 'calculation' && route.params.calculation === id
     const idx = calcOrder.value.indexOf(id)
@@ -370,10 +361,15 @@ export const useCalcStore = defineStore('calcs', () => {
     if (needNavigation) {
       const newIdx = idx !== -1 ? Math.min(idx + 1, calcs.value.size - 1) : null
       const nextCalc = newIdx !== null ? [...calcs.value.keys()].find((k, idx) => idx === newIdx) : null
-      navigateTo({
-        name: 'calculation',
-        params: { calculation: nextCalc ?? firstCalc() },
-      })
+
+      if (calcs.value.size === 0) {
+        return navigateTo('/')
+      } else {
+        return navigateTo({
+          name: 'calculation',
+          params: { calculation: nextCalc ?? firstCalc() },
+        })
+      }
     }
   }
 

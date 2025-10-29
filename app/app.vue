@@ -16,12 +16,7 @@
         <li class="nav-item" role="presentation" v-for="(id, idx) in calcStore.calcOrder" :key="id">
           <NuxtLink class="nav-link" :to="{ name: 'calculation', params: { calculation: id } }" active-class="active">
             {{ calcStore.calcName(id, idx) }}
-            <BButton
-              v-if="calcStore.calcs.size > 1"
-              variant="danger"
-              size="sm"
-              @click.prevent="calcStore.removeCalc(id)"
-            >
+            <BButton variant="danger" size="sm" @click.prevent="calcStore.removeCalc(id)">
               <FontAwesomeIcon :icon="['fas', 'times']"></FontAwesomeIcon>
             </BButton>
           </NuxtLink>

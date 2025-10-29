@@ -91,7 +91,11 @@ watch(
   route,
   () => {
     if (!calcStore.calcs.has(calcId.value)) {
-      return navigateTo(`/${calcStore.firstCalc()}`)
+      if (calcStore.calcs.size === 0) {
+        return navigateTo('/')
+      } else {
+        return navigateTo(`/${calcStore.firstCalc()}`)
+      }
     }
   },
   {
