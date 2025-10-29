@@ -1,6 +1,6 @@
 <template>
   <div v-if="calcStore.calcs.has(calcId)" class="mt-2">
-    <CalcSettings :store-id="calcId" @load="load" @save="save" @save-csv="saveCSV"></CalcSettings>
+    <CalcSettings :calc-id="calcId" @load="load" @save="save" @save-csv="saveCSV"></CalcSettings>
     <hr />
     <CalcSized :calc-id="calcId" />
   </div>
@@ -96,6 +96,10 @@ watch(
       } else {
         return navigateTo(`/${calcStore.firstCalc()}`)
       }
+    }
+
+    if (!calcStore.calcOrder.includes(calcId.value)) {
+      calcStore.calcOrder.push(calcId.value)
     }
   },
   {

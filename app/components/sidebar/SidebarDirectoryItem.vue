@@ -1,9 +1,7 @@
 <template>
   <span class="directory-item">
     <FontAwesomeIcon :icon="['fas', icon]" size="lg" />
-    <span class="expanded-only">
-      <slot />
-    </span>
+    <slot />
   </span>
 </template>
 

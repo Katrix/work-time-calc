@@ -75,53 +75,57 @@ export const useCalcStore = defineStore('calcs', () => {
   }
 
   function makeComputedTime(entry: Ref<CalcWithEntries>) {
-    return computed<ComputedWorkTime>((oldValue) => {
-      const calc = entry.value
-
-      const workDaysObj: WorkDays = {}
-      if (calc.mode === 'tasks') {
-        const group = []
-        for (const [idx, workDay] of calc.entries.entries()) {
-          if (workDay) {
-            group.push({
-              ...workDay,
-              idx,
-            })
-          }
-        }
-
-        workDaysObj[calc.name] = group
-      } else {
-        for (const [idx, workDay] of calc.entries.entries()) {
-          if (workDay) {
-            if (!workDaysObj[workDay.name]) {
-              workDaysObj[workDay.name] = []
+    const computed = ref<ComputedWorkTime>({ entries: [], summaryByTag: {} })
+    watch(
+      entry,
+      (calc) => {
+        const workDaysObj: WorkDays = {}
+        if (calc.mode === 'tasks') {
+          const group = []
+          for (const [idx, workDay] of calc.entries.entries()) {
+            if (workDay) {
+              group.push({
+                ...workDay,
+                idx,
+              })
             }
-            workDaysObj[workDay.name].push({
-              ...workDay,
-              idx,
-            })
+          }
+
+          workDaysObj[calc.name] = group
+        } else {
+          for (const [idx, workDay] of calc.entries.entries()) {
+            if (workDay) {
+              if (!workDaysObj[workDay.name]) {
+                workDaysObj[workDay.name] = []
+              }
+              workDaysObj[workDay.name].push({
+                ...workDay,
+                idx,
+              })
+            }
           }
         }
-      }
 
-      try {
-        const res = computeWorkTime(
-          workDaysObj,
-          calc.savedUpTime,
-          calc.defaultFrom,
-          calc.defaultTo,
-          calc.workTime,
-          now.value,
-          calc.precision,
-        )
-        res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
-        return res
-      } catch (e) {
-        // Ignored
-        return oldValue ?? { entries: [], summaryByTag: {} }
-      }
-    })
+        try {
+          const res = computeWorkTime(
+            workDaysObj,
+            calc.savedUpTime,
+            calc.defaultFrom,
+            calc.defaultTo,
+            calc.workTime,
+            now.value,
+            calc.precision,
+          )
+          res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
+          computed.value = res
+        } catch (e) {
+          // Ignored
+        }
+      },
+      { immediate: true, deep: true },
+    )
+
+    return computed
   }
 
   function newCalcWithWatchers(id: string, mode: 'hours' | 'tasks') {
@@ -337,40 +341,44 @@ export const useCalcStore = defineStore('calcs', () => {
     navigateTo({ name: 'calculation', params: { calculation: newId } })
   }
 
-  function removeCalc(id: string) {
+  async function closeCalc(id: string) {
     const route = useRoute()
     const needNavigation = route.name === 'calculation' && route.params.calculation === id
     const idx = calcOrder.value.indexOf(id)
 
-    const removed = calcs.value.get(id)
     if (idx !== -1) {
       calcOrder.value.splice(idx, 1)
     }
-    calcs.value.delete(id)
-
-    if (removed) {
-      removed.watcher.value.stop()
-    }
-
-    triggerRef(calcs)
-
-    if (import.meta.client) {
-      localStorage.removeItem(`calcs.${id}`)
-    }
 
     if (needNavigation) {
-      const newIdx = idx !== -1 ? Math.min(idx + 1, calcs.value.size - 1) : null
-      const nextCalc = newIdx !== null ? [...calcs.value.keys()].find((k, idx) => idx === newIdx) : null
-
-      if (calcs.value.size === 0) {
-        return navigateTo('/')
+      if (calcOrder.value.length === 0) {
+        return await navigateTo('/')
       } else {
-        return navigateTo({
+        const newIdx = idx !== -1 ? Math.min(idx + 1, calcOrder.value.length - 1) : null
+        const nextCalc = newIdx !== null && newIdx >= 0 ? calcOrder.value.find((k, idx) => idx === newIdx) : null
+        return await navigateTo({
           name: 'calculation',
           params: { calculation: nextCalc ?? firstCalc() },
         })
       }
     }
+  }
+
+  function deleteCalc(id: string) {
+    closeCalc(id).then(() => {
+      const removed = calcs.value.get(id)
+      calcs.value.delete(id)
+
+      if (removed) {
+        removed.watcher.value.stop()
+      }
+
+      triggerRef(calcs)
+
+      if (import.meta.client) {
+        localStorage.removeItem(`calcs.${id}`)
+      }
+    })
   }
 
   function firstCalc(): string {
@@ -457,7 +465,8 @@ export const useCalcStore = defineStore('calcs', () => {
     waitForLocalStorage: skipHydrate(waitForLocalStorage),
     lastUpdated,
     addCalc,
-    removeCalc,
+    closeCalc,
+    deleteCalc,
     calcName,
     useCalc,
     firstCalc,

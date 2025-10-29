@@ -105,14 +105,30 @@
               Add remaining workdays
             </button>
           </div>
+
+          <div class="btn-group mx-1" role="group" aria-label="Dangerous actions">
+            <button class="btn btn-danger" type="button" @click="deleteModal = true">Delete</button>
+          </div>
         </div>
       </div>
     </div>
+
+    <BModal
+      v-model="deleteModal"
+      title="Delete calc?"
+      ok-variant="danger"
+      ok-title="Yes"
+      @ok="calcStore.deleteCalc(calcId)"
+    >
+      Do you want to delete the calc "{{ calc.name }}"?
+    </BModal>
   </form>
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ storeId: string }>()
+const props = defineProps<{ calcId: string }>()
+
+const deleteModal = ref(false)
 
 const calcStore = useCalcStore()
 const {
@@ -121,12 +137,12 @@ const {
   clear: calcClear,
   fillWorkdays,
   fillRemainingWorkdays,
-} = calcStore.useCalc(computed(() => props.storeId))
+} = calcStore.useCalc(computed(() => props.calcId))
 const mode = computed(() => calc.value.mode)
 
 const saveFile = computed<File | null, File>({
-  get: () => calcStore.saveFiles.get(props.storeId) ?? null,
-  set: (value) => calcStore.saveFiles.set(props.storeId, value),
+  get: () => calcStore.saveFiles.get(props.calcId) ?? null,
+  set: (value) => calcStore.saveFiles.set(props.calcId, value),
 })
 
 defineEmits<{
