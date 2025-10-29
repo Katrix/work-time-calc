@@ -3,13 +3,13 @@
     <div v-if="loading">
       <FontAwesomeIcon :icon="['fa', 'spinner']" spin size="8x"></FontAwesomeIcon>
     </div>
-    <div v-else-if="calcStore.calcs.size > 0" class="card w-25">
+    <div v-else-if="calcStore.calcOrder.length > 0" class="card w-25">
       <div class="card-header">Calculations</div>
 
       <ul class="list-group list-group-flush">
-        <li class="list-group-item" v-for="[calcId, calc] in calcStore.calcs.entries()" :key="calcId">
+        <li class="list-group-item" v-for="(calcId, idx) in calcStore.calcOrder" :key="calcId">
           <NuxtLink :to="{ name: 'calculation', params: { calculation: calcId } }">
-            {{ calc.entry.value.name }}
+            {{ calcStore.calcName(calcId, idx) }}
           </NuxtLink>
         </li>
       </ul>
