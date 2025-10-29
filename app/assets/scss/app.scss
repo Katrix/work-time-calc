@@ -57,22 +57,6 @@ $enable-cssgrid: true;
 }
 
 @include media-breakpoint-up(sm) {
-  .hours-settings {
-    grid-template-rows: repeat(10, 1fr);
-    grid-template-columns: auto 1fr;
-    grid-template-areas:
-      'name-description              name-content'
-      'mode-switch                   mode-switch'
-      'saved-up-time-description     saved-up-time-content'
-      'saved-up-vacation-description saved-up-vacation-content'
-      'work-time-description         work-time-content'
-      'default-work-from-description default-work-from-content'
-      'default-work-to-description   default-work-to-content'
-      'precision-description         precision-content'
-      'input-file-content            input-file-content'
-      'actions-content               actions-content';
-  }
-
   .tasks-settings {
     grid-template-rows: repeat(4, 1fr);
     grid-template-columns: auto 1fr;
@@ -92,8 +76,8 @@ $enable-cssgrid: true;
       'name-description              name-content                  name-content          mode-switch'
       'saved-up-time-description     default-work-from-description work-time-description input-file-description'
       'saved-up-time-content         default-work-from-content     work-time-content     input-file-content'
-      'saved-up-vacation-description default-work-to-description   precision-description actions-content'
-      'saved-up-vacation-content     default-work-to-content       precision-content     none';
+      'saved-up-vacation-description default-work-to-description   precision-description none'
+      'saved-up-vacation-content     default-work-to-content       precision-content     actions-content';
   }
 
   .tasks-settings {
