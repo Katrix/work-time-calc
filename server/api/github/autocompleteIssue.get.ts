@@ -1,5 +1,6 @@
 import z from 'zod'
 import { Octokit } from 'octokit'
+import type { OctokitResponse } from '@octokit/types'
 
 export default defineEventHandler(async (event) => {
   const { prefix, repo: reposToSearch } = await getValidatedQuery(
@@ -22,42 +23,66 @@ export default defineEventHandler(async (event) => {
   if (!reposToSearch || reposToSearch.length === 0) {
     return []
   }
-  const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' OR ')
-  console.log(`Searching ${reposToSearch.length} repos`)
 
-  // TODO: Use RegExp.escape() when it's available
+  const resultItems: {
+    title: string
+    number: number
+    repositoryOwner: string
+    repository: string
+  }[] = []
+  console.log(`In total searching ${reposToSearch.length} repos`)
 
-  const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title (${repoFilters})`
+  for (let i = 0; i < reposToSearch.length; i += 5) {
+    const toSearch = reposToSearch.slice(i, i + 5)
+    const repoFilters = toSearch.map((repo) => `repo:${repo}`).join(' OR ')
+    console.log(`Searching ${toSearch.length} repos`)
 
-  let res
-  try {
-    res = await octokit.rest.search.issuesAndPullRequests({
-      advanced_search: 'true',
-      q: searchQuery,
-      first: 20,
-    })
-  } catch (e) {
-    console.error('Error searching GitHub:', e)
-    throw createError({
-      statusCode: 500,
-      statusMessage: 'Error searching GitHub',
-    })
+    // TODO: Use RegExp.escape() when it's available
+
+    const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title (${repoFilters})`
+
+    let res: OctokitResponse<{
+      total_count: number
+      incomplete_results: boolean
+      items: {
+        title: string
+        number: number
+        html_url: string
+      }[]
+    }>
+    try {
+      res = await octokit.rest.search.issuesAndPullRequests({
+        advanced_search: 'true',
+        q: searchQuery,
+        first: 20,
+      })
+    } catch (e) {
+      console.error('Error searching GitHub:', e)
+      throw createError({
+        statusCode: 500,
+        statusMessage: 'Error searching GitHub',
+      })
+    }
+
+    console.log(`Got ${res.data.items.length} results`)
+
+    resultItems.push(
+      ...res.data.items.map((n) => {
+        const url = n.html_url
+        const urlParts = url.split('/')
+        urlParts.pop() // Issue number
+        urlParts.pop() // Issues
+        const repo = urlParts.pop()
+        const owner = urlParts.pop()
+        return {
+          title: n.title,
+          number: n.number,
+          repositoryOwner: owner ?? '',
+          repository: repo ?? '',
+        }
+      }),
+    )
   }
 
-  console.log(`Got ${res.data.items.length} results`)
-
-  return res.data.items.map((n) => {
-    const url = n.html_url
-    const urlParts = url.split('/')
-    urlParts.pop() // Issue number
-    urlParts.pop() // Issues
-    const repo = urlParts.pop()
-    const owner = urlParts.pop()
-    return {
-      title: n.title,
-      number: n.number,
-      repositoryOwner: owner ?? '',
-      repository: repo ?? '',
-    }
-  })
+  return resultItems
 })

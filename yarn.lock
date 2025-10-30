@@ -2187,6 +2187,15 @@ __metadata:
   languageName: node
   linkType: hard
 
+"@octokit/types@npm:^15.0.2":
+  version: 15.0.2
+  resolution: "@octokit/types@npm:15.0.2"
+  dependencies:
+    "@octokit/openapi-types": "npm:^26.0.0"
+  checksum: 10/4f40a3eb65fab1370f8c988e6f8281265238fd1a4d69218eb7b496703c31c652aa27a834b134f6c8679f9029d6f547c61ad588a7a21e3d98fdc57448174ca9f8
+  languageName: node
+  linkType: hard
+
 "@octokit/webhooks-methods@npm:^6.0.0":
   version: 6.0.0
   resolution: "@octokit/webhooks-methods@npm:6.0.0"
@@ -13131,6 +13140,7 @@ __metadata:
     "@nuxt/eslint": "npm:1.9.0"
     "@nuxt/test-utils": "npm:3.19.2"
     "@nuxthub/core": "npm:0.9.0"
+    "@octokit/types": "npm:^15.0.2"
     "@pinia/nuxt": "npm:0.11.2"
     "@tanstack/vue-query": "npm:^5.90.2"
     "@types/eslint-plugin-security": "npm:^3.0.0"
