@@ -1,9 +1,5 @@
-import { Octokit } from 'octokit'
-
 export default defineEventHandler(async (event) => {
-  const accessToken = await useAccessToken(event)
-
-  const octokit = new Octokit({ userAgent: 'Work-time-calc', auth: accessToken })
+  const octokit = await useOctokit(event)
   const repos = await octokit.paginate(octokit.rest.repos.listForAuthenticatedUser, {
     per_page: 100,
   })

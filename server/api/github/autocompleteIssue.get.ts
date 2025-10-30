@@ -1,5 +1,4 @@
 import z from 'zod'
-import { Octokit } from 'octokit'
 import type { OctokitResponse } from '@octokit/types'
 
 export default defineEventHandler(async (event) => {
@@ -15,10 +14,8 @@ export default defineEventHandler(async (event) => {
     }).parse,
   )
 
-  const accessToken = await useAccessToken(event)
-  console.log('Got access token')
-
-  const octokit = new Octokit({ userAgent: 'Work-time-calc', auth: accessToken })
+  const octokit = await useOctokit(event)
+  console.log('Created octokit')
 
   if (!reposToSearch || reposToSearch.length === 0) {
     return []
