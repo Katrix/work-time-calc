@@ -28,17 +28,25 @@ export async function useOctokit(event: H3Event) {
       refreshTokenExpires: epochToDate(session.secure?.githubRefreshTokenExpires),
       refreshToken: session.secure?.githubRefreshToken,
     },
+    request: {
+      fetch: $fetch
+    }
   })
+  console.log('About to authanticate')
   const authRes = (await octokit.auth({})) as GitHubAppAuthenticationWithExpiration
+  console.log('Authanticated')
 
-  await setUserSession(event, {
-    secure: {
-      githubAccessToken: authRes.token,
-      githubRefreshToken: authRes.refreshToken,
-      githubAccessTokenExpires: new Date(authRes.expiresAt).getTime() / 1000,
-      githubRefreshTokenExpires: new Date(authRes.refreshTokenExpiresAt).getTime() / 1000,
-    },
-  })
+  if (authRes.token != accessToken || session.secure?.githubRefreshToken != authRes.refreshToken) {
+    console.log('Token was changed, updating session')
+    await setUserSession(event, {
+      secure: {
+        githubAccessToken: authRes.token,
+        githubRefreshToken: authRes.refreshToken,
+        githubAccessTokenExpires: new Date(authRes.expiresAt).getTime() / 1000,
+        githubRefreshTokenExpires: new Date(authRes.refreshTokenExpiresAt).getTime() / 1000,
+      },
+    })
+  }
 
   return octokit
 }
