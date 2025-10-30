@@ -11,6 +11,7 @@
         borderBottom: dropdownVisible && autocompleteOptions.length > 0 ? 0 : undefined,
       }"
       v-model="name"
+      @change="hasEdited = true"
       @focus="onFocus"
       @blur="onBlur"
       @keydown.up="setFocused(-1)"
@@ -77,6 +78,7 @@ const dropdownVisible = ref(false)
 const selectedDropdown = ref<number | null>(null)
 
 const name = defineModel<string>({ required: true })
+const hasEdited = ref(false)
 
 const autocompleteOptions = computed(() => {
   return (
@@ -125,6 +127,7 @@ const { data: currentIssues } = useQuery({
       import.meta.client &&
       isVisible.value &&
       auth.loggedIn &&
+      hasEdited.value &&
       props.mode === 'tasks' &&
       debouncedName.value.length > 0,
   ),
@@ -175,6 +178,7 @@ function setFocused(change: number) {
 function onSelectAutocomplete(idx: number | null) {
   if (idx !== null) {
     const selected = autocompleteOptions.value[idx]
+    hasEdited.value = false
     name.value = selected.value
     emits('onAutocompleteIssue', selected.title)
 

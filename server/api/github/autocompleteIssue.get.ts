@@ -15,6 +15,7 @@ export default defineEventHandler(async (event) => {
   )
 
   const accessToken = await useAccessToken(event)
+  console.log('Got access token')
 
   const octokit = new Octokit({ userAgent: 'Work-time-calc', auth: accessToken })
 
@@ -22,6 +23,7 @@ export default defineEventHandler(async (event) => {
     return []
   }
   const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' OR ')
+  console.log(`Searching ${repoFilters.length} repos`)
 
   // TODO: Use RegExp.escape() when it's available
 
@@ -32,6 +34,8 @@ export default defineEventHandler(async (event) => {
     q: searchQuery,
     first: 20,
   })
+
+  console.log(`Got ${res.data.items.length} results`)
 
   return res.data.items.map((n) => {
     const url = n.html_url
