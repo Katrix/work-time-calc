@@ -29,24 +29,29 @@ export async function useOctokit(event: H3Event) {
       refreshToken: session.secure?.githubRefreshToken,
     },
     request: {
-      fetch: $fetch
+      fetch: $fetch.raw
     }
   })
-  console.log('About to authanticate')
-  const authRes = (await octokit.auth({})) as GitHubAppAuthenticationWithExpiration
-  console.log('Authanticated')
+  try {
+    console.log('About to authanticate')
+    const authRes = (await octokit.auth({})) as GitHubAppAuthenticationWithExpiration
+    console.log('Authanticated')
 
-  if (authRes.token != accessToken || session.secure?.githubRefreshToken != authRes.refreshToken) {
-    console.log('Token was changed, updating session')
-    await setUserSession(event, {
-      secure: {
-        githubAccessToken: authRes.token,
-        githubRefreshToken: authRes.refreshToken,
-        githubAccessTokenExpires: new Date(authRes.expiresAt).getTime() / 1000,
-        githubRefreshTokenExpires: new Date(authRes.refreshTokenExpiresAt).getTime() / 1000,
-      },
-    })
+    if (authRes.token != accessToken || session.secure?.githubRefreshToken != authRes.refreshToken) {
+      console.log('Token was changed, updating session')
+      await setUserSession(event, {
+        secure: {
+          githubAccessToken: authRes.token,
+          githubRefreshToken: authRes.refreshToken,
+          githubAccessTokenExpires: new Date(authRes.expiresAt).getTime() / 1000,
+          githubRefreshTokenExpires: new Date(authRes.refreshTokenExpiresAt).getTime() / 1000,
+        },
+      })
+    }
+
+    return octokit
+  } catch (e) {
+    console.error('Error authenticating with GitHub', e)
+    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
-
-  return octokit
 }
