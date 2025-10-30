@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     return []
   }
   const repoFilters = reposToSearch.map((repo) => `repo:${repo}`).join(' OR ')
-  console.log(`Searching ${repoFilters.length} repos`)
+  console.log(`Searching ${reposToSearch.length} repos`)
 
   // TODO: Use RegExp.escape() when it's available
 

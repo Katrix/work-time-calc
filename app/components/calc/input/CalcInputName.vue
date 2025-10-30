@@ -11,7 +11,7 @@
         borderBottom: dropdownVisible && autocompleteOptions.length > 0 ? 0 : undefined,
       }"
       v-model="name"
-      @change="hasEdited = true"
+      @input="hasEdited = true"
       @focus="onFocus"
       @blur="onBlur"
       @keydown.up="setFocused(-1)"
