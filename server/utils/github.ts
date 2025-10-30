@@ -28,9 +28,9 @@ export async function useOctokit(event: H3Event) {
       refreshTokenExpires: epochToDate(session.secure?.githubRefreshTokenExpires),
       refreshToken: session.secure?.githubRefreshToken,
     },
-    request: {
-      fetch: $fetch.raw
-    }
+    //request: {
+    //  fetch: $fetch.raw
+    //}
   })
   try {
     console.log('About to authanticate')
@@ -52,6 +52,6 @@ export async function useOctokit(event: H3Event) {
     return octokit
   } catch (e) {
     console.error('Error authenticating with GitHub', e)
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
+    throw createError({ statusCode: 500, statusMessage: 'Internal server error' })
   }
 }
