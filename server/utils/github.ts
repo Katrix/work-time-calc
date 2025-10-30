@@ -28,9 +28,6 @@ export async function useOctokit(event: H3Event) {
       refreshTokenExpires: epochToDate(session.secure?.githubRefreshTokenExpires),
       refreshToken: session.secure?.githubRefreshToken,
     },
-    //request: {
-    //  fetch: $fetch.raw
-    //}
   })
   try {
     console.log('About to authanticate')
