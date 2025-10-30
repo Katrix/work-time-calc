@@ -29,11 +29,20 @@ export default defineEventHandler(async (event) => {
 
   const searchQuery = `is:issue state:open /^${prefix.replace('\\', '\\\\')}/ in:title (${repoFilters})`
 
-  const res = await octokit.rest.search.issuesAndPullRequests({
-    advanced_search: 'true',
-    q: searchQuery,
-    first: 20,
-  })
+  let res
+  try {
+    res = await octokit.rest.search.issuesAndPullRequests({
+      advanced_search: 'true',
+      q: searchQuery,
+      first: 20,
+    })
+  } catch (e) {
+    console.error('Error searching GitHub:', e)
+    throw createError({
+      statusCode: 500,
+      statusMessage: 'Error searching GitHub',
+    })
+  }
 
   console.log(`Got ${res.data.items.length} results`)
 
