@@ -1,8 +1,9 @@
 import z from 'zod'
 import type { OctokitResponse } from '@octokit/types'
-import type { Octokit } from 'octokit'
+import type { Octokit } from '@octokit/core'
+import type { Api } from '@octokit/plugin-rest-endpoint-methods'
 
-async function queryIssues(octokit: Octokit, repos: string[], prefix: string, abortSignal: AbortSignal) {
+async function queryIssues(octokit: Octokit & Api, repos: string[], prefix: string, abortSignal: AbortSignal) {
   const repoFilters = repos.map((repo) => `repo:${repo}`).join(' OR ')
   console.log(`Searching ${repos.length} repos`)
 

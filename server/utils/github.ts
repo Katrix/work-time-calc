@@ -1,6 +1,8 @@
 import { H3Event } from 'h3'
-import { Octokit } from 'octokit'
+import { Octokit } from '@octokit/core'
 import { createOAuthUserAuth, type GitHubAppAuthenticationWithExpiration } from '@octokit/auth-oauth-user'
+import { type Api, restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
+import { type PaginateInterface, paginateRest } from '@octokit/plugin-paginate-rest'
 
 export async function useOctokit(event: H3Event) {
   const session = await getUserSession(event)
@@ -15,7 +17,11 @@ export async function useOctokit(event: H3Event) {
   }
 
   const runtimeConfig = useRuntimeConfig()
-  const octokit = new Octokit({
+  const withPlugins = Octokit.plugin(restEndpointMethods, paginateRest)
+  const octokit: Octokit &
+    Api & {
+      paginate: PaginateInterface
+    } = new withPlugins({
     userAgent: 'Work-time-calc',
     authStrategy: createOAuthUserAuth,
     auth: {
@@ -28,6 +34,7 @@ export async function useOctokit(event: H3Event) {
       refreshTokenExpires: epochToDate(session.secure?.githubRefreshTokenExpires),
       refreshToken: session.secure?.githubRefreshToken,
     },
+    log: console,
   })
   try {
     console.log('About to authanticate')
