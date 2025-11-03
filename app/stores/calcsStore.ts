@@ -2,6 +2,7 @@ import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 import type { WatchHandle } from 'vue'
 import { skipHydrate } from 'pinia'
 import z from 'zod'
+import { dateToMinutesRounded } from '#shared/utils/ComputeWorkTime'
 
 export const useCalcStore = defineStore('calcs', () => {
   const presetStore = usePresetStore()
@@ -75,57 +76,60 @@ export const useCalcStore = defineStore('calcs', () => {
   }
 
   function makeComputedTime(entry: Ref<CalcWithEntries>) {
-    const computed = ref<ComputedWorkTime>({ entries: [], summaryByTag: {} })
-    watch(
-      entry,
-      (calc) => {
-        const workDaysObj: WorkDays = {}
-        if (calc.mode === 'tasks') {
-          const group = []
-          for (const [idx, workDay] of calc.entries.entries()) {
-            if (workDay) {
-              group.push({
-                ...workDay,
-                idx,
-              })
-            }
-          }
+    const computedRef = ref<ComputedWorkTime>({ entries: [], summaryByTag: {} })
 
-          workDaysObj[calc.name] = group
-        } else {
-          for (const [idx, workDay] of calc.entries.entries()) {
-            if (workDay) {
-              if (!workDaysObj[workDay.name]) {
-                workDaysObj[workDay.name] = []
-              }
-              workDaysObj[workDay.name].push({
-                ...workDay,
-                idx,
-              })
-            }
+    function doCompute() {
+      const calc = entry.value
+      const workDaysObj: WorkDays = {}
+      if (calc.mode === 'tasks') {
+        const group = []
+        for (const [idx, workDay] of calc.entries.entries()) {
+          if (workDay) {
+            group.push({
+              ...workDay,
+              idx,
+            })
           }
         }
 
-        try {
-          const res = computeWorkTime(
-            workDaysObj,
-            calc.savedUpTime,
-            calc.defaultFrom,
-            calc.defaultTo,
-            calc.workTime,
-            now.value,
-            calc.precision,
-          )
-          res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
-          computed.value = res
-        } catch (e) {
-          // Ignored
+        workDaysObj[calc.name] = group
+      } else {
+        for (const [idx, workDay] of calc.entries.entries()) {
+          if (workDay) {
+            if (!workDaysObj[workDay.name]) {
+              workDaysObj[workDay.name] = []
+            }
+            workDaysObj[workDay.name].push({
+              ...workDay,
+              idx,
+            })
+          }
         }
-      },
-      { immediate: true, deep: true },
-    )
+      }
 
-    return computed
+      try {
+        const res = computeWorkTime(
+          workDaysObj,
+          calc.savedUpTime,
+          calc.defaultFrom,
+          calc.defaultTo,
+          calc.workTime,
+          now.value,
+          calc.precision,
+        )
+        res.entries.sort((a, b) => (a.idx ?? 0) - (b.idx ?? 0))
+        computedRef.value = res
+      } catch (e) {
+        // Ignored
+      }
+    }
+
+    const nowWithNowPrecision = computed(() => dateToMinutesRounded(now.value, entry.value.precision))
+
+    watch(entry, doCompute, { immediate: true, deep: true })
+    watch(nowWithNowPrecision, doCompute)
+
+    return computedRef
   }
 
   function newCalcWithWatchers(id: string, mode: 'hours' | 'tasks') {
