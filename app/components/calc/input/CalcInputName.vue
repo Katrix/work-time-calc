@@ -133,6 +133,8 @@ const { data: currentIssues } = useQuery({
   ),
   staleTime: 1000 * 60 * 5,
   retry: computed(() => false),
+  refetchOnWindowFocus: false,
+  refetchOnReconnect: false
 })
 
 function onFocus() {
