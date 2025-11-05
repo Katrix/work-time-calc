@@ -61,6 +61,7 @@ export function encodeCalcToString(calc: CalcWithEntries) {
       tags: e.tags,
       notes: e.notes,
       idx: e.idx,
+      isTracking: e.isTracking,
     })),
   }
 
@@ -105,6 +106,7 @@ export function decodeCalcFromString(str: string): CalcWithEntries {
         tags: z.array(z.string()).optional(),
         notes: z.string().optional(),
         idx: z.int().optional(),
+        isTracking: z.boolean().optional(),
       }),
     ),
   })
