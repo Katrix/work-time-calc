@@ -10,8 +10,12 @@ export default defineNuxtConfig({
   },
   nitro: {
     prerender: {
-      autoSubfolderIndex: false
-    }
+      autoSubfolderIndex: false,
+    },
+    cloudflare: {
+      deployConfig: true,
+      nodeCompat: true,
+    },
   },
   modules: [
     '@nuxt/eslint',
@@ -31,8 +35,8 @@ export default defineNuxtConfig({
   runtimeConfig: {
     github: {
       appId: '',
-      privateKey: ''
-    }
+      privateKey: '',
+    },
   },
   vite: {
     css: {
