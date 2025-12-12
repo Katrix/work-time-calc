@@ -18,7 +18,7 @@ describe('CalcInputParsed.vue', () => {
 
     await input.setValue('01:05')
     const emitted = wrapper.emitted<(number | null | undefined)[]>('update:modelValue')
-    expect(emitted[0][0]).toBe(65)
+    expect(emitted && emitted[0][0]).toBe(65)
 
     await wrapper.setProps({ modelValue: 120 })
     expect((input.element as HTMLInputElement).value).toBe('02:00')
@@ -40,8 +40,9 @@ describe('CalcInputParsed.vue', () => {
     const lastEmitted = () => {
       const emitted = wrapper.emitted<(number | null | undefined)[]>('update:modelValue')
       expect(emitted).not.toBeUndefined()
-      expect(emitted.length).toBeGreaterThan(0)
-      return emitted[emitted.length - 1]
+
+      expect(emitted!.length).toBeGreaterThan(0)
+      return emitted![emitted!.length - 1]
     }
 
     let emitted = wrapper.emitted<(number | null | undefined)[]>('update:modelValue')

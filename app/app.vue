@@ -52,6 +52,7 @@
 <script setup lang="ts">
 import SidebarHeading from '~/components/sidebar/SidebarHeading.vue'
 import SidebarDirectory from '~/components/sidebar/SidebarDirectory.vue'
+import type { RouteLocationRaw } from 'vue-router'
 
 const calcStore = useCalcStore()
 const intervalId = ref<number>()
