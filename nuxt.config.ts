@@ -8,13 +8,17 @@ export default defineNuxtConfig({
       enabled: true,
     },
   },
+  nitro: {
+    prerender: {
+      autoSubfolderIndex: false
+    }
+  },
   modules: [
     '@nuxt/eslint',
     '@nuxt/test-utils',
     '@bootstrap-vue-next/nuxt',
     '@vueuse/nuxt',
     '@pinia/nuxt',
-    '@nuxthub/core',
     // 'nuxt-security',
     'nuxt-auth-utils',
   ],
@@ -29,10 +33,6 @@ export default defineNuxtConfig({
       appId: '',
       privateKey: ''
     }
-  },
-  hub: {
-    cache: true,
-    database: true,
   },
   vite: {
     css: {
