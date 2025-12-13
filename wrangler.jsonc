@@ -1,7 +1,14 @@
 {
-  "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "work-time-calc",
-  "observability": {
-    "enabled": true
-  }
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"name": "work-time-calc",
+	"observability": {
+		"enabled": true
+	},
+	"d1_databases": [
+		{
+			"binding": "work_time_calc",
+			"database_name": "work-time-calc",
+			"database_id": "c0da6c79-313a-42ba-bca6-28c3da16ee9d"
+		}
+	]
 }
