@@ -15,7 +15,7 @@ const calcStore = useCalcStore()
 watch(
   route,
   () => {
-    if (!calcStore.allCalcs.has(calcId.value)) {
+    if (!calcStore.loading && !calcStore.allCalcs.has(calcId.value)) {
       if (calcStore.allCalcs.size === 0) {
         return navigateTo('/')
       } else {
@@ -23,7 +23,7 @@ watch(
       }
     }
 
-    if (!calcStore.calcOrder.includes(calcId.value)) {
+    if (!calcStore.loading && !calcStore.calcOrder.includes(calcId.value)) {
       calcStore.calcOrder.push(calcId.value)
     }
   },

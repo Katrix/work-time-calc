@@ -32,7 +32,7 @@ export const calcSchema = z.object({
   defaultFrom: z.int(),
   defaultTo: z.int().nullable(),
   precision: z.int(),
-  tags: z.map(z.string(), z.string()).or(recordMap(z.string())),
+  tags: recordMap(z.string()).or(z.map(z.string(), z.string())),
 })
 export type Calc = z.infer<typeof calcSchema>
 
@@ -76,9 +76,8 @@ export function decodeCalcFromString(str: string): CalcWithEntries {
       defaultFrom: z.int().or(strDuration),
       defaultTo: z.int().or(strDuration),
       precision: z.int().optional().default(5),
-      tags: z
-        .map(z.string(), z.string())
-        .or(recordMap(z.string()))
+      tags: recordMap(z.string())
+        .or(z.map(z.string(), z.string()))
         .default(() => new Map()),
       workDays: z.array(
         z.object({

@@ -21,7 +21,7 @@ export const useCalcStore = defineStore('calcs', () => {
     try {
       const res = await $fetch('/api/calc', {
         method: 'POST',
-        body: defaultCalc,
+        body: calcWithEntriesV2Schema.encode(defaultCalc),
       })
 
       calcOrder.value.push(res.publicId)
@@ -91,34 +91,45 @@ export const useCalcStore = defineStore('calcs', () => {
     calcsLastUpdated.value = new Date(openedRes.value.lastUpated).getTime()
   }
 
-  function fetchLocalOpenedCalcs(toast: ReturnType<typeof useToast>) {
+  function fetchLocalOpenedCalcs() {
     const calcsStr = localStorage.getItem('calcs')
     const calcsLastUpdatedStr = localStorage.getItem('calcsLastUpdated')
-    const calcsLastUpdatedParsed = calcsLastUpdatedStr ? new Date(calcsLastUpdatedStr).getTime() : 1 // 1 so it still loads if it's missing
+    const calcsLastUpdatedParsed = calcsLastUpdatedStr ? new Date(calcsLastUpdatedStr).getTime() : Date.now() // So it still loads if it's missing on server
 
     if (calcsStr && calcsLastUpdatedParsed > calcsLastUpdated.value) {
       calcOrder.value = z.string().array().parse(JSON.parse(calcsStr))
       calcsLastUpdated.value = calcsLastUpdatedParsed
     }
-
-    watchEffect(async () => {
-      localStorage.setItem('calcs', JSON.stringify(calcOrder.value))
-      localStorage.setItem('calcsLastUpdated', new Date(calcsLastUpdated.value).toISOString())
-      if (session.loggedIn.value) {
-        try {
-          await $fetch('/api/calc/opened', {
-            method: 'PUT',
-            body: {
-              opened: calcOrder.value,
-            },
-          })
-        } catch (e) {
-          toast.create({ body: 'Failed to update opened calcs', variant: 'danger' })
-          console.error('Failed to update opened calcs', e)
-        }
-      }
-    })
   }
+
+  watchEffect(async () => {
+    if (loading.value || !import.meta.client) {
+      return
+    }
+
+    localStorage.setItem('calcs', JSON.stringify(calcOrder.value))
+    localStorage.setItem('calcsLastUpdated', new Date(calcsLastUpdated.value).toISOString())
+    if (session.loggedIn.value) {
+      if (!calcOrder.value.every((calcId) => z.nanoid().safeParse(calcId).success)) {
+        // Wait for them to be converted
+        return
+      }
+
+      try {
+        await $fetch('/api/calc/opened', {
+          method: 'PUT',
+          body: {
+            opened: calcOrder.value,
+          },
+        })
+      } catch (e) {
+        nuxt.vueApp.runWithContext(() =>
+          useToast().create({ body: 'Failed to update opened calcs', variant: 'danger' }),
+        )
+        console.error('Failed to update opened calcs', e)
+      }
+    }
+  })
 
   async function fetchCalcList() {
     const { data: allServerCalcs, suspense } = scope.run(() =>
@@ -141,7 +152,9 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
-  function fetchLocalCalcList(toast: ReturnType<typeof useToast>) {
+  const route = useRoute()
+  async function fetchLocalCalcList() {
+    const keysToRemove = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
       if (!key || !key.startsWith('calcs.')) {
@@ -149,21 +162,51 @@ export const useCalcStore = defineStore('calcs', () => {
       }
 
       const id = key.substring('calcs.'.length)
-
       const dataStr = localStorage.getItem(key)
-      if (!dataStr || allCalcs.value.has(id)) {
-        continue
-      }
 
       const dataSchema = z.object({
         data: z.string(),
       })
+
+      if (session.loggedIn.value && dataStr && !z.nanoid().safeParse(id).success) {
+        const data = dataSchema.parse(JSON.parse(dataStr))
+
+        const calcToMigrate = decodeCalcFromString(data.data)
+        let res
+        try {
+          res = await $fetch('/api/calc', {
+            method: 'POST',
+            body: calcWithEntriesV2Schema.encode(calcToMigrate),
+          })
+        } catch (error) {
+          console.error('Failed to migrate local calc:', error)
+          nuxt.vueApp.runWithContext(() =>
+            useToast().create({ body: `Failed to migrate calc ${calcToMigrate.name}`, variant: 'danger' }),
+          )
+          continue
+        }
+        keysToRemove.push(id)
+        const calcOrderIdx = calcOrder.value.indexOf(id)
+        if (calcOrderIdx !== -1) {
+          calcOrder.value.splice(calcOrderIdx, 1, res.publicId)
+        }
+        allCalcs.value.set(res.publicId, { name: calcToMigrate.name, mode: calcToMigrate.mode })
+        if (route.name === 'calculation' && route.params.calculation === id) {
+          await navigateTo(`/${res.publicId}`, { replace: true })
+        }
+
+        continue
+      } else if (!dataStr || allCalcs.value.has(id)) {
+        continue
+      }
 
       const data = dataSchema.parse(JSON.parse(dataStr))
 
       const calcFromStorage = decodeCalcFromString(data.data)
       allCalcs.value.set(id, { name: calcFromStorage.name, mode: calcFromStorage.mode })
     }
+
+    keysToRemove.forEach((id) => localStorage.removeItem(`calcs.${id}`))
   }
 
   async function fetchData() {
@@ -171,9 +214,9 @@ export const useCalcStore = defineStore('calcs', () => {
     await fetchCalcList()
   }
 
-  function fetchLocalData(toast: ReturnType<typeof useToast>) {
-    fetchLocalOpenedCalcs(toast)
-    fetchLocalCalcList(toast)
+  async function fetchLocalData() {
+    fetchLocalOpenedCalcs()
+    await fetchLocalCalcList()
 
     loading.value = false
   }

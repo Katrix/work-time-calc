@@ -79,7 +79,7 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
     {
       async mutationFn(entry: CalcEntry) {
         return await $fetch<InternalApi['/api/calc/:id/entries']['post']>(`/api/calc/${id.value}/entries`, {
-          body: entry,
+          body: calcEntryV2Schema.encode(entry),
           method: 'POST',
         })
       },
@@ -93,8 +93,8 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
         return await $fetch<InternalApi['/api/calc/:id/entries/:rank']['post']>(
           `/api/calc/${id.value}/entries/${entry.rank}`,
           {
-            body: entry,
-            method: 'POST'
+            body: calcEntryV2Schema.encode(entry),
+            method: 'POST',
           },
         )
       },
@@ -117,8 +117,8 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
     {
       async mutationFn(calc: Calc) {
         return await $fetch<InternalApi['/api/calc/:id']['put']>(`/api/calc/${id}`, {
-          body: calc,
-          method: 'PUT'
+          body: calcSchema.encode(calc),
+          method: 'PUT',
         })
       },
     },
@@ -129,8 +129,8 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
     {
       async mutationFn(entries: CalcEntry[]) {
         return await $fetch<InternalApi['/api/calc/:id/entries']['put']>(`/api/calc/${id.value}/entries`, {
-          body: entries,
-          method: 'PUT'
+          body: calcEntryV2Schema.array().encode(entries),
+          method: 'PUT',
         })
       },
     },
@@ -296,11 +296,14 @@ export interface CalcInfo {
   getTagColor(tag: string): string
 }
 
-export async function useCalcsInfo(id: Ref<string>): Promise<Reactive<CalcInfo>> {
+export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<CalcInfo>> {
   const presetStore = usePresetStore()
   const scope = effectScope()
 
-  function loadCalcFromLocalStorage(id: string, serverLastUpdated: number) {
+  function loadCalcFromLocalStorage(
+    id: string,
+    serverLastUpdated: number,
+  ): { lastUpdated: number; data: CalcWithEntries } | null {
     if (import.meta.client) {
       const calcWrapperStr = localStorage.getItem(`calcs.${id}`)
       if (!calcWrapperStr) {

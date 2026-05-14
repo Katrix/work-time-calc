@@ -76,7 +76,7 @@ describe('strFromMinutes', () => {
 describe('computeWorkTime', () => {
   it('single full-day entry subtracts default workTime on last entry', () => {
     const workDays: WorkDays = {
-      Mon: [{ name: 'Work', from: m('09:00'), to: m('17:00'), subtractedTime: null }],
+      Mon: [{ name: 'Work', from: m('09:00'), to: m('17:00'), subtractedTime: null, rank: '1' }],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
@@ -94,7 +94,7 @@ describe('computeWorkTime', () => {
 
   it('uses defaults when from/to are null and sets estimate=true', () => {
     const workDays: WorkDays = {
-      entry: [{ name: 'Defaulted', from: null, to: null, subtractedTime: null }],
+      entry: [{ name: 'Defaulted', from: null, to: null, subtractedTime: null, rank: '1' }],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
@@ -107,8 +107,8 @@ describe('computeWorkTime', () => {
   it('accounts for nested/overlapping ranges', () => {
     const workDays: WorkDays = {
       entry: [
-        { name: 'A', from: m('09:00'), to: m('17:00'), subtractedTime: null },
-        { name: 'B', from: m('10:00'), to: m('11:00'), subtractedTime: null },
+        { name: 'A', from: m('09:00'), to: m('17:00'), subtractedTime: null, rank: '1' },
+        { name: 'B', from: m('10:00'), to: m('11:00'), subtractedTime: null, rank: '2' },
       ],
     }
 
@@ -120,7 +120,7 @@ describe('computeWorkTime', () => {
 
   it('respects custom subtractedTime = 0 (no default subtraction)', () => {
     const workDays: WorkDays = {
-      entry: [{ name: 'Short', from: m('09:00'), to: m('10:00'), subtractedTime: 0 }],
+      entry: [{ name: 'Short', from: m('09:00'), to: m('10:00'), subtractedTime: 0, rank: '1' }],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
@@ -133,7 +133,7 @@ describe('computeWorkTime', () => {
 
   it('respects custom subtractedTime != 0 (custom subtraction)', () => {
     const workDays: WorkDays = {
-      Fri: [{ name: 'One hour', from: m('09:00'), to: m('17:00'), subtractedTime: m('04:00') }],
+      Fri: [{ name: 'One hour', from: m('09:00'), to: m('17:00'), subtractedTime: m('04:00'), rank: '1' }],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
@@ -146,8 +146,8 @@ describe('computeWorkTime', () => {
   it('builds tag summaries with aggregated time and names', () => {
     const workDays: WorkDays = {
       entry: [
-        { name: 'Task A', from: m('09:00'), to: m('10:00'), subtractedTime: 0, tags: ['projA'] },
-        { name: 'Task B', from: m('10:00'), to: m('11:00'), subtractedTime: 0, tags: ['projA', 'projB'] },
+        { name: 'Task A', from: m('09:00'), to: m('10:00'), subtractedTime: 0, tags: ['projA'], rank: '1' },
+        { name: 'Task B', from: m('10:00'), to: m('11:00'), subtractedTime: 0, tags: ['projA', 'projB'], rank: '2' },
       ],
     }
 
@@ -161,7 +161,7 @@ describe('computeWorkTime', () => {
 
   it('produces negative extraTime when overall timeDiff is negative', () => {
     const workDays: WorkDays = {
-      Fri: [{ name: 'One hour', from: m('09:00'), to: m('10:00'), subtractedTime: m('02:00') }],
+      Fri: [{ name: 'One hour', from: m('09:00'), to: m('10:00'), subtractedTime: m('02:00'), rank: '1' }],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
@@ -174,8 +174,8 @@ describe('computeWorkTime', () => {
   it('subtracts workTime only to the last entry within each group', () => {
     const workDays: WorkDays = {
       group: [
-        { name: 'First', from: m('09:00'), to: m('10:00'), subtractedTime: null },
-        { name: 'Second', from: m('10:00'), to: m('12:00'), subtractedTime: null },
+        { name: 'First', from: m('09:00'), to: m('10:00'), subtractedTime: null, rank: '1' },
+        { name: 'Second', from: m('10:00'), to: m('12:00'), subtractedTime: null, rank: '2' },
       ],
     }
 
@@ -188,10 +188,10 @@ describe('computeWorkTime', () => {
   it('handles multiple groups independently for last-entry subtraction', () => {
     const workDays: WorkDays = {
       group1: [
-        { name: 'A1', from: m('09:00'), to: m('11:00'), subtractedTime: null },
-        { name: 'A2', from: m('11:00'), to: m('12:00'), subtractedTime: null },
+        { name: 'A1', from: m('09:00'), to: m('11:00'), subtractedTime: null, rank: '1' },
+        { name: 'A2', from: m('11:00'), to: m('12:00'), subtractedTime: null, rank: '2' },
       ],
-      group2: [{ name: 'B1', from: m('13:00'), to: m('14:00'), subtractedTime: null }],
+      group2: [{ name: 'B1', from: m('13:00'), to: m('14:00'), subtractedTime: null, rank: '3' }],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
@@ -205,24 +205,24 @@ describe('computeWorkTime', () => {
     expect(eB1.subtractedTime).toBe('08:00')
   })
 
-  it('propagates indices successfully', () => {
+  it('propagates ranks successfully', () => {
     const workDays: WorkDays = {
       group1: [
-        { name: 'First', from: m('09:00'), to: m('10:00'), subtractedTime: null, idx: 5 },
-        { name: 'Second', from: m('10:00'), to: m('12:00'), subtractedTime: null, idx: 7 },
+        { name: 'First', from: m('09:00'), to: m('10:00'), subtractedTime: null, rank: '5' },
+        { name: 'Second', from: m('10:00'), to: m('12:00'), subtractedTime: null, rank: '7' },
       ],
       group2: [
-        { name: 'First', from: m('09:00'), to: m('10:00'), subtractedTime: null, idx: 10 },
-        { name: 'Second', from: m('10:00'), to: m('12:00'), subtractedTime: null, idx: 9 },
+        { name: 'First', from: m('09:00'), to: m('10:00'), subtractedTime: null, rank: '99' },
+        { name: 'Second', from: m('10:00'), to: m('12:00'), subtractedTime: null, rank: '9' },
       ],
     }
 
     const res = computeWorkTime(workDays, 0, m('09:00'), m('17:00'), m('08:00'), new Date(), 1)
 
-    expect(res.entries[0].idx).toBe(5)
-    expect(res.entries[1].idx).toBe(7)
-    expect(res.entries[2].idx).toBe(10)
-    expect(res.entries[3].idx).toBe(9)
+    expect(res.entries[0].rank).toBe('5')
+    expect(res.entries[1].rank).toBe('7')
+    expect(res.entries[2].rank).toBe('99')
+    expect(res.entries[3].rank).toBe('9')
   })
 })
 

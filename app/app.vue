@@ -44,7 +44,7 @@ onMounted(async () => {
   }, 1000) as unknown as number
 
   presetStore.fetchLocalData(toast)
-  calcStore.fetchLocalData(toast)
+  await calcStore.fetchLocalData()
 })
 onUnmounted(() => clearInterval(trackedIntervalId.value))
 

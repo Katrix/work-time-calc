@@ -1,6 +1,5 @@
 import * as devalue from 'devalue'
 import z from 'zod'
-import { allVersionsPresetSchema } from '#shared/types/preset'
 import { useMutation } from '@tanstack/vue-query'
 import type { InternalApi } from 'nitropack/types'
 import { debounceFilter } from '@vueuse/core'
@@ -36,7 +35,6 @@ const defaultPreset: Preset = {
 export const usePresetStore = defineStore('presetStore', () => {
   const presets = ref<Map<string, Preset>>(new Map<string, Preset>([[defaultPresetName, defaultPreset]]))
   const lastUpdated = ref(0)
-  const defaultExistsOnServer = ref(true)
 
   const dataFetched = ref(false)
   watch(
@@ -65,8 +63,7 @@ export const usePresetStore = defineStore('presetStore', () => {
       const res = await $fetch('/api/presets', { headers })
       presets.value = new Map(Object.entries(z.record(z.string(), presetV2Schema).parse(res.presets)))
       if (!presets.value.has(defaultPresetName)) {
-        presets.value.set(defaultPresetName, defaultPreset)
-        defaultExistsOnServer.value = false
+        updates.value.set(defaultPresetName, ['all'])
       }
 
       lastUpdated.value = res.lastUpdated !== undefined ? new Date(res.lastUpdated).getTime() : 0
@@ -91,9 +88,13 @@ export const usePresetStore = defineStore('presetStore', () => {
 
       const presetsObj = schema.safeParse(JSON.parse(presetsStr))
       if (presetsObj.data && presetsObj.data.lastUpdated > lastUpdated.value) {
-        presets.value = z.map(z.string(), allVersionsPresetSchema).parse(devalue.parse(presetsObj.data.data))
+        const clientPresets = z.map(z.string(), allVersionsPresetSchema).parse(devalue.parse(presetsObj.data.data))
+        clientPresets.forEach((preset, name) => {
+          presets.value.set(name, preset)
+          updates.value.set(name, ['all'])
+        })
       }
-      if (presetsObj.error) {
+      else if (presetsObj.error) {
         toast.create({ body: 'Failed to parse presets', variant: 'danger' })
         console.error('Error parsing presets', presetsObj.error)
       }
@@ -120,15 +121,11 @@ export const usePresetStore = defineStore('presetStore', () => {
           }
 
           const distinctTypes = [...new Set(types)]
-          if (
-            (name === defaultPresetName && !defaultExistsOnServer.value) ||
-            distinctTypes.includes('all') ||
-            distinctTypes.length === allUpdateTypes.length - 1
-          ) {
+          if (distinctTypes.includes('all') || distinctTypes.length === allUpdateTypes.length - 1) {
             return [
               $fetch(`/api/presets/${name}`, {
                 method: 'PUT',
-                body: preset,
+                body: presetV2Schema.encode(preset),
               }),
             ]
           } else {
@@ -137,12 +134,7 @@ export const usePresetStore = defineStore('presetStore', () => {
                 ? [
                     $fetch(`/api/presets/${name}/github`, {
                       method: 'PUT',
-                      body: Object.fromEntries(
-                        [...preset.github.entries()].map(([k, v]) => [
-                          k,
-                          { ...v, repos: Object.fromEntries(v.repos.entries()) },
-                        ]),
-                      ),
+                      body: presetGithubV2Schema.encode(preset.github),
                     }),
                   ]
                 : [],
@@ -150,7 +142,7 @@ export const usePresetStore = defineStore('presetStore', () => {
                 ? [
                     $fetch(`/api/presets/${name}/holiday`, {
                       method: 'PUT',
-                      body: preset.holidayRules,
+                      body: holidayRuleSchema.array().encode(preset.holidayRules),
                     }),
                   ]
                 : [],
@@ -158,7 +150,7 @@ export const usePresetStore = defineStore('presetStore', () => {
                 ? [
                     $fetch(`/api/presets/${name}/settings`, {
                       method: 'PUT',
-                      body: preset,
+                      body: presetV2Schema.encode(preset),
                     }),
                   ]
                 : [],
@@ -168,9 +160,6 @@ export const usePresetStore = defineStore('presetStore', () => {
       )
     },
     onSuccess() {
-      if (updates.value.has(defaultPresetName) && !defaultExistsOnServer.value) {
-        defaultExistsOnServer.value = true
-      }
       updates.value.clear()
     },
   })
@@ -211,7 +200,7 @@ export const usePresetStore = defineStore('presetStore', () => {
 
       return await $fetch<InternalApi['/api/presets/:preset']['put']>(`/api/presets/${name}`, {
         method: 'PUT',
-        body: currentPreset.value,
+        body: presetV2Schema.encode(currentPreset.value),
       })
     },
     onSuccess(result, name) {
@@ -234,10 +223,6 @@ export const usePresetStore = defineStore('presetStore', () => {
       })
     },
     onSuccess(result, name) {
-      if (name === defaultPresetName) {
-        return
-      }
-
       presets.value.delete(name)
       if (currentPresetId.value === name) {
         currentPresetId.value = defaultPresetName
@@ -263,10 +248,6 @@ export const usePresetStore = defineStore('presetStore', () => {
     },
 
     onSuccess(result, { from, to }) {
-      if (from === to) {
-        return
-      }
-
       const fromVal = presets.value.get(from)
       if (fromVal) {
         presets.value.set(to, fromVal)
@@ -285,7 +266,6 @@ export const usePresetStore = defineStore('presetStore', () => {
     currentPreset,
     updates,
     dataFetched,
-    defaultExistsOnServer,
     fetchData,
     fetchLocalData,
     newPreset,
