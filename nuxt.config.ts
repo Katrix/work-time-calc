@@ -33,12 +33,6 @@ export default defineNuxtConfig({
   ],
   ssr: true,
   css: ['~/assets/scss/app.scss', '@fortawesome/fontawesome-svg-core/styles.css'],
-  runtimeConfig: {
-    github: {
-      appId: '',
-      privateKey: '',
-    },
-  },
   vite: {
     css: {
       preprocessorOptions: {

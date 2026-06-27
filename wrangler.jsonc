@@ -11,5 +11,16 @@
 			"database_name": "work-time-calc",
 			"database_id": "c0da6c79-313a-42ba-bca6-28c3da16ee9d"
 		}
-	]
+	],
+	"env": {
+		"staging": {
+			"d1_databases": [
+				{
+					"binding": "DB",
+					"database_name": "work-time-calc-staging",
+					"database_id": "5231238a-8a77-4843-8b0c-f0fc7e989e7d"
+				}
+			]
+		}
+	}
 }
