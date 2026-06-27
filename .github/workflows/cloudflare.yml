@@ -19,7 +19,7 @@ jobs:
     env:
       WRANGLER_ENV: ${{ github.event_name == 'workflow_dispatch' && inputs.environment || '' }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
       - uses: actions/setup-node@v6
         with:
@@ -28,8 +28,10 @@ jobs:
 
       - run: yarn install --immutable
       - run: yarn db:generate
-      - run: yarn run build --preset cloudflare_module
 
+      # Run migrations against the source wrangler.jsonc BEFORE the build, so no
+      # generated deploy-redirect exists yet and `--env` resolves normally
+      # (migrations live in ./migrations, relative to the repo-root config).
       - name: Apply D1 migrations
         uses: cloudflare/wrangler-action@v4
         with:
@@ -38,10 +40,17 @@ jobs:
           environment: ${{ env.WRANGLER_ENV }}
           command: d1 migrations apply DB --remote
 
-      - name: Build & Deploy Worker
+      - run: yarn run build --preset cloudflare_module
+
+      # deployConfig generates ".output/server/wrangler.json" (Nitro keeps owning
+      # main/assets/compat). It contains env.* blocks, and wrangler rejects those
+      # in an auto-discovered "redirected" config — so we pass it explicitly with
+      # -c, which is allowed to carry environments. See nitrojs/nitro#3429.
+      - name: Deploy Worker
         uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           environment: ${{ env.WRANGLER_ENV }}
           gitHubToken: ${{ secrets.GITHUB_TOKEN }}
+          command: deploy -c .output/server/wrangler.json
