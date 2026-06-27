@@ -32,7 +32,6 @@ export default defineEventHandler(async (event) => {
           userId: githubId,
         },
         create: openedIds.map(({ id, publicId }) => ({
-          userId: githubId,
           calcId: id,
           order: b.opened.indexOf(publicId),
         })),

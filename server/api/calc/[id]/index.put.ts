@@ -1,7 +1,8 @@
 import z from 'zod'
+import { customNanoId } from '#shared/types/calc'
 
 export default defineEventHandler(async (event) => {
-  const { id: publicId } = await getValidatedRouterParams(event, z.object({ id: z.nanoid() }).parse)
+  const { id: publicId } = await getValidatedRouterParams(event, z.object({ id: customNanoId }).parse)
 
   const session = await getUserSession(event)
   const githubId = session.user?.githubId

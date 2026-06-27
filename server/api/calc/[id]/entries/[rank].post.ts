@@ -1,9 +1,10 @@
 import z from 'zod'
+import { customNanoId } from '#shared/types/calc'
 
 export default defineEventHandler(async (event) => {
   const { id: publicId, rank } = await getValidatedRouterParams(
     event,
-    z.object({ id: z.nanoid(), rank: z.string() }).parse,
+    z.object({ id: customNanoId, rank: z.string() }).parse,
   )
 
   const session = await getUserSession(event)
@@ -56,6 +57,7 @@ export default defineEventHandler(async (event) => {
       },
     },
   })
+  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { publicId } })
 
   setResponseStatus(event, 204)
 })

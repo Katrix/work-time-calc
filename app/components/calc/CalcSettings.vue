@@ -211,14 +211,9 @@ function saveCSV() {
 
 async function deleteCalc() {
   deleting.value = true
-  await calcStore.closeCalc(props.calcInfo.id)
-  await $fetch<InternalApi['/api/calc/:id']['delete']>(`/api/calc/${props.calcInfo.id}`, {
-    method: 'DELETE',
-  })
 
-  if (import.meta.client) {
-    localStorage.removeItem(`calcs.${props.calcInfo.id}`)
-  }
+  await calcStore.deleteCalc(props.calcInfo.id)
+
   deleteModal.value = false
   deleting.value = false
 }

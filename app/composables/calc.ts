@@ -7,6 +7,7 @@ import type { Reactive } from 'vue'
 import { type QueryClient, useMutation, type UseMutationReturnType, useQueryClient } from '@tanstack/vue-query'
 import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing'
 import { debounceFilter } from '@vueuse/core'
+import { klona } from 'klona/full'
 
 export function computedCalc(calc: CalcWithEntries) {
   const now = useNow()
@@ -139,9 +140,13 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
 
   const session = useUserSession()
 
+  let prev = klona(toRaw(calc.value))
   const { pause, resume } = watchWithFilter(
     calc,
-    async (newV, oldV) => {
+    async (newV) => {
+      const oldV = prev
+      prev = klona(toRaw(newV))
+
       if (!session.loggedIn.value) {
         return
       }
@@ -185,7 +190,7 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
             prospectiveRequestCount += 1
           }
 
-          if (prospectiveRequestCount > ranks.size / 4) {
+          if (prospectiveRequestCount > 4) {
             updateAll = true
             break
           }
@@ -209,21 +214,13 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
       }
     },
     {
-      eventFilter: debounceFilter(2000),
+      eventFilter: debounceFilter(1000),
+      deep: true,
     },
   )
 }
 
-function useCalcPersister(
-  id: Ref<string>,
-  entry: Ref<CalcWithEntries>,
-  lastUpdated: Ref<number>,
-  queryClient: QueryClient,
-) {
-  watch(entry, () => {
-    lastUpdated.value = Date.now()
-  })
-
+function useCalcPersister(id: Ref<string>, entry: Ref<CalcWithEntries>, queryClient: QueryClient) {
   if (import.meta.client) {
     useLocalStoragePersister(id, entry)
     useServerPersister(id, entry, queryClient)
@@ -278,7 +275,6 @@ export interface CalcInfo {
   id: string
   calc: CalcWithEntries
   requestError: FetchError | undefined
-  lastUpdated: number
   computedCalc: ComputedWorkTime
 
   switchMode(): void
@@ -327,6 +323,7 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
   }
 
   const session = useUserSession()
+  const nuxtApp = useNuxtApp()
 
   async function loadCalc(id: Ref<string>) {
     // UseFetch instead of UseQuery, as useFetch gives us a mutable writeable ref
@@ -345,8 +342,23 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
         }
       })
 
+      // localStorage is only readable on the client, so feeding it into the calc
+      // during the initial hydration render diverges from the server-rendered DOM
+      // (the server never saw it) and produces hydration mismatches. Keep the
+      // first client render identical to the server by gating localStorage until
+      // hydration has resolved; the watchEffect then swaps in the local copy as a
+      // normal reactive update.
+      const hydrated = ref(import.meta.server ? true : !nuxtApp.isHydrating)
+      if (import.meta.client && nuxtApp.isHydrating) {
+        nuxtApp.hooks.hookOnce('app:suspense:resolve', () => {
+          hydrated.value = true
+        })
+      }
+
       const localStorage = computed(() =>
-        loadCalcFromLocalStorage(id.value, data.value ? new Date(data.value.updatedAt).getTime() : 0),
+        hydrated.value
+          ? loadCalcFromLocalStorage(id.value, data.value ? new Date(data.value.updatedAt).getTime() : 0)
+          : null,
       )
       const lastUpdated = computed(() => {
         const local = localStorage.value
@@ -429,13 +441,12 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
   }
 
   return scope.run(() => {
-    useCalcPersister(id, calc, lastUpdated, queryClient)
+    useCalcPersister(id, calc, queryClient)
 
     return reactive({
       id,
       calc,
       requestError: error,
-      lastUpdated,
       computedCalc: useComputedCalc(calc),
       switchMode() {
         if (calc.value.mode === 'hours') {
@@ -535,12 +546,11 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
           })),
         )
       },
-    } satisfies Omit<CalcInfo, 'calc' | 'computedCalc' | 'requestError' | 'lastUpdated' | 'id'> & {
+    } satisfies Omit<CalcInfo, 'calc' | 'computedCalc' | 'requestError' | 'id'> & {
       id: Ref<string>
       calc: Ref<CalcWithEntries>
       computedCalc: Ref<ComputedWorkTime>
       requestError: Ref<FetchError | undefined>
-      lastUpdated: Ref<number>
     })
   })!
 }

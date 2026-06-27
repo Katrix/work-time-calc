@@ -44,6 +44,7 @@ export default defineNuxtConfig({
       preprocessorOptions: {
         scss: {
           quietDeps: true,
+          silenceDeprecations: ['import'],
         },
       },
     },

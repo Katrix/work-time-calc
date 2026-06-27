@@ -4,6 +4,8 @@ import { generateNKeysBetween } from 'fractional-indexing'
 
 export const currentCalcVersion = 2
 
+export const customNanoId = z.string().regex(/^[a-z0-9_-]{12}$/i)
+
 const recordMap = <T>(schema: z.ZodType<T>) => {
   return z.codec(z.record(z.string(), schema), z.map(z.string(), schema), {
     encode: (v) => Object.fromEntries(v.entries()) as Record<string, T>,

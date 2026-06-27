@@ -1,6 +1,8 @@
 import z from 'zod'
 import { useQuery, useQueryClient } from '@tanstack/vue-query'
 import type { InternalApi } from 'nitropack/types'
+import { nanoid } from 'nanoid'
+import { customNanoId } from '#shared/types/calc'
 
 interface CalcSummary {
   name: string
@@ -16,19 +18,32 @@ export const useCalcStore = defineStore('calcs', () => {
 
   const nuxt = useNuxtApp()
 
+  const headers = useRequestHeaders(['cookie'])
+  const queryClient = useQueryClient()
+  const session = useUserSession()
+  const scope = effectScope()
+
   async function addCalc() {
     const defaultCalc = makeNewCalc('hours', presetStore.currentPreset)
     try {
-      const res = await $fetch('/api/calc', {
-        method: 'POST',
-        body: calcWithEntriesV2Schema.encode(defaultCalc),
-      })
+      let publicId
+      if (session.loggedIn.value) {
+        const res = await $fetch('/api/calc', {
+          method: 'PUT',
+          body: calcWithEntriesV2Schema.encode(defaultCalc),
+          headers,
+        })
+        publicId = res!.publicId
+      } else {
+        publicId = nanoid(12)
+      }
 
-      calcOrder.value.push(res.publicId)
+      calcOrder.value.push(publicId)
       calcsLastUpdated.value = Date.now()
+      allCalcs.value.set(publicId, { name: defaultCalc.name, mode: defaultCalc.mode })
 
-      await navigateTo({ name: 'calculation', params: { calculation: res.publicId } })
-      return res.publicId
+      await navigateTo({ name: 'calculation', params: { calculation: publicId } })
+      return publicId
     } catch (e) {
       if (import.meta.client) {
         nuxt.vueApp.runWithContext(() => useToast().create({ body: 'Failed to create calc', variant: 'danger' }))
@@ -63,14 +78,21 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
+  async function deleteCalc(id: string) {
+    await closeCalc(id)
+    await $fetch<InternalApi['/api/calc/:id']['delete']>(`/api/calc/${id}`, {
+      method: 'DELETE',
+    })
+
+    if (import.meta.client) {
+      localStorage.removeItem(`calcs.${id}`)
+    }
+    allCalcs.value.delete(id)
+  }
+
   function firstCalc(): string {
     return calcOrder.value[0]
   }
-
-  const headers = useRequestHeaders(['cookie'])
-  const queryClient = useQueryClient()
-  const session = useUserSession()
-  const scope = effectScope()
 
   async function fetchOpenedCalcs() {
     const { data: openedRes, suspense } = scope.run(() =>
@@ -110,7 +132,7 @@ export const useCalcStore = defineStore('calcs', () => {
     localStorage.setItem('calcs', JSON.stringify(calcOrder.value))
     localStorage.setItem('calcsLastUpdated', new Date(calcsLastUpdated.value).toISOString())
     if (session.loggedIn.value) {
-      if (!calcOrder.value.every((calcId) => z.nanoid().safeParse(calcId).success)) {
+      if (!calcOrder.value.every((calcId) => customNanoId.safeParse(calcId).success)) {
         // Wait for them to be converted
         return
       }
@@ -165,45 +187,50 @@ export const useCalcStore = defineStore('calcs', () => {
       const dataStr = localStorage.getItem(key)
 
       const dataSchema = z.object({
+        lastUpdated: z.number(),
         data: z.string(),
       })
 
-      if (session.loggedIn.value && dataStr && !z.nanoid().safeParse(id).success) {
-        const data = dataSchema.parse(JSON.parse(dataStr))
-
-        const calcToMigrate = decodeCalcFromString(data.data)
-        let res
-        try {
-          res = await $fetch('/api/calc', {
-            method: 'POST',
-            body: calcWithEntriesV2Schema.encode(calcToMigrate),
-          })
-        } catch (error) {
-          console.error('Failed to migrate local calc:', error)
-          nuxt.vueApp.runWithContext(() =>
-            useToast().create({ body: `Failed to migrate calc ${calcToMigrate.name}`, variant: 'danger' }),
-          )
-          continue
-        }
-        keysToRemove.push(id)
-        const calcOrderIdx = calcOrder.value.indexOf(id)
-        if (calcOrderIdx !== -1) {
-          calcOrder.value.splice(calcOrderIdx, 1, res.publicId)
-        }
-        allCalcs.value.set(res.publicId, { name: calcToMigrate.name, mode: calcToMigrate.mode })
-        if (route.name === 'calculation' && route.params.calculation === id) {
-          await navigateTo(`/${res.publicId}`, { replace: true })
-        }
-
-        continue
-      } else if (!dataStr || allCalcs.value.has(id)) {
+      if (!dataStr) {
         continue
       }
 
-      const data = dataSchema.parse(JSON.parse(dataStr))
+      const { data, lastUpdated } = dataSchema.parse(JSON.parse(dataStr))
+      const calcFromStorage = decodeCalcFromString(data)
 
-      const calcFromStorage = decodeCalcFromString(data.data)
-      allCalcs.value.set(id, { name: calcFromStorage.name, mode: calcFromStorage.mode })
+      if (session.loggedIn.value) {
+        let res
+        try {
+          res = await $fetch('/api/calc', {
+            method: 'PUT',
+            body: { ...calcWithEntriesV2Schema.encode(calcFromStorage), updatedAt: lastUpdated, publicId: id },
+          })
+        } catch (error) {
+          console.error('Failed to update local calc:', error)
+          nuxt.vueApp.runWithContext(() =>
+            useToast().create({ body: `Failed to update calc ${calcFromStorage.name}`, variant: 'danger' }),
+          )
+          continue
+        }
+
+        const newPublicId = res?.publicId ?? id
+
+        allCalcs.value.set(newPublicId, { name: calcFromStorage.name, mode: calcFromStorage.mode })
+
+        if (newPublicId !== id) {
+          keysToRemove.push(id)
+          const calcOrderIdx = calcOrder.value.indexOf(id)
+          if (calcOrderIdx !== -1) {
+            calcOrder.value.splice(calcOrderIdx, 1, newPublicId)
+          }
+
+          if (route.name === 'calculation' && route.params.calculation === id) {
+            await navigateTo(`/${newPublicId}`, { replace: true })
+          }
+        }
+      } else {
+        allCalcs.value.set(id, { name: calcFromStorage.name, mode: calcFromStorage.mode })
+      }
     }
 
     keysToRemove.forEach((id) => localStorage.removeItem(`calcs.${id}`))
@@ -230,6 +257,7 @@ export const useCalcStore = defineStore('calcs', () => {
     fetchLocalData,
     addCalc,
     closeCalc,
+    deleteCalc,
     firstCalc,
   }
 })

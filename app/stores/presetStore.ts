@@ -64,6 +64,7 @@ export const usePresetStore = defineStore('presetStore', () => {
       presets.value = new Map(Object.entries(z.record(z.string(), presetV2Schema).parse(res.presets)))
       if (!presets.value.has(defaultPresetName)) {
         updates.value.set(defaultPresetName, ['all'])
+        presets.value.set(defaultPresetName, defaultPreset)
       }
 
       lastUpdated.value = res.lastUpdated !== undefined ? new Date(res.lastUpdated).getTime() : 0

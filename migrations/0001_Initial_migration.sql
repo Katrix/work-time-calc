@@ -1,5 +1,3 @@
-PRAGMA defer_foreign_keys = ON;
-
 -- CreateTable
 CREATE TABLE "user" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
@@ -65,19 +63,19 @@ CREATE TABLE "preset_github_repo" (
 );
 
 -- CreateTable
-CREATE TABLE "preset_fixedd_holiday" (
+CREATE TABLE "preset_fixed_holiday" (
     "preset_id" INTEGER NOT NULL,
     "from" TEXT NOT NULL,
     "to" TEXT NOT NULL,
 
     PRIMARY KEY ("preset_id", "from", "to"),
-    CONSTRAINT "preset_fixedd_holiday_preset_id_fkey" FOREIGN KEY ("preset_id") REFERENCES "preset" ("id") ON DELETE CASCADE ON UPDATE CASCADE
+    CONSTRAINT "preset_fixed_holiday_preset_id_fkey" FOREIGN KEY ("preset_id") REFERENCES "preset" ("id") ON DELETE CASCADE ON UPDATE CASCADE
 );
 
 -- CreateTable
 CREATE TABLE "calc" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
-    "public_id" TEXT NOT NULL COLLATE BINARY,
+    "public_id" TEXT NOT NULL,
     "created_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "updated_at" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
     "created_by_id" INTEGER NOT NULL,
@@ -106,7 +104,7 @@ CREATE TABLE "calc_tag" (
 CREATE TABLE "calc_entry" (
     "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
     "calc_id" INTEGER NOT NULL,
-    "rank" TEXT NOT NULL COLLATE BINARY,
+    "rank" TEXT NOT NULL,
     "name" TEXT NOT NULL,
     "from" INTEGER,
     "to" INTEGER,
@@ -150,4 +148,3 @@ CREATE UNIQUE INDEX "calc_public_id_key" ON "calc"("public_id");
 -- CreateIndex
 CREATE UNIQUE INDEX "calc_entry_calc_id_rank_key" ON "calc_entry"("calc_id", "rank");
 
-PRAGMA defer_foreign_keys = OFF;
