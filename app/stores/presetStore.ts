@@ -54,13 +54,13 @@ export const usePresetStore = defineStore('presetStore', () => {
     { deep: true },
   )
   const nuxt = useNuxtApp()
+  const requestFetch = useRequestFetch()
 
   async function fetchData() {
-    const headers = useRequestHeaders(['cookie'])
-
     try {
-      // $fetch here is fine, as this will likely run on the server with SSR
-      const res = await $fetch('/api/presets', { headers })
+      // useRequestFetch forwards the incoming request's cookies and (on Cloudflare) the
+      // event context/bindings, so the internal SSR call reaches the DB. Plain $fetch does not.
+      const res = await requestFetch('/api/presets')
       presets.value = new Map(Object.entries(z.record(z.string(), presetV2Schema).parse(res.presets)))
       if (!presets.value.has(defaultPresetName)) {
         updates.value.set(defaultPresetName, ['all'])

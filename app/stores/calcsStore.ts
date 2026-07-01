@@ -18,7 +18,7 @@ export const useCalcStore = defineStore('calcs', () => {
 
   const nuxt = useNuxtApp()
 
-  const headers = useRequestHeaders(['cookie'])
+  const requestFetch = useRequestFetch()
   const queryClient = useQueryClient()
   const session = useUserSession()
   const scope = effectScope()
@@ -28,10 +28,9 @@ export const useCalcStore = defineStore('calcs', () => {
     try {
       let publicId
       if (session.loggedIn.value) {
-        const res = await $fetch('/api/calc', {
+        const res = await requestFetch('/api/calc', {
           method: 'PUT',
           body: calcWithEntriesV2Schema.encode(defaultCalc),
-          headers,
         })
         publicId = res!.publicId
       } else {
@@ -99,7 +98,7 @@ export const useCalcStore = defineStore('calcs', () => {
       useQuery(
         {
           queryKey: ['api', 'calc', 'opened'],
-          queryFn: async () => await $fetch<InternalApi['/api/calc/opened']['get']>('/api/calc/opened', { headers }),
+          queryFn: async () => await requestFetch<InternalApi['/api/calc/opened']['get']>('/api/calc/opened'),
         },
         queryClient,
       ),
@@ -158,7 +157,7 @@ export const useCalcStore = defineStore('calcs', () => {
       useQuery(
         {
           queryKey: ['api', 'calc', 'list'],
-          queryFn: async () => await $fetch<InternalApi['/api/calc/list']['get']>('/api/calc/list', { headers }),
+          queryFn: async () => await requestFetch<InternalApi['/api/calc/list']['get']>('/api/calc/list'),
         },
         queryClient,
       ),
