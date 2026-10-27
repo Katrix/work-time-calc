@@ -7024,6 +7024,13 @@ __metadata:
   languageName: node
   linkType: hard
 
+"fflate@npm:^0.8.3":
+  version: 0.8.3
+  resolution: "fflate@npm:0.8.3"
+  checksum: 10/6ebf528dc9c56e78e715eac615b009b25dc33e15c1920b11ebba44e6d76181c647756a81a23e19247907496b93aa99928514c53090579a65109e026ac2824aa7
+  languageName: node
+  linkType: hard
+
 "file-entry-cache@npm:^8.0.0":
   version: 8.0.0
   resolution: "file-entry-cache@npm:8.0.0"
@@ -12999,6 +13006,7 @@ __metadata:
     devalue: "npm:^5.6.1"
     eslint: "npm:^9.39.1"
     eslint-plugin-security: "npm:^3.0.1"
+    fflate: "npm:^0.8.3"
     get-graphql-schema: "npm:^2.1.2"
     graphql: "npm:^16.12.0"
     happy-dom: "npm:^20.0.11"
