@@ -36,12 +36,9 @@ const calcStore = useCalcStore()
 
 function exportAll() {
   const files: Record<string, Uint8Array> = {}
-  for (const [idx, calcId] of calcStore.calcOrder.entries()) {
-    const calc = calcStore.calcs.get(calcId)?.entry?.value
-    if (!calc) {
-      continue
-    }
-
+  // Iterate over all calcs, not just calcOrder, so that closed calcs are included
+  for (const [idx, [calcId, { entry }]] of [...calcStore.calcs.entries()].entries()) {
+    const calc = entry.value
     const baseName = calcStore.calcName(calcId, idx).replace(/[/\\]/g, '_')
     let name = `${baseName}.json`
     for (let i = 2; name in files; i++) {
