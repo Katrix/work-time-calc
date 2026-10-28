@@ -349,21 +349,13 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
 
   async function loadCalc(id: Ref<string>) {
     // UseFetch instead of UseQuery, as useFetch gives us a mutable writeable ref
-    const { data, error, refresh } = await useFetch<InternalApi['/api/calc/:id']['get']>(
-      () => `/api/calc/${id.value}`,
-      {
-        deep: true,
-        immediate: session.loggedIn.value,
-      },
-    )
+    const { data, error } = await useFetch<InternalApi['/api/calc/:id']['get']>(() => `/api/calc/${id.value}`, {
+      deep: true,
+      enabled: session.loggedIn,
+      watch: [session.loggedIn],
+    })
 
     return scope.run(() => {
-      watch(session.loggedIn, () => {
-        if (session.loggedIn.value) {
-          refresh()
-        }
-      })
-
       // localStorage is only readable on the client, so feeding it into the calc
       // during the initial hydration render diverges from the server-rendered DOM
       // (the server never saw it) and produces hydration mismatches. Keep the

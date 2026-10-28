@@ -1,1 +1,1 @@
-const useNow = () => useState('now', () => new Date())
+export const useNow = () => useState('now', () => new Date())
