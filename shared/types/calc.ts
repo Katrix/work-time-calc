@@ -128,5 +128,6 @@ export function decodeCalcFromString(str: string): CalcWithEntries {
 
   const schema = z.discriminatedUnion('version', [jsonSchemaV1, calcWithEntriesV2Schema])
 
-  return schema.parse(JSON.parse(str))
+  // Fallback to 1 for those that don't have an version
+  return schema.parse({ version: 1, ...JSON.parse(str) })
 }
