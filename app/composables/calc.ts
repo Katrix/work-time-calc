@@ -242,7 +242,7 @@ function nameDefault(mode: 'hours' | 'tasks') {
   const now = Temporal.Now.plainDateISO()
   if (mode === 'hours') {
     const monthName = new TemporalIntl.DateTimeFormat('en', { month: 'long' }).format(now)
-    return `${now.year}-${now.month}-${monthName}`
+    return `${now.year}-${now.month.toString().padStart(2, '0')}-${monthName}`
   } else {
     return now.toString()
   }
@@ -305,6 +305,7 @@ export interface CalcInfo {
 
 export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<CalcInfo>> {
   const presetStore = usePresetStore()
+  const calcStore = useCalcStore()
   const scope = effectScope()
 
   function loadCalcFromLocalStorage(
@@ -449,6 +450,16 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
 
   return scope.run(() => {
     useCalcPersister(id, calc, queryClient)
+
+    // Keep the calc list (sidebar, tabs) in sync with renames and mode switches
+    watch(
+      () => [calc.value.name, calc.value.mode] as const,
+      ([name, mode]) => {
+        if (calcStore.allCalcs.has(id.value)) {
+          calcStore.allCalcs.set(id.value, { name, mode })
+        }
+      },
+    )
 
     return reactive({
       id,

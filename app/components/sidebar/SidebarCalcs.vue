@@ -21,7 +21,8 @@ const nestedCalcs = computed(() => {
     name: string
   }
 
-  const hoursRegexp = /(\d{4})-\d{2}-\w+/
+  // Older default names didn't zero-pad the month
+  const hoursRegexp = /(\d{4})-\d{1,2}-\w+/
   const tasksRegexp = /(\d{4})-(\d{2})-\d{2}/
 
   const yearsHours: number[] = []
@@ -115,7 +116,7 @@ const nestedCalcs = computed(() => {
 
   const hoursItems: Item[] = yearsHours.flatMap((year) => {
     const items: TextItem[] = (yearEntriesHours.get(year) ?? []).map((entry) => entryToItem(entry))
-    items.sort((a, b) => b.text.localeCompare(a.text))
+    items.sort((a, b) => b.text.localeCompare(a.text, undefined, { numeric: true }))
 
     return [{ icon: 'folder', text: year.toString(10) }, items]
   })
