@@ -53,12 +53,7 @@
       <label class="visually-hidden" for="inputFile">Input:</label>
       <div style="grid-area: input-file-content">
         <BInputGroup>
-          <BFormFile
-            id="inputFile"
-            v-model="saveFile"
-            accept="application/json"
-            :directory="null as unknown as boolean"
-          ></BFormFile>
+          <BFormFile id="inputFile" v-model="saveFile" accept="application/json"></BFormFile>
           <template #append>
             <button class="btn btn-secondary" type="button" :disabled="!saveFile" @click="load()">Load</button>
             <button

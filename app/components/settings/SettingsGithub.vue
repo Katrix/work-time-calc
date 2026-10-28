@@ -44,7 +44,7 @@
           >
             <div class="d-flex justify-content-between">
               <span>{{ ownerName }}/</span>
-              <BFormCheckbox v-model="owner.autocompleteWithoutOwner" class="me-4" reverse>
+              <BFormCheckbox v-model="owner.autocompleteWithoutOwner" :unchecked-value="false" class="me-4" reverse>
                 Autocomplete without owner:
               </BFormCheckbox>
             </div>
@@ -54,6 +54,7 @@
                   <span class="me-4">{{ repoName }}</span>
                   <BFormCheckbox
                     v-model="repo.autocompleteWithoutRepository"
+                    :unchecked-value="false"
                     class="me-4"
                     reverse
                     @change="markGithubUpdate"
