@@ -95,6 +95,7 @@ const nestedCalcs = computed(() => {
 
   yearsHours.sort((a, b) => b - a)
   yearsTasks.sort((a, b) => b - a)
+  yearEntriesTasks.forEach((entries) => entries.months.sort((a, b) => b - a))
 
   interface TextItem {
     icon: string
