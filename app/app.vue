@@ -24,7 +24,7 @@
 </template>
 
 <script setup lang="ts">
-import { debounceFilter } from '@vueuse/shared'
+import { debounceFilter } from '@vueuse/core'
 
 const presetStore = usePresetStore()
 const calcStore = useCalcStore()
