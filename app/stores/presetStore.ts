@@ -174,6 +174,7 @@ export const usePresetStore = defineStore('presetStore', () => {
 
   const sessionState = useUserSession()
   const currentPresetId = ref(defaultPresetName)
+  const updateEventFilter = debounceFilter(1000)
   watchWithFilter(
     currentPresetId,
     async () => {
@@ -187,8 +188,17 @@ export const usePresetStore = defineStore('presetStore', () => {
       }
     },
     {
-      eventFilter: debounceFilter(1000),
+      eventFilter: updateEventFilter,
     },
+  )
+
+  const visibility = useDocumentVisibility()
+  watch(
+    visibility,
+    (v) => {
+      if (v === 'hidden') updateEventFilter.flush()
+    },
+    { flush: 'sync' },
   )
 
   const currentPreset = computed<Preset, Preset>({

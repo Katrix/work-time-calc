@@ -145,6 +145,7 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
   )
 
   const session = useUserSession()
+  const saveEventFilter = debounceFilter(1000)
 
   let prev = klona(toRaw(calc.value))
   const { pause, resume } = watchWithFilter(
@@ -225,9 +226,18 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
       }
     },
     {
-      eventFilter: debounceFilter(1000),
+      eventFilter: saveEventFilter,
       deep: true,
     },
+  )
+
+  const visibility = useDocumentVisibility()
+  watch(
+    visibility,
+    (v) => {
+      if (v === 'hidden') saveEventFilter.flush()
+    },
+    { flush: 'sync' },
   )
 }
 

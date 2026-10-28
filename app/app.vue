@@ -38,6 +38,7 @@ if (session.loggedIn.value) {
 const trackedIntervalId = ref<number>()
 const now = useNow()
 const toast = useToast()
+
 onMounted(async () => {
   trackedIntervalId.value = setInterval(() => {
     now.value = new Date()
@@ -48,6 +49,7 @@ onMounted(async () => {
 })
 onUnmounted(() => clearInterval(trackedIntervalId.value))
 
+const updateEventFilter = debounceFilter(1_500)
 watchWithFilter(
   computed(() => presetStore.updates),
   () => {
@@ -55,6 +57,15 @@ watchWithFilter(
       presetStore.runUpdate.mutate()
     }
   },
-  { deep: true, eventFilter: debounceFilter(1_500) },
+  { deep: true, eventFilter: updateEventFilter },
+)
+
+const visibility = useDocumentVisibility()
+watch(
+  visibility,
+  (v) => {
+    if (v === 'hidden') updateEventFilter.flush()
+  },
+  { flush: 'sync' },
 )
 </script>
