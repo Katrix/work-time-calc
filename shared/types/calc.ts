@@ -89,7 +89,10 @@ export function decodeCalcFromString(str: string): CalcWithEntries {
           to: z.int().or(strDuration).nullable(),
           subtractedTime: z.int().nullable().or(strDuration.nullable().default(null)),
           tags: z.array(z.string()).optional(),
-          notes: z.string().optional(),
+          notes: z
+            .string()
+            .nullish()
+            .transform((v) => v ?? undefined),
           idx: z.int().optional(),
           isTracking: z.boolean().optional(),
         }),
