@@ -240,7 +240,7 @@ export const usePresetStore = defineStore('presetStore', () => {
       if (name === defaultPresetName || !sessionState.loggedIn.value || !isValidPresetName(name)) {
         return
       }
-      return await $fetch<[InternalApi['/api/presets/:preset']['delete']]>(`/api/presets/${encodeURIComponent(name)}`, {
+      return await $fetch<InternalApi['/api/presets/:preset']['delete']>(`/api/presets/${encodeURIComponent(name)}`, {
         method: 'DELETE',
       })
     },
@@ -307,7 +307,3 @@ export const usePresetStore = defineStore('presetStore', () => {
     runUpdate,
   }
 })
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(usePresetStore, import.meta.hot))
-}

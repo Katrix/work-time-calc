@@ -315,7 +315,3 @@ export const useCalcStore = defineStore('calcs', () => {
     firstCalc,
   }
 })
-
-if (import.meta.hot) {
-  import.meta.hot.accept(acceptHMRUpdate(useCalcStore, import.meta.hot))
-}

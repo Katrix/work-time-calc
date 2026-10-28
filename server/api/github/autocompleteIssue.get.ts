@@ -25,7 +25,7 @@ async function queryIssues(octokit: Octokit & Api, repos: string[], prefix: stri
     res = await octokit.rest.search.issuesAndPullRequests({
       advanced_search: 'true',
       q: searchQuery,
-      first: 20,
+      per_page: 20,
       request: {
         signal: abortSignal,
       },
