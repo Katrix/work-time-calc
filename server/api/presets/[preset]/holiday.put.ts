@@ -5,11 +5,8 @@ export default defineEventHandler(async (event) => {
     decode: true,
   })
 
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const r = await readValidatedBody(event, holidayRuleSchema.array().parse)
   const prisma = usePrisma(event)

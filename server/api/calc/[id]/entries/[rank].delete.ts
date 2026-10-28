@@ -7,11 +7,8 @@ export default defineEventHandler(async (event) => {
     z.object({ id: customNanoId, rank: z.string() }).parse,
   )
 
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const prisma = usePrisma(event)
   const res = await prisma.calcEntry.deleteMany({

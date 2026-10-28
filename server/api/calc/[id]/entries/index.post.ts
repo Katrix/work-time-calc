@@ -4,11 +4,8 @@ import { customNanoId } from '#shared/types/calc'
 export default defineEventHandler(async (event) => {
   const { id: publicId } = await getValidatedRouterParams(event, z.object({ id: customNanoId }).parse)
 
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const e = await readValidatedBody(event, calcEntryV2Schema.parse)
 

@@ -2,11 +2,8 @@ import { nanoid } from 'nanoid'
 import z from 'zod'
 
 export default defineEventHandler(async (event) => {
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const extraParams = z.union([
     z.object({

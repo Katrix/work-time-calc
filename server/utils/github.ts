@@ -5,7 +5,7 @@ import { type Api, restEndpointMethods } from '@octokit/plugin-rest-endpoint-met
 import { type PaginateInterface, paginateRest } from '@octokit/plugin-paginate-rest'
 
 export async function useOctokit(event: H3Event) {
-  const session = await getUserSession(event)
+  const session = await requireUserSession(event)
   let accessToken = session.secure?.githubAccessToken
   if (!accessToken) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })

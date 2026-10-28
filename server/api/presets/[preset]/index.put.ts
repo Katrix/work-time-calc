@@ -9,11 +9,8 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 400, statusMessage: 'Invalid preset name' })
   }
 
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const p = await readValidatedBody(event, presetV2Schema.parse)
   const prisma = usePrisma(event)

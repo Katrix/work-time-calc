@@ -2,12 +2,8 @@ import { Temporal } from '@js-temporal/polyfill'
 import { type PresetGithubOwner, presetV2Schema } from '#shared/types/preset'
 
 export default defineEventHandler(async (event) => {
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: `Unauthorized` })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const userInfo = await usePrisma(event).user.findUnique({
     where: { id: githubId },

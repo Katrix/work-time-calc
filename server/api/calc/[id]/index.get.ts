@@ -6,11 +6,8 @@ const calcWithEntriesWithUpdatedAt = calcWithEntriesV2Schema.extend({ updatedAt:
 export default defineEventHandler(async (event) => {
   const { id: publicId } = await getValidatedRouterParams(event, z.object({ id: customNanoId }).parse)
 
-  const session = await getUserSession(event)
-  const githubId = session.user?.githubId
-  if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
-  }
+  const session = await requireUserSession(event)
+  const githubId = session.user.githubId
 
   const res = await usePrisma(event).calc.findUnique({
     where: {
