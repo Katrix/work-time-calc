@@ -53,6 +53,49 @@ export const useCalcStore = defineStore('calcs', () => {
     }
   }
 
+  async function importCalcs(files: File[]) {
+    let imported = 0
+    const failed: string[] = []
+
+    for (const file of files) {
+      const name = file.name
+      let calc
+      try {
+        calc = decodeCalcFromString(await file.text())
+      } catch (e) {
+        console.error(`Failed to decode ${name}`, e)
+        failed.push(name)
+        continue
+      }
+
+      let publicId
+      if (session.loggedIn.value) {
+        try {
+          const res = await $fetch('/api/calc', {
+            method: 'PUT',
+            body: calcWithEntriesV2Schema.encode(calc),
+          })
+          publicId = res!.publicId
+        } catch (e) {
+          console.error(`Failed to import ${name}`, e)
+          failed.push(name)
+          continue
+        }
+      } else {
+        publicId = nanoid(12)
+        localStorage.setItem(
+          `calcs.${publicId}`,
+          JSON.stringify({ lastUpdated: Date.now(), data: encodeCalcToString(calc) }),
+        )
+      }
+
+      allCalcs.value.set(publicId, { name: calc.name, mode: calc.mode })
+      imported++
+    }
+
+    return { imported, failed }
+  }
+
   async function closeCalc(id: string) {
     const route = useRoute()
     const needNavigation = route.name === 'calculation' && route.params.calculation === id
@@ -258,6 +301,7 @@ export const useCalcStore = defineStore('calcs', () => {
     fetchData,
     fetchLocalData,
     addCalc,
+    importCalcs,
     closeCalc,
     deleteCalc,
     firstCalc,

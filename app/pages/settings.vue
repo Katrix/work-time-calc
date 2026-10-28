@@ -16,6 +16,10 @@
     <hr />
 
     <!-- <button type="button" class="btn btn-secondary mt-3 me-2" @click="exportAll">Export all as zip</button> -->
+    <button type="button" class="btn btn-secondary mt-3 me-2" :disabled="importing" @click="importFiles">
+      Import calcs
+      <FontAwesomeIcon v-if="importing" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
+    </button>
 
     <button
       v-if="presetStore.currentPresetId !== 'Default'"
@@ -33,7 +37,35 @@
 // import { strToU8, zipSync } from 'fflate'
 
 const presetStore = usePresetStore()
-// const calcStore = useCalcStore()
+const calcStore = useCalcStore()
+const toast = useToast()
+
+const importing = ref(false)
+
+function importFiles() {
+  const input = document.createElement('input')
+  input.type = 'file'
+  input.accept = '.json'
+  input.multiple = true
+  input.onchange = async (e) => {
+    const files = [...((e.target as HTMLInputElement).files ?? [])]
+    if (!files.length) {
+      return
+    }
+
+    importing.value = true
+    try {
+      const { imported, failed } = await calcStore.importCalcs(files)
+      toast.create({ body: `Imported ${imported} calc${imported === 1 ? '' : 's'}`, variant: 'success' })
+      if (failed.length) {
+        toast.create({ body: `Failed to import ${failed.join(', ')}`, variant: 'danger' })
+      }
+    } finally {
+      importing.value = false
+    }
+  }
+  input.click()
+}
 
 /* TODO: Reimplement later
 function exportAll() {
