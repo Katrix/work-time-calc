@@ -1,12 +1,13 @@
 <template>
-  <div class="d-none d-lg-block">
-    <CalcTable :calc-id="calcId" />
+  <div v-if="viewport.isGreaterOrEquals('lg')" class="d-none d-lg-block">
+    <CalcTable :calc-info="calcInfo" />
   </div>
-  <div class="d-lg-none">
-    <CalcCards :calc-id="calcId" />
+  <div v-if="viewport.isLessThan('lg')" class="d-lg-none">
+    <CalcCards :calc-info="calcInfo" />
   </div>
 </template>
 
 <script setup lang="ts">
-defineProps<{ calcId: string }>()
+defineProps<{ calcInfo: CalcInfo }>()
+const viewport = useViewport()
 </script>

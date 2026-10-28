@@ -1,4 +1,4 @@
-import { H3Event } from 'h3'
+import { type H3Event } from 'h3'
 import { Octokit } from '@octokit/core'
 import { createOAuthUserAuth, type GitHubAppAuthenticationWithExpiration } from '@octokit/auth-oauth-user'
 import { type Api, restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'

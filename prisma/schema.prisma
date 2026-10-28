@@ -1,0 +1,188 @@
+generator client {
+  provider   = "prisma-client"
+  output     = "../server/generated/prisma"
+  runtime    = "cloudflare"
+  engineType = "client"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model User {
+  id                    Int      @id
+  username              String   @unique
+  email                 String
+  lastUpatedOpenedCalcs DateTime @default(now()) @map("last_updated_opened_calcs")
+  lastUpdatedPresets    DateTime @default(now()) @map("last_updated_presets")
+  currentPresetId       Int?     @map("current_preset_id")
+
+  currentPreset Preset?      @relation(name: "current_preset", fields: [currentPresetId], references: [id], onDelete: SetNull)
+  presets       Preset[]     @relation(name: "preset_opened_by")
+  calcs         Calc[]
+  openedCalcs   OpenedCalc[]
+
+  @@map("user")
+}
+
+model Preset {
+  id          Int    @id @default(autoincrement())
+  createdById Int    @map("created_by_id")
+  name        String
+
+  hoursWorkTime    Int  @map("hours_work_time")
+  hoursDefaultFrom Int  @map("hours_default_from")
+  hoursDefaultTo   Int? @map("hours_default_to")
+  hoursPrecision   Int  @map("hours_precision")
+  tasksPrecision   Int  @map("tasks_precision")
+
+  easterHoliday    Boolean @map("easter_holiday")
+  ascensionHoliday Boolean @map("ascension_holiday")
+  pentecostHoliday Boolean @map("pentecost_holiday")
+  christmasHoliday Boolean @map("christmas_holiday")
+  saturdayHoliday  Boolean @map("saturday_holiday")
+  sundayHoliday    Boolean @map("sunday_holiday")
+
+  createdBy         User                 @relation(name: "preset_opened_by", fields: [createdById], references: [id], onDelete: Cascade)
+  currentlyOpenedBy User[]               @relation(name: "current_preset")
+  tags              PresetPartTag[]
+  githubOwners      PresetGithubOwner[]
+  githubRepos       PresetGithubRepo[]
+  fixedHolidays     PresetFixedHoliday[]
+
+  @@unique([createdById, name])
+  @@map("preset")
+}
+
+enum CalcMode {
+  hours
+  tasks
+}
+
+model PresetPartTag {
+  presetId   Int      @map("preset_id")
+  presetMode CalcMode @map("preset_mode")
+  name       String
+  color      String
+
+  preset Preset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+
+  @@id([presetId, presetMode, name])
+  @@map("preset_part_tag")
+}
+
+model PresetGithubOwner {
+  presetId                 Int     @map("preset_id")
+  owner                    String
+  active                   Boolean
+  autocompleteWithoutOwner Boolean @map("autocomplete_without_owner")
+
+  preset Preset             @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  repos  PresetGithubRepo[]
+
+  @@id([presetId, owner])
+  @@map("preset_github_owner")
+}
+
+model PresetGithubRepo {
+  presetId                      Int     @map("preset_id")
+  owner                         String
+  repo                          String
+  autocompleteWithoutRepository Boolean @map("autocomplete_without_repository")
+
+  preset      Preset            @relation(fields: [presetId], references: [id], onDelete: Cascade)
+  presetOwner PresetGithubOwner @relation(fields: [presetId, owner], references: [presetId, owner], onDelete: Cascade)
+
+  @@id([presetId, owner, repo])
+  @@map("preset_github_repo")
+}
+
+model PresetFixedHoliday {
+  presetId Int    @map("preset_id")
+  from     String
+  to       String
+
+  preset Preset @relation(fields: [presetId], references: [id], onDelete: Cascade)
+
+  @@id([presetId, from, to])
+  @@map("preset_fixed_holiday")
+}
+
+model Calc {
+  id          Int      @id @default(autoincrement())
+  publicId    String   @unique @map("public_id")
+  createdAt   DateTime @default(now()) @map("created_at")
+  updatedAt   DateTime @default(now()) @map("updated_at")
+  createdById Int      @map("created_by_id")
+
+  name            String
+  mode            CalcMode
+  savedUpTime     Int      @map("saved_up_time")
+  savedUpVacation Float    @map("saved_up_vacation")
+  workTime        Int      @map("work_time")
+  defaultFrom     Int      @map("default_from")
+  defaultTo       Int?     @map("default_to")
+  precision       Int
+
+  createdBy User         @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  entries   CalcEntry[]
+  openedBy  OpenedCalc[]
+  tags      CalcTag[]
+
+  @@map("calc")
+}
+
+model CalcTag {
+  calcId Int    @map("calc_id")
+  tag    String
+  color  String
+
+  calc      Calc           @relation(fields: [calcId], references: [id], onDelete: Cascade)
+  entryTags CalcEntryTag[]
+
+  @@id([calcId, tag])
+  @@map("calc_tag")
+}
+
+model CalcEntry {
+  id     Int    @id @default(autoincrement())
+  calcId Int    @map("calc_id")
+  rank   String
+
+  name           String
+  from           Int?
+  to             Int?
+  subtractedTime Int?    @map("subtracted_time")
+  isTracking     Boolean @map("is_tracking")
+  notes          String?
+
+  calc Calc           @relation(fields: [calcId], references: [id], onDelete: Cascade)
+  tags CalcEntryTag[]
+
+  @@map("calc_entry")
+  @@unique([calcId, rank])
+}
+
+model CalcEntryTag {
+  calcId  Int    @map("calc_id")
+  tag     String
+  entryId Int    @map("entry_id")
+
+  entry   CalcEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
+  calcTag CalcTag   @relation(fields: [calcId, tag], references: [calcId, tag], onDelete: Cascade)
+
+  @@id([entryId, tag])
+  @@map("calc_entry_tag")
+}
+
+model OpenedCalc {
+  userId Int
+  calcId Int
+  order  Int
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+  calc Calc @relation(fields: [calcId], references: [id], onDelete: Cascade)
+
+  @@id([userId, calcId])
+  @@map("opened_calc")
+}

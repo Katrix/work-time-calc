@@ -1,7 +1,7 @@
 <template>
   <table class="table table-dark table-striped">
     <thead>
-      <tr v-if="calc.mode === 'hours'">
+      <tr v-if="calcInfo.calc.mode === 'hours'">
         <th scope="col" style="min-width: 8em">Day</th>
         <th scope="col" style="min-width: 8em; max-width: 12em; width: 12em">Arrived</th>
         <th scope="col" style="min-width: 11em; max-width: 12em; width: 12em">Left</th>
@@ -23,54 +23,51 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(item, index) in calc.entries" :class="trClasses(item)">
+      <tr v-for="(item, index) in calcInfo.calc.entries" :class="trClasses(item)">
         <td>
           <CalcInputName
             v-model="item.name"
-            :mode="calc.mode"
+            :mode="calcInfo.calc.mode"
             @on-autocomplete-issue="(notes) => (item.notes = notes)"
           />
         </td>
 
-        <td><CalcInputFrom :precision="calc.precision" v-model="item.from" /></td>
+        <td><CalcInputFrom :precision="calcInfo.calc.precision" v-model="item.from" /></td>
         <td>
-          <CalcInputTo :precision="calc.precision" v-model:to="item.to" v-model:is-tracking="item.isTracking" />
+          <CalcInputTo :precision="calcInfo.calc.precision" v-model:to="item.to" v-model:is-tracking="item.isTracking" />
         </td>
 
         <td>
-          {{ computedCalc?.entries?.[index] ? computedCalc.entries[index].workedTime : '' }}
+          {{ calcInfo.computedCalc?.entries?.[index] ? calcInfo.computedCalc.entries[index].workedTime : '' }}
         </td>
         <td>
-          {{ computedCalc?.entries?.[index] ? computedCalc.entries[index].extraTime : '' }}
+          {{ calcInfo.computedCalc?.entries?.[index] ? calcInfo.computedCalc.entries[index].extraTime : '' }}
         </td>
 
-        <td v-if="calc.mode === 'hours'">
-          <CalcInputSubtractedTime
-            v-model:subtracted-time="item.subtractedTime"
-            v-model:custom-subtracted-time="item.customSubtractedTime"
-          ></CalcInputSubtractedTime>
+        <td v-if="calcInfo.calc.mode === 'hours'">
+          <CalcInputSubtractedTime v-model="item.subtractedTime" />
         </td>
 
         <!-- Tags -->
-        <td v-if="calc.mode === 'tasks'" style="max-width: 160px">
+        <td v-if="calcInfo.calc.mode === 'tasks'" style="max-width: 160px">
           <TagBadge
             v-for="tag in item.tags ?? []"
             :key="tag"
             :tag="tag"
-            :calc-id="calcId"
-            @delete-tag="removeTag(index, tag)"
+            :calc-info="calcInfo"
+            @delete-tag="calcInfo.removeTag(index, tag)"
           />
-          <TagDropdown :calc-id="calcId" :existing-tags="item.tags ?? []" @new-tag="(tag) => addTag(index, tag)" />
+          <TagDropdown :calc-info="calcInfo" :existing-tags="item.tags ?? []" @new-tag="(tag) => calcInfo.addTag(index, tag)" />
         </td>
 
-        <td><BFormInput v-model="calc.entries[index].notes" /></td>
+        <td><BFormInput v-model="calcInfo.calc.entries[index].notes" /></td>
 
         <!-- Add/Remove row -->
         <td>
-          <button class="btn btn-secondary" @click="addRowAfter(index)">
+          <button class="btn btn-secondary" @click="calcInfo.addRowAfter(index)">
             <FontAwesomeIcon :icon="['fas', 'plus']" />
           </button>
-          <button class="btn btn-secondary" v-if="calc.entries.length > 1" @click="removeRow(index)">
+          <button class="btn btn-secondary" v-if="calcInfo.calc.entries.length > 1" @click="calcInfo.removeRow(index)">
             <FontAwesomeIcon :icon="['fas', 'minus']" />
           </button>
         </td>
@@ -78,21 +75,17 @@
     </tbody>
   </table>
 
-  <CalcTagSummary :calcId="calcId" :tag-summaries="computedCalc?.summaryByTag ?? {}" />
+  <CalcTagSummary :calc-info="calcInfo" :tag-summaries="calcInfo.computedCalc?.summaryByTag ?? {}" />
 </template>
 
 <script setup lang="ts">
-const props = defineProps<{ calcId: string }>()
-const calcStore = useCalcStore()
-const { calc, computedCalc, addTag, removeTag, addRowAfter, removeRow } = calcStore.useCalc(
-  computed(() => props.calcId),
-)
+const props = defineProps<{ calcInfo: CalcInfo }>()
 
 function trClasses(item: CalcEntry): string | null {
   const name = item.name
-  const idx = calc.value.entries.findIndex((v) => v.name === name)
+  const idx = props.calcInfo.calc.entries.findIndex((v) => v.name === name)
   if (idx > 0) {
-    const prevName = calc.value.entries[idx - 1].name
+    const prevName = props.calcInfo.calc.entries[idx - 1].name
     if (new Date(name).getDate() - new Date(prevName).getDate() > 1) {
       return 'table-group-divider'
     }

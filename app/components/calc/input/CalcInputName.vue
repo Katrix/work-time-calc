@@ -60,6 +60,7 @@
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
 import CalcInputSearchOption from '~/components/calc/input/CalcInputSearchOption.vue'
+import type { InternalApi } from 'nitropack/types'
 
 const presetStore = usePresetStore()
 const auth = useUserSession()
@@ -112,7 +113,7 @@ const debouncedName = debouncedRef(name, 500)
 const { data: currentIssues } = useQuery({
   queryKey: ['api', 'github', 'autocompleteIssue', debouncedName, computed(() => presetStore.currentPreset.github)],
   queryFn: ({ signal }) =>
-    $fetch(`/api/github/autocompleteIssue`, {
+    $fetch<InternalApi['/api/github/autocompleteIssue']['get']>(`/api/github/autocompleteIssue`, {
       query: {
         prefix: debouncedName.value,
         repo: [...presetStore.currentPreset.github.entries()]

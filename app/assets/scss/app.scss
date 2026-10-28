@@ -1,3 +1,5 @@
+@use "sass:color";
+
 $color-mode-type: media-query;
 $enable-cssgrid: true;
 
@@ -27,7 +29,7 @@ $expanded-sidebar-width: 20rem;
 }
 @media (prefers-color-scheme: dark) {
   .sidebar {
-    background: adjust-color($gray-900, $lightness: -2%);
+    background: color.adjust($gray-900, $lightness: -2%);
     border-right-color: $gray-700;
   }
 }
@@ -71,7 +73,7 @@ $expanded-sidebar-width: 20rem;
 @media (prefers-color-scheme: dark) {
   .directory .directory-item:hover,
   .directory .directory-item.active {
-    background: adjust-color($gray-900, $lightness: -5%);
+    background: color.adjust($gray-900, $lightness: -5%);
   }
 }
 

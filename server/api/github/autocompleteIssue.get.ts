@@ -28,7 +28,7 @@ async function queryIssues(octokit: Octokit & Api, repos: string[], prefix: stri
       first: 20,
       request: {
         signal: abortSignal,
-      }
+      },
     })
     console.log(`Got ${res.data.items.length} results in ${Date.now() - now}ms`)
   } catch (e) {
@@ -100,9 +100,6 @@ export default defineEventHandler(async (event) => {
   }, 3000)
 
   const all = await Promise.all(resultItems)
-
-  console.log()
-  console.log()
 
   return all.flat()
 })

@@ -5,5 +5,5 @@ export default defineEventHandler(async (event) => {
   })
 
   // Only take what we need from the response
-  return githubRepoInfo.array().parse(repos)
+  return githubRepoInfoSchema.array().parse(repos)
 })
