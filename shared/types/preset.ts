@@ -13,7 +13,7 @@ export const repoV2Schema = z.object({
 export type Repo = z.infer<typeof repoV2Schema>
 
 const recordMap = <T>(schema: z.ZodType<T>) => {
-  return z.codec(z.record(z.string(), schema), z.map(z.string(), schema), {
+  return z.codec(z.record(z.string(), schema), z.custom<Map<string, T>>((v) => v instanceof Map), {
     encode: (v) => Object.fromEntries(v.entries()) as Record<string, T>,
     decode: (v) => new Map(Object.entries(v)),
   })

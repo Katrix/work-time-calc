@@ -31,8 +31,8 @@ const calcStore = useCalcStore()
 const session = useUserSession()
 
 if (session.loggedIn.value) {
-  await callOnce(async () => await presetStore.fetchData())
-  await callOnce(async () => await calcStore.fetchData())
+  await callOnce('fetchPresetData', async () => await presetStore.fetchData())
+  await callOnce('fetchCalcData', async () => await calcStore.fetchData())
 }
 
 const trackedIntervalId = ref<number>()

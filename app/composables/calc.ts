@@ -450,127 +450,129 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
     return monthDates.filter((d) => !isHoliday(d, holidayRules))
   }
 
-  return scope.run(() => {
-    useCalcPersister(id, calc, queryClient)
+  return nuxtApp.runWithContext(() =>
+    scope.run(() => {
+      useCalcPersister(id, calc, queryClient)
 
-    // Keep the calc list (sidebar, tabs) in sync with renames and mode switches
-    watch(
-      () => [calc.value.name, calc.value.mode] as const,
-      ([name, mode]) => {
-        if (calcStore.allCalcs.has(id.value)) {
-          calcStore.allCalcs.set(id.value, { name, mode })
-        }
-      },
-    )
+      // Keep the calc list (sidebar, tabs) in sync with renames and mode switches
+      watch(
+        () => [calc.value.name, calc.value.mode] as const,
+        ([name, mode]) => {
+          if (calcStore.allCalcs.has(id.value)) {
+            calcStore.allCalcs.set(id.value, { name, mode })
+          }
+        },
+      )
 
-    return reactive({
-      id,
-      calc,
-      requestError: error,
-      computedCalc: useComputedCalc(calc),
-      switchMode() {
-        if (calc.value.mode === 'hours') {
-          setMode('tasks')
-        } else {
-          setMode('hours')
-        }
-      },
-      async loadFromFile(file: File) {
-        calc.value = {
-          ...calc.value,
-          ...decodeCalcFromString(await file.text()),
-        }
-      },
-      getTagColor(tag: string) {
-        const existing = calc.value.tags.get(tag)
-        if (existing) {
-          return existing
-        }
+      return reactive({
+        id,
+        calc,
+        requestError: error,
+        computedCalc: useComputedCalc(calc),
+        switchMode() {
+          if (calc.value.mode === 'hours') {
+            setMode('tasks')
+          } else {
+            setMode('hours')
+          }
+        },
+        async loadFromFile(file: File) {
+          calc.value = {
+            ...calc.value,
+            ...decodeCalcFromString(await file.text()),
+          }
+        },
+        getTagColor(tag: string) {
+          const existing = calc.value.tags.get(tag)
+          if (existing) {
+            return existing
+          }
 
-        const color = randomColor()
-        calc.value.tags.set(tag, color)
-        return color
-      },
-      addRowAfter(idx: number) {
-        const before = calc.value.entries[idx]?.rank
-        const after = calc.value.entries[idx + 1]?.rank
-        const rank = generateKeyBetween(before, after)
+          const color = randomColor()
+          calc.value.tags.set(tag, color)
+          return color
+        },
+        addRowAfter(idx: number) {
+          const before = calc.value.entries[idx]?.rank
+          const after = calc.value.entries[idx + 1]?.rank
+          const rank = generateKeyBetween(before, after)
 
-        calc.value.entries.splice(idx + 1, 0, {
-          name: defaultEntryName(calc.value.mode),
-          from: calc.value.defaultFrom,
-          to: null,
-          subtractedTime: null,
-          rank,
-        })
-      },
-      removeRow(idx: number) {
-        calc.value.entries.splice(idx, 1)
-      },
-      clear() {
-        calc.value.entries = [
-          {
+          calc.value.entries.splice(idx + 1, 0, {
             name: defaultEntryName(calc.value.mode),
             from: calc.value.defaultFrom,
-            to: calc.value.defaultTo,
+            to: null,
             subtractedTime: null,
-            rank: generateKeyBetween(null, null),
-          },
-        ]
-      },
-      addTag(index: number, tag: string) {
-        const entry = calc.value.entries[index]
-        if (entry) {
-          entry.tags ??= []
-          entry.tags.push(tag)
-        }
-      },
-      deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }) {
-        const tag = calc.value.tags.get(tagName)
-        if (tag && presetStore.currentPreset[calc.value.mode].tags.has(tagName) && !deleteConfigured) {
-          return
-        }
-        calc.value.tags.delete(tagName)
-      },
-      removeTag(index: number, tag: string) {
-        const entry = calc.value.entries[index]
-        entry?.tags?.splice(entry.tags?.indexOf(tag), 1)
+            rank,
+          })
+        },
+        removeRow(idx: number) {
+          calc.value.entries.splice(idx, 1)
+        },
+        clear() {
+          calc.value.entries = [
+            {
+              name: defaultEntryName(calc.value.mode),
+              from: calc.value.defaultFrom,
+              to: calc.value.defaultTo,
+              subtractedTime: null,
+              rank: generateKeyBetween(null, null),
+            },
+          ]
+        },
+        addTag(index: number, tag: string) {
+          const entry = calc.value.entries[index]
+          if (entry) {
+            entry.tags ??= []
+            entry.tags.push(tag)
+          }
+        },
+        deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }) {
+          const tag = calc.value.tags.get(tagName)
+          if (tag && presetStore.currentPreset[calc.value.mode].tags.has(tagName) && !deleteConfigured) {
+            return
+          }
+          calc.value.tags.delete(tagName)
+        },
+        removeTag(index: number, tag: string) {
+          const entry = calc.value.entries[index]
+          entry?.tags?.splice(entry.tags?.indexOf(tag), 1)
 
-        if (calc.value.entries.every((e) => !e.tags?.includes(tag))) {
-          this.deleteTag(tag, { deleteConfigured: false })
-        }
-      },
-      fillWorkdays() {
-        const dates = fillWorkdaysBase(Temporal.PlainDate.from(calc.value.entries[0].name))
-        const ranks = generateNKeysBetween(null, null, dates.length)
-        calc.value.entries = dates.map((d, i) => ({
-          name: d.toString(),
-          from: null,
-          to: null,
-          subtractedTime: null,
-          rank: ranks[i],
-        }))
-      },
-      fillRemainingWorkdays() {
-        const start = Temporal.PlainDate.from(calc.value.entries[calc.value.entries.length - 1].name).add({ days: 1 })
-        const startRank = calc.value.entries.at(-1)?.rank
-        const dates = fillWorkdaysBase(start)
-        const ranks = generateNKeysBetween(startRank, null, dates.length)
-        calc.value.entries.push(
-          ...dates.map((d, i) => ({
+          if (calc.value.entries.every((e) => !e.tags?.includes(tag))) {
+            this.deleteTag(tag, { deleteConfigured: false })
+          }
+        },
+        fillWorkdays() {
+          const dates = fillWorkdaysBase(Temporal.PlainDate.from(calc.value.entries[0].name))
+          const ranks = generateNKeysBetween(null, null, dates.length)
+          calc.value.entries = dates.map((d, i) => ({
             name: d.toString(),
             from: null,
             to: null,
             subtractedTime: null,
             rank: ranks[i],
-          })),
-        )
-      },
-    } satisfies Omit<CalcInfo, 'calc' | 'computedCalc' | 'requestError' | 'id'> & {
-      id: Ref<string>
-      calc: Ref<CalcWithEntries>
-      computedCalc: Ref<ComputedWorkTime>
-      requestError: Ref<FetchError | undefined>
-    })
-  })!
+          }))
+        },
+        fillRemainingWorkdays() {
+          const start = Temporal.PlainDate.from(calc.value.entries[calc.value.entries.length - 1].name).add({ days: 1 })
+          const startRank = calc.value.entries.at(-1)?.rank
+          const dates = fillWorkdaysBase(start)
+          const ranks = generateNKeysBetween(startRank, null, dates.length)
+          calc.value.entries.push(
+            ...dates.map((d, i) => ({
+              name: d.toString(),
+              from: null,
+              to: null,
+              subtractedTime: null,
+              rank: ranks[i],
+            })),
+          )
+        },
+      } satisfies Omit<CalcInfo, 'calc' | 'computedCalc' | 'requestError' | 'id'> & {
+        id: Ref<string>
+        calc: Ref<CalcWithEntries>
+        computedCalc: Ref<ComputedWorkTime>
+        requestError: Ref<FetchError | undefined>
+      })
+    })!,
+  )
 }
