@@ -10,9 +10,12 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }
 
-  await usePrisma(event).calc.delete({
+  const res = await usePrisma(event).calc.deleteMany({
     where: { publicId, createdById: githubId },
   })
+  if (res.count === 0) {
+    throw createError({ statusCode: 404, statusMessage: 'Not found' })
+  }
 
   setResponseStatus(event, 204)
 })

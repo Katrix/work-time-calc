@@ -9,18 +9,23 @@ export default defineEventHandler(async (event) => {
 
   const p = await readValidatedBody(event, z.object({ from: z.string(), to: z.string() }).parse)
 
-  if (p.from === p.to || p.to === '' || p.to.includes('/')) {
+  if (p.from === p.to || !isValidPresetName(p.to)) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid name' })
+  }
+
+  const existing = await usePrisma(event).preset.count({ where: { createdById: githubId, name: p.to } })
+  if (existing > 0) {
+    throw createError({ statusCode: 409, statusMessage: 'Another present with that name already exists' })
   }
 
   const res = await usePrisma(event).preset.updateMany({
     data: {
-      name: p.to
+      name: p.to,
     },
     where: {
       name: p.from,
       createdById: githubId,
-    }
+    },
   })
 
   if (res.count === 0) {

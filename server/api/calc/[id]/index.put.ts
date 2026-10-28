@@ -13,7 +13,7 @@ export default defineEventHandler(async (event) => {
   const c = await readValidatedBody(event, calcSchema.parse)
 
   const prisma = usePrisma(event)
-  const calcId = await prisma.calc.findUnique({ where: { publicId }, select: { id: true } })
+  const calcId = await prisma.calc.findUnique({ where: { publicId, createdById: githubId }, select: { id: true } })
   if (!calcId) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
@@ -21,13 +21,11 @@ export default defineEventHandler(async (event) => {
   await prisma.calc.update({
     where: {
       id: calcId.id,
-      createdById: githubId,
     },
     data: {
-      createdById: githubId,
-      updatedAt: new Date(),
       name: c.name,
       mode: c.mode,
+      updatedAt: new Date(),
       savedUpTime: c.savedUpTime,
       savedUpVacation: c.savedUpVacation,
       workTime: c.workTime,

@@ -1,12 +1,12 @@
 import { Temporal } from '@js-temporal/polyfill'
-import type { PresetGithubOwner, Repo } from '#shared/types/preset'
+import { type PresetGithubOwner, presetV2Schema } from '#shared/types/preset'
 
 export default defineEventHandler(async (event) => {
   const session = await getUserSession(event)
   const githubId = session.user?.githubId
 
   if (!githubId) {
-    throw createError({ statusCode: 401, statusMessage: `Unauthorized, ${JSON.stringify(session)}` })
+    throw createError({ statusCode: 401, statusMessage: `Unauthorized` })
   }
 
   const userInfo = await usePrisma(event).user.findUnique({
@@ -45,26 +45,19 @@ export default defineEventHandler(async (event) => {
     currentPreset: userInfo?.currentPreset?.name,
     presets: Object.fromEntries(
       res.map((rawPreset) => {
-        const github = new Map<
-          string,
-          Omit<PresetGithubOwner, 'repos'> & {
-            repos: Record<string, Repo>
-          }
-        >()
+        const github = new Map<string, PresetGithubOwner>()
 
         for (const githubOwner of rawPreset.githubOwners) {
-          const owner: Omit<PresetGithubOwner, 'repos'> & {
-            repos: Record<string, Repo>
-          } = {
+          const owner: PresetGithubOwner = {
             active: githubOwner.active,
             autocompleteWithoutOwner: githubOwner.autocompleteWithoutOwner,
-            repos: {},
+            repos: new Map(),
           }
 
           for (const repo of githubOwner.repos) {
-            owner.repos[repo.repo] = {
+            owner.repos.set(repo.repo, {
               autocompleteWithoutRepository: repo.autocompleteWithoutRepository,
-            }
+            })
           }
 
           github.set(githubOwner.owner, owner)
@@ -97,7 +90,7 @@ export default defineEventHandler(async (event) => {
 
         return [
           rawPreset.name,
-          {
+          presetV2Schema.encode({
             version: currentPresetVersion,
             hours: {
               workTime: rawPreset.hoursWorkTime,
@@ -113,16 +106,9 @@ export default defineEventHandler(async (event) => {
               precision: rawPreset.tasksPrecision,
               tags: new Map(rawPreset.tags.filter((t) => t.presetMode === 'tasks').map((t) => [t.name, t.color])),
             },
-            github: Object.fromEntries(github.entries()),
+            github: github,
             holidayRules,
-          } satisfies Omit<Preset, 'github'> & {
-            github: Record<
-              string,
-              Omit<PresetGithubOwner, 'repos'> & {
-                repos: Record<string, Repo>
-              }
-            >
-          },
+          }),
         ]
       }),
     ),

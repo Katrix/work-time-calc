@@ -38,7 +38,9 @@
     "prisma": "^7.1.0",
     "sass": "^1.96.0",
     "tsx": "^4.22.4",
+    "typescript": "^5",
     "vitest": "^4.0.15",
+    "vue-tsc": "^3",
     "wrangler": "^4.54.0"
   },
   "dependencies": {

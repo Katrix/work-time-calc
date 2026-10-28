@@ -79,9 +79,11 @@ export const useCalcStore = defineStore('calcs', () => {
 
   async function deleteCalc(id: string) {
     await closeCalc(id)
-    await $fetch<InternalApi['/api/calc/:id']['delete']>(`/api/calc/${id}`, {
-      method: 'DELETE',
-    })
+    if (session.loggedIn.value) {
+      await $fetch<InternalApi['/api/calc/:id']['delete']>(`/api/calc/${id}`, {
+        method: 'DELETE',
+      })
+    }
 
     if (import.meta.client) {
       localStorage.removeItem(`calcs.${id}`)
@@ -232,6 +234,7 @@ export const useCalcStore = defineStore('calcs', () => {
       }
     }
 
+    calcOrder.value = calcOrder.value.filter((id) => allCalcs.value.has(id))
     keysToRemove.forEach((id) => localStorage.removeItem(`calcs.${id}`))
   }
 

@@ -92,7 +92,14 @@ export const usePresetStore = defineStore('presetStore', () => {
         const clientPresets = z.map(z.string(), allVersionsPresetSchema).parse(devalue.parse(presetsObj.data.data))
         clientPresets.forEach((preset, name) => {
           presets.value.set(name, preset)
-          updates.value.set(name, ['all'])
+          if (isValidPresetName(name)) {
+            updates.value.set(name, ['all'])
+          } else {
+            toast.create({
+              body: `Preset "${name}" has an invalid name, and won't be saved to the server until it is renamed`,
+              variant: 'warning',
+            })
+          }
         })
       }
       else if (presetsObj.error) {
@@ -117,14 +124,14 @@ export const usePresetStore = defineStore('presetStore', () => {
       return await Promise.all(
         [...updates.value.entries()].flatMap(([name, types]) => {
           const preset = presets.value.get(name)
-          if (!preset) {
+          if (!preset || !isValidPresetName(name)) {
             return
           }
 
           const distinctTypes = [...new Set(types)]
           if (distinctTypes.includes('all') || distinctTypes.length === allUpdateTypes.length - 1) {
             return [
-              $fetch(`/api/presets/${name}`, {
+              $fetch(`/api/presets/${encodeURIComponent(name)}`, {
                 method: 'PUT',
                 body: presetV2Schema.encode(preset),
               }),
@@ -133,7 +140,7 @@ export const usePresetStore = defineStore('presetStore', () => {
             return [
               distinctTypes.includes('github')
                 ? [
-                    $fetch(`/api/presets/${name}/github`, {
+                    $fetch(`/api/presets/${encodeURIComponent(name)}/github`, {
                       method: 'PUT',
                       body: presetGithubV2Schema.encode(preset.github),
                     }),
@@ -141,7 +148,7 @@ export const usePresetStore = defineStore('presetStore', () => {
                 : [],
               distinctTypes.includes('holiday')
                 ? [
-                    $fetch(`/api/presets/${name}/holiday`, {
+                    $fetch(`/api/presets/${encodeURIComponent(name)}/holiday`, {
                       method: 'PUT',
                       body: holidayRuleSchema.array().encode(preset.holidayRules),
                     }),
@@ -149,7 +156,7 @@ export const usePresetStore = defineStore('presetStore', () => {
                 : [],
               distinctTypes.includes('settings')
                 ? [
-                    $fetch(`/api/presets/${name}/settings`, {
+                    $fetch(`/api/presets/${encodeURIComponent(name)}/settings`, {
                       method: 'PUT',
                       body: presetV2Schema.encode(preset),
                     }),
@@ -165,11 +172,12 @@ export const usePresetStore = defineStore('presetStore', () => {
     },
   })
 
+  const sessionState = useUserSession()
   const currentPresetId = ref(defaultPresetName)
   watchWithFilter(
     currentPresetId,
     async () => {
-      if (import.meta.client) {
+      if (import.meta.client && sessionState.loggedIn.value) {
         await $fetch(`/api/presets/current`, {
           method: 'PUT',
           body: {
@@ -191,15 +199,17 @@ export const usePresetStore = defineStore('presetStore', () => {
       presets.value.set(currentPresetId.value, value)
     },
   })
-  const sessionState = useUserSession()
 
   const newPreset = useMutation({
     async mutationFn(name: string) {
       if (presets.value.has(name) || !sessionState.loggedIn.value) {
         return
       }
+      if (!isValidPresetName(name)) {
+        throw new Error('Invalid preset name')
+      }
 
-      return await $fetch<InternalApi['/api/presets/:preset']['put']>(`/api/presets/${name}`, {
+      return await $fetch<InternalApi['/api/presets/:preset']['put']>(`/api/presets/${encodeURIComponent(name)}`, {
         method: 'PUT',
         body: presetV2Schema.encode(currentPreset.value),
       })
@@ -216,10 +226,11 @@ export const usePresetStore = defineStore('presetStore', () => {
 
   const deletePreset = useMutation({
     async mutationFn(name: string) {
-      if (name === defaultPresetName || !sessionState.loggedIn.value) {
+      // Presets with invalid names only exist locally
+      if (name === defaultPresetName || !sessionState.loggedIn.value || !isValidPresetName(name)) {
         return
       }
-      return await $fetch<[InternalApi['/api/presets/:preset']['delete']]>(`/api/presets/${name}`, {
+      return await $fetch<[InternalApi['/api/presets/:preset']['delete']]>(`/api/presets/${encodeURIComponent(name)}`, {
         method: 'DELETE',
       })
     },
@@ -234,6 +245,13 @@ export const usePresetStore = defineStore('presetStore', () => {
   const renamePreset = useMutation({
     async mutationFn({ from, to }: { from: string; to: string }) {
       if (from === to || !sessionState.loggedIn.value) {
+        return
+      }
+      if (!isValidPresetName(to)) {
+        throw new Error('Invalid preset name')
+      }
+      // Presets with invalid names only exist locally, so there is nothing to rename on the server
+      if (!isValidPresetName(from)) {
         return
       }
       const fromVal = presets.value.get(from)
@@ -256,6 +274,9 @@ export const usePresetStore = defineStore('presetStore', () => {
           currentPresetId.value = to
         }
         presets.value.delete(from)
+        if (!isValidPresetName(from)) {
+          markUpdate(to, 'all')
+        }
       }
     },
   })

@@ -1,7 +1,9 @@
 import z from 'zod'
 
 export default defineEventHandler(async (event) => {
-  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse)
+  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse, {
+    decode: true,
+  })
 
   const session = await getUserSession(event)
   const githubId = session.user?.githubId
@@ -34,11 +36,20 @@ export default defineEventHandler(async (event) => {
             OR: r.filter((r) => r.type === 'fixed').map((r) => ({ from: r.from.toString(), to: r.to.toString() })),
           },
         },
-        create: r
+        connectOrCreate: r
           .filter((r) => r.type === 'fixed')
           .map((r) => ({
-            from: r.from.toString(),
-            to: r.to.toString(),
+            where: {
+              presetId_from_to: {
+                presetId,
+                from: r.from.toString(),
+                to: r.to.toString(),
+              }
+            },
+            create: {
+              from: r.from.toString(),
+              to: r.to.toString(),
+            },
           })),
       },
     },

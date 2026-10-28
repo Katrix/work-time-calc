@@ -14,6 +14,7 @@ export default defineEventHandler(async (event) => {
       publicId: {
         in: b.opened,
       },
+      createdById: githubId,
     },
     select: {
       id: true,

@@ -14,10 +14,14 @@ export default defineEventHandler(async (event) => {
   }
 
   const prisma = usePrisma(event)
-  await prisma.calcEntry.deleteMany({
+  const res = await prisma.calcEntry.deleteMany({
     where: { rank, calc: { createdById: githubId, publicId } },
   })
-  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { publicId } })
+  if (res.count === 0) {
+    throw createError({ statusCode: 404, statusMessage: 'Not found' })
+  }
+
+  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { createdById: githubId, publicId } })
 
   setResponseStatus(event, 204)
 })

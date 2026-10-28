@@ -1,14 +1,9 @@
 <template>
   <BFormGroup label="New preset">
     <BInputGroup>
-      <BFormInput type="text" v-model="newPresetName" :state="presetStore.presets.has(newPresetName) ? false : null" />
+      <BFormInput type="text" v-model="newPresetName" :state="newPresetNameValid ? null : false" />
       <template #append>
-        <button
-          type="button"
-          class="btn btn-secondary"
-          @click="newPreset"
-          :disabled="presetStore.presets.has(newPresetName)"
-        >
+        <button type="button" class="btn btn-secondary" @click="newPreset" :disabled="!newPresetNameValid">
           Create
           <FontAwesomeIcon v-if="presetStore.newPreset.isPending" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
         </button>
@@ -31,11 +26,12 @@
     <div class="col-6">
       <BFormGroup v-if="presetStore.currentPresetId !== 'Default'" label="Name">
         <BInputGroup>
-          <BFormInput type="text" v-model="renamePresetName" />
+          <BFormInput type="text" v-model="renamePresetName" :state="isValidPresetName(renamePresetName) ? null : false" />
           <template #append>
             <button
               type="button"
               class="btn btn-secondary"
+              :disabled="!isValidPresetName(renamePresetName)"
               @click="presetStore.renamePreset.mutate({ from: presetStore.currentPresetId, to: renamePresetName })"
             >
               Rename
@@ -56,6 +52,9 @@
 const presetStore = usePresetStore()
 const newPresetName = ref('')
 const renamePresetName = ref(presetStore.currentPresetId)
+const newPresetNameValid = computed(
+  () => !presetStore.presets.has(newPresetName.value) && isValidPresetName(newPresetName.value),
+)
 
 function resetPresetName() {
   renamePresetName.value = presetStore.currentPresetId

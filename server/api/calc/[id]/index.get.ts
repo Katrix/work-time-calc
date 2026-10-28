@@ -1,5 +1,7 @@
 import z from 'zod'
-import { customNanoId } from '#shared/types/calc'
+import { calcWithEntriesV2Schema, customNanoId } from '#shared/types/calc'
+
+const calcWithEntriesWithUpdatedAt = calcWithEntriesV2Schema.extend({ updatedAt: z.date() })
 
 export default defineEventHandler(async (event) => {
   const { id: publicId } = await getValidatedRouterParams(event, z.object({ id: customNanoId }).parse)
@@ -20,6 +22,9 @@ export default defineEventHandler(async (event) => {
         include: {
           tags: true,
         },
+        orderBy: {
+          rank: 'asc'
+        }
       },
       tags: true,
     },
@@ -35,5 +40,5 @@ export default defineEventHandler(async (event) => {
     tags: new Map(res.tags.map((t) => [t.tag, t.color])),
   }
 
-  return calc
+  return calcWithEntriesWithUpdatedAt.encode(calc)
 })

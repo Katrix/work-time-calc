@@ -159,8 +159,8 @@ model CalcEntry {
   calc Calc           @relation(fields: [calcId], references: [id], onDelete: Cascade)
   tags CalcEntryTag[]
 
-  @@map("calc_entry")
   @@unique([calcId, rank])
+  @@map("calc_entry")
 }
 
 model CalcEntryTag {

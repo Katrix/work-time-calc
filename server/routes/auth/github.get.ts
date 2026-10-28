@@ -22,6 +22,8 @@ export default defineOAuthGitHubEventHandler({
         id: user.id,
         username: user.login,
         email: user.email,
+        lastUpatedOpenedCalcs: new Date(0),
+        lastUpdatedPresets: new Date(0),
       },
       update: {},
       where: { id: user.id },

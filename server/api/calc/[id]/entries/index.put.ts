@@ -25,9 +25,7 @@ export default defineEventHandler(async (event) => {
     data: {
       updatedAt: new Date(),
       entries: {
-        deleteMany: {
-          calcId: calcId.id,
-        },
+        deleteMany: {},
         create: es.map((e) => ({
           name: e.name,
           from: e.from,
@@ -52,6 +50,4 @@ export default defineEventHandler(async (event) => {
       },
     },
   })
-
-  await setPresetsUpdatedNow(event, githubId)
 })

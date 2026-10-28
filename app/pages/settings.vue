@@ -15,7 +15,7 @@
 
     <hr />
 
-    <button type="button" class="btn btn-secondary mt-3 me-2" @click="exportAll">Export all as zip</button>
+    <!-- <button type="button" class="btn btn-secondary mt-3 me-2" @click="exportAll">Export all as zip</button> -->
 
     <button
       v-if="presetStore.currentPresetId !== 'Default'"
@@ -30,11 +30,12 @@
 </template>
 
 <script setup lang="ts">
-import { strToU8, zipSync } from 'fflate'
+// import { strToU8, zipSync } from 'fflate'
 
 const presetStore = usePresetStore()
-const calcStore = useCalcStore()
+// const calcStore = useCalcStore()
 
+/* TODO: Reimplement later
 function exportAll() {
   const files: Record<string, Uint8Array> = {}
   // Iterate over all calcs, not just calcOrder, so that closed calcs are included
@@ -61,4 +62,5 @@ function exportAll() {
     URL.revokeObjectURL(url)
   }, 0)
 }
+*/
 </script>

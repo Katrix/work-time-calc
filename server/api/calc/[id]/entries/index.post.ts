@@ -1,5 +1,4 @@
 import z from 'zod'
-import { nanoid } from 'nanoid'
 import { customNanoId } from '#shared/types/calc'
 
 export default defineEventHandler(async (event) => {
@@ -14,7 +13,7 @@ export default defineEventHandler(async (event) => {
   const e = await readValidatedBody(event, calcEntryV2Schema.parse)
 
   const prisma = usePrisma(event)
-  const calcId = await prisma.calc.findUnique({ where: { publicId }, select: { id: true } })
+  const calcId = await prisma.calc.findUnique({ where: { publicId, createdById: githubId }, select: { id: true } })
   if (!calcId) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
@@ -36,10 +35,17 @@ export default defineEventHandler(async (event) => {
       tags: {
         create: e.tags?.map((tag) => ({
           calcTag: {
-            connect: {
-              calcId_tag: {
+            connectOrCreate: {
+              where: {
+                calcId_tag: {
+                  calcId: calcId.id,
+                  tag,
+                },
+              },
+              create: {
                 calcId: calcId.id,
                 tag,
+                color: randomColor()
               },
             },
           },
@@ -47,7 +53,7 @@ export default defineEventHandler(async (event) => {
       },
     },
   })
-  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { publicId } })
+  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { id: calcId.id } })
 
   setResponseStatus(event, 201)
 })

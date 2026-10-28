@@ -117,7 +117,7 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
   const updateSettingsMutation = useMutation(
     {
       async mutationFn(calc: Calc) {
-        return await $fetch<InternalApi['/api/calc/:id']['put']>(`/api/calc/${id}`, {
+        return await $fetch<InternalApi['/api/calc/:id']['put']>(`/api/calc/${id.value}`, {
           body: calcSchema.encode(calc),
           method: 'PUT',
         })
@@ -399,10 +399,6 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
       toast.create({ body: v.message, variant: 'danger' })
     }
   })
-
-  function randomColor() {
-    return '#' + Math.floor(Math.random() * 16777215).toString(16)
-  }
 
   function setSettingsToDefaults() {
     const defaultVals = presetStore.currentPreset[calc.value.mode]

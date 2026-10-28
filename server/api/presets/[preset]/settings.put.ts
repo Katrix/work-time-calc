@@ -2,7 +2,9 @@ import z from 'zod'
 import { presetPartSchema } from '#shared/types/preset'
 
 export default defineEventHandler(async (event) => {
-  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse)
+  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse, {
+    decode: true,
+  })
 
   const session = await getUserSession(event)
   const githubId = session.user?.githubId
@@ -28,10 +30,16 @@ export default defineEventHandler(async (event) => {
       hoursPrecision: settings.hours.precision,
       tasksPrecision: settings.tasks.precision,
       tags: {
-        deleteMany: {
-          presetId,
-          NOT: { name: { in: allTags.map(({ name }) => name) } },
-        },
+        deleteMany: [
+          {
+            presetMode: 'hours',
+            name: { notIn: [...settings.hours.tags.keys()].map((name) => name) },
+          },
+          {
+            presetMode: 'tasks',
+            name: { notIn: [...settings.tasks.tags.keys()].map((name) => name) },
+          },
+        ],
         upsert: allTags.map(({ name, mode, color }) => ({
           where: {
             presetId_presetMode_name: {

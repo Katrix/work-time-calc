@@ -16,8 +16,21 @@ export default defineEventHandler(async (event) => {
   const e = await readValidatedBody(event, calcEntryV2Schema.parse)
 
   const prisma = usePrisma(event)
-  const calcId = await prisma.calc.findUnique({ where: { publicId, createdById: githubId }, select: { id: true } })
-  if (!calcId) {
+  const calcId = await prisma.calc.findUnique({
+    where: { publicId, createdById: githubId },
+    select: {
+      id: true,
+      entries: {
+        where: {
+          rank
+        },
+        select: {
+          id: true
+        }
+      }
+    },
+  })
+  if (!calcId || calcId.entries.length === 0) {
     throw createError({ statusCode: 404, statusMessage: 'Not found' })
   }
 
@@ -40,16 +53,31 @@ export default defineEventHandler(async (event) => {
         deleteMany: {
           NOT: {
             tag: {
-              in: e.tags,
+              in: e.tags ?? [],
             },
           },
         },
-        create: e.tags?.map((tag) => ({
-          calcTag: {
-            connect: {
-              calcId_tag: {
-                calcId: calcId.id,
-                tag,
+        connectOrCreate: (e.tags ?? []).map((tag) => ({
+          where: {
+            entryId_tag: {
+              entryId: calcId.entries[0].id,
+              tag,
+            },
+          },
+          create: {
+            calcTag: {
+              connectOrCreate: {
+                where: {
+                  calcId_tag: {
+                    calcId: calcId.id,
+                    tag,
+                  },
+                },
+                create: {
+                  calcId: calcId.id,
+                  tag,
+                  color: randomColor(),
+                },
               },
             },
           },
@@ -57,7 +85,7 @@ export default defineEventHandler(async (event) => {
       },
     },
   })
-  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { publicId } })
+  await prisma.calc.update({ data: { updatedAt: new Date() }, where: { id: calcId.id } })
 
   setResponseStatus(event, 204)
 })

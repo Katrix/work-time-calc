@@ -1,6 +1,6 @@
 -- CreateTable
 CREATE TABLE "user" (
-    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "id" INTEGER NOT NULL PRIMARY KEY,
     "username" TEXT NOT NULL,
     "email" TEXT NOT NULL,
     "last_updated_opened_calcs" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,

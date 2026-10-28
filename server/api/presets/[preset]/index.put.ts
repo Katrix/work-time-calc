@@ -1,9 +1,11 @@
 import z from 'zod'
 
 export default defineEventHandler(async (event) => {
-  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse)
+  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse, {
+    decode: true,
+  })
 
-  if (presetName === '' || presetName.includes('/')) {
+  if (!isValidPresetName(presetName)) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid preset name' })
   }
 
@@ -58,14 +60,14 @@ export default defineEventHandler(async (event) => {
             })),
         },
         githubOwners: {
-          create: Object.entries(p.github).map(([owner, ownerData]) => ({
+          create: [...p.github.entries()].map(([owner, ownerData]) => ({
             owner,
             active: ownerData.active,
             autocompleteWithoutOwner: ownerData.autocompleteWithoutOwner,
           })),
         },
         githubRepos: {
-          create: Object.entries(p.github).flatMap(([owner, { repos }]) =>
+          create: [...p.github.entries()].flatMap(([owner, { repos }]) =>
             [...repos.entries()].map(([repo, repoData]) => ({
               owner,
               repo,
@@ -112,22 +114,31 @@ export default defineEventHandler(async (event) => {
                 .map((r) => ({ from: r.from.toString(), to: r.to.toString() })),
             },
           },
-          create: p.holidayRules
+          connectOrCreate: p.holidayRules
             .filter((r) => r.type === 'fixed')
             .map((r) => ({
-              from: r.from.toString(),
-              to: r.to.toString(),
+              where: {
+                presetId_from_to: {
+                  presetId,
+                  from: r.from.toString(),
+                  to: r.to.toString(),
+                },
+              },
+              create: {
+                from: r.from.toString(),
+                to: r.to.toString(),
+              },
             })),
         },
         githubOwners: {
           deleteMany: {
             NOT: {
               owner: {
-                in: Object.keys(p.github),
+                in: [...p.github.keys()],
               },
             },
           },
-          upsert: Object.entries(p.github).map(([owner, ownerData]) => ({
+          upsert: [...p.github.entries()].map(([owner, ownerData]) => ({
             where: {
               presetId_owner: {
                 presetId,
@@ -149,7 +160,7 @@ export default defineEventHandler(async (event) => {
         githubRepos: {
           deleteMany: {
             NOT: {
-              OR: Object.entries(p.github).flatMap(([owner, { repos }]) =>
+              OR: [...p.github.entries()].flatMap(([owner, { repos }]) =>
                 [...repos.keys()].map((repo) => ({
                   owner,
                   repo,
@@ -157,7 +168,7 @@ export default defineEventHandler(async (event) => {
               ),
             },
           },
-          upsert: Object.entries(p.github).flatMap(([owner, { repos }]) =>
+          upsert: [...p.github.entries()].flatMap(([owner, { repos }]) =>
             [...repos.entries()].map(([repo, repoData]) => ({
               where: {
                 presetId_owner_repo: {
@@ -180,9 +191,16 @@ export default defineEventHandler(async (event) => {
           ),
         },
         tags: {
-          deleteMany: {
-            NOT: { name: { in: allTags.map(({ name }) => name) } },
-          },
+          deleteMany: [
+            {
+              presetMode: 'hours',
+              name: { notIn: [...p.hours.tags.keys()].map((name) => name) },
+            },
+            {
+              presetMode: 'tasks',
+              name: { notIn: [...p.tasks.tags.keys()].map((name) => name) },
+            },
+          ],
           upsert: allTags.map(({ name, mode, color }) => ({
             where: {
               presetId_presetMode_name: {

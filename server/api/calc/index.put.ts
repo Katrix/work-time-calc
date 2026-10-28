@@ -20,22 +20,25 @@ export default defineEventHandler(async (event) => {
   ])
 
   const c = await readValidatedBody(event, calcWithEntriesV2Schema.and(extraParams).parse)
+  const entriesByRank = c.entries.sort((a, b) => (a.rank < b.rank ? -1 : b.rank < a.rank ? 1 : 0))
 
   const prisma = usePrisma(event)
   const existing = !c.publicId
     ? null
     : await prisma.calc.findUnique({
         select: {
-          updatedAt: true,
+          id: true,
+          updatedAt: true
         },
         where: {
           publicId: c.publicId,
+          createdById: githubId,
         },
       })
 
   if (!existing) {
     const publicId = nanoid(12)
-    await prisma.calc.create({
+    const { id: calcId, entries } = await prisma.calc.create({
       data: {
         publicId,
         createdById: githubId,
@@ -62,12 +65,27 @@ export default defineEventHandler(async (event) => {
           })),
         },
       },
+      select: {
+        id: true,
+        entries: {
+          select: {
+            id: true,
+          },
+          orderBy: {
+            rank: 'asc'
+          }
+        },
+      },
+    })
+
+    await prisma.calcEntryTag.createMany({
+      data: entriesByRank.flatMap((e, i) => (e.tags ?? []).map((t) => ({ calcId, entryId: entries[i].id, tag: t }))),
     })
 
     setResponseStatus(event, 201)
     return { publicId }
   } else if (c.publicId && existing.updatedAt.getTime() < c.updatedAt.getTime()) {
-    await prisma.calc.update({
+    const { entries } = await prisma.calc.update({
       data: {
         name: c.name,
         mode: c.mode,
@@ -98,6 +116,22 @@ export default defineEventHandler(async (event) => {
       where: {
         publicId: c.publicId,
       },
+      select: {
+        entries: {
+          select: {
+            id: true,
+          },
+          orderBy: {
+            rank: 'asc'
+          }
+        },
+      },
+    })
+
+    await prisma.calcEntryTag.createMany({
+      data: entriesByRank.flatMap((e, i) =>
+        (e.tags ?? []).map((t) => ({ calcId: existing.id, entryId: entries[i].id, tag: t })),
+      ),
     })
 
     return { publicId: c.publicId }

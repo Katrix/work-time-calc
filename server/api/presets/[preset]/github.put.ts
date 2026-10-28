@@ -1,7 +1,9 @@
 import z from 'zod'
 
 export default defineEventHandler(async (event) => {
-  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse)
+  const { preset: presetName } = await getValidatedRouterParams(event, z.object({ preset: z.string() }).parse, {
+    decode: true,
+  })
 
   const session = await getUserSession(event)
   const githubId = session.user?.githubId
