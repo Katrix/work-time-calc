@@ -13,6 +13,7 @@ export default defineEventHandler(async (event) => {
       publicId: true,
       name: true,
       mode: true,
+      updatedAt: true,
     },
   })
 })

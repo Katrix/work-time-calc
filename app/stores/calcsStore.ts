@@ -220,6 +220,9 @@ export const useCalcStore = defineStore('calcs', () => {
 
   const route = useRoute()
   async function fetchLocalCalcList() {
+    const serverCalcs = queryClient.getQueryData<InternalApi['/api/calc/list']['get']>(['api', 'calc', 'list'])
+    const serverUpdatedAt = new Map(serverCalcs?.map((c) => [c.publicId, new Date(c.updatedAt).getTime()]))
+
     const keysToRemove = []
     for (let i = 0; i < localStorage.length; i++) {
       const key = localStorage.key(i)
@@ -243,6 +246,11 @@ export const useCalcStore = defineStore('calcs', () => {
       const calcFromStorage = decodeCalcFromString(data)
 
       if (session.loggedIn.value) {
+        const serverLastUpdated = serverUpdatedAt.get(id)
+        if (serverLastUpdated !== undefined && serverLastUpdated >= lastUpdated) {
+          continue // Server already has this version or a newer one
+        }
+
         let res
         try {
           res = await $fetch('/api/calc', {
