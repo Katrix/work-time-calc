@@ -49,7 +49,6 @@ export default defineEventHandler(async (event) => {
             color,
           },
           create: {
-            calcId: calcId.id,
             tag,
             color
           }
