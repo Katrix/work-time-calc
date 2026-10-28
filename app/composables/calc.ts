@@ -63,8 +63,14 @@ export function useComputedCalc(entry: Ref<CalcWithEntries>) {
 }
 
 function useLocalStoragePersister(id: Ref<string>, calc: Ref<CalcWithEntries>) {
-  const serializedData = computed(() => encodeCalcToString(calc.value))
+  const serializedData = computed(() =>
+    calcWithEntriesV2Schema.safeEncode(calc.value).success ? encodeCalcToString(calc.value) : null,
+  )
   watch(serializedData, (newV) => {
+    if (newV === null) {
+      return // Calc is mid-edit (e.g. a partially typed time) and would fail to decode
+    }
+
     localStorage.setItem(
       `calcs.${id.value}`,
       JSON.stringify({
@@ -144,6 +150,11 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
   const { pause, resume } = watchWithFilter(
     calc,
     async (newV) => {
+      if (!calcWithEntriesV2Schema.safeEncode(newV).success) {
+        // Calc is mid-edit (e.g. a partially typed time). Keep prev as the last valid state, and sync once valid again
+        return
+      }
+
       const oldV = prev
       prev = klona(toRaw(newV))
 
