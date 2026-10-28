@@ -2,9 +2,8 @@
   <ul class="directory">
     <slot />
     <li v-for="item in items">
-      <SidebarDirectoryItem v-if="'text' in item" :icon="item.icon">
-        <NuxtLink class="expanded-only" v-if="item.to" :to="item.to">{{ item.text }}</NuxtLink>
-        <span class="expanded-only" v-else>{{ item.text }}</span>
+      <SidebarDirectoryItem v-if="'text' in item" :icon="item.icon" :to="item.to">
+        <span class="expanded-only">{{ item.text }}</span>
       </SidebarDirectoryItem>
       <SidebarDirectory v-else :items="item" />
     </li>
