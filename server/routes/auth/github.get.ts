@@ -1,5 +1,5 @@
-import type { SecureSessionData } from '#auth-utils'
 import z from 'zod'
+import type { SecureSessionData } from '#auth-utils'
 
 const refreshTokensSchema = z.object({
   refresh_token: z.string().optional(),

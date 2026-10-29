@@ -4,7 +4,7 @@ import { easter } from 'date-easter'
 function easterAlignedHolidays(year: number) {
   const easterSunday = Temporal.PlainDate.from(easter(year))
   return {
-    easterSunday: easterSunday,
+    easterSunday,
     easterMonday: easterSunday.add({ days: 1 }),
     goodFriday: easterSunday.subtract({ days: 2 }),
     maundyThursday: easterSunday.subtract({ days: 3 }),
@@ -17,11 +17,12 @@ function easterAlignedHolidays(year: number) {
 function isHolidayByRule(date: Temporal.PlainDate, rule: HolidayRule): boolean {
   const easterHolidays = easterAlignedHolidays(date.year)
   switch (rule.type) {
-    case 'fixed':
+    case 'fixed': {
       const from = rule.from.toPlainDate({ year: date.year })
       const to = rule.to.toPlainDate({ year: date.year })
 
       return Temporal.PlainDate.compare(from, date) <= 0 && Temporal.PlainDate.compare(to, date) >= 0
+    }
     case 'easter':
       return (
         Temporal.PlainDate.compare(easterHolidays.easterSunday, date) === 0 ||

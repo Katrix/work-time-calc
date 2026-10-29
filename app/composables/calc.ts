@@ -4,7 +4,7 @@ import { Intl as TemporalIntl, Temporal } from '@js-temporal/polyfill'
 import z from 'zod'
 import type { FetchError } from 'ofetch'
 import type { Reactive } from 'vue'
-import { type QueryClient, useMutation, type UseMutationReturnType, useQueryClient } from '@tanstack/vue-query'
+import { type QueryClient, useMutation, useQueryClient } from '@tanstack/vue-query'
 import { generateKeyBetween, generateNKeysBetween } from 'fractional-indexing'
 import { debounceFilter } from '@vueuse/core'
 import { klona } from 'klona/full'
@@ -179,9 +179,9 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
         const ranks = new Set([...oldByRank.keys(), ...newByRank.keys()])
 
         let updateAll = false
-        let prospectiveAdds: CalcEntry[] = []
-        let prospectiveUpdates: CalcEntry[] = []
-        let prospectiveRemoves: string[] = []
+        const prospectiveAdds: CalcEntry[] = []
+        const prospectiveUpdates: CalcEntry[] = []
+        const prospectiveRemoves: string[] = []
         let prospectiveRequestCount = 0
 
         for (const rank of ranks) {
@@ -264,7 +264,7 @@ export function makeNewCalc(mode: 'hours' | 'tasks', preset: Preset): CalcWithEn
   return {
     version: currentCalcVersion,
     name: nameDefault(mode),
-    mode: mode,
+    mode,
     savedUpTime: 0,
     savedUpVacation: 0,
     workTime: defaultVal.workTime,
@@ -398,7 +398,7 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
   const queryClient = useQueryClient()
   const toast = useToast()
 
-  const { calc, lastUpdated, error } = await loadCalc(id)
+  const { calc, error } = await loadCalc(id)
 
   watch(error, (v) => {
     if (v) {

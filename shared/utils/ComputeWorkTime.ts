@@ -1,5 +1,5 @@
 import { Temporal } from '@js-temporal/polyfill'
-import { type CalcEntry } from '../types/calc'
+import type { CalcEntry } from '../types/calc'
 
 export type WorkDays = { [group: string]: CalcEntry[] }
 
@@ -169,10 +169,6 @@ export function dateToMinutesRounded(d: Date, precision: number) {
   const roundedMinutes = roundedTotalMinutes - roundedHours * 60
 
   return roundedHours * 60 + roundedMinutes
-}
-
-function dateToTimeRoundedString(d: Date, precision: number) {
-  return strFromMinutes(dateToMinutesRounded(d, precision))
 }
 
 export function currentTime(precision: number) {

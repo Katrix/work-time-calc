@@ -4,8 +4,6 @@ declare module '#auth-utils' {
     githubId: number
   }
 
-  interface UserSession {}
-
   interface SecureSessionData {
     githubAccessToken: string
     githubRefreshToken?: string

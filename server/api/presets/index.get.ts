@@ -102,7 +102,7 @@ export default defineEventHandler(async (event) => {
               precision: rawPreset.tasksPrecision,
               tags: new Map(rawPreset.tags.filter((t) => t.presetMode === 'tasks').map((t) => [t.name, t.color])),
             },
-            github: github,
+            github,
             holidayRules,
           }),
         ]

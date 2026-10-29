@@ -1,5 +1,5 @@
 <template>
-  <div class="d-flex justify-content-center align-items-center mt-5" v-show="!foundCalc">
+  <div v-show="!foundCalc" class="d-flex justify-content-center align-items-center mt-5">
     <div v-if="calcStore.loading">
       <FontAwesomeIcon :icon="['fa', 'spinner']" spin size="8x"></FontAwesomeIcon>
     </div>
@@ -7,7 +7,7 @@
       <div class="card-header">Calculations</div>
 
       <ul class="list-group list-group-flush">
-        <li class="list-group-item" v-for="calcId in calcStore.calcOrder" :key="calcId">
+        <li v-for="calcId in calcStore.calcOrder" :key="calcId" class="list-group-item">
           <NuxtLink :to="{ name: 'calculation', params: { calculation: calcId } }">
             {{ calcStore.allCalcs.get(calcId)?.name }}
           </NuxtLink>

@@ -2,7 +2,7 @@
   <fieldset>
     <legend>Github</legend>
 
-    <div class="row" v-if="loggedIn && repoNamesStatus === 'success'">
+    <div v-if="loggedIn && repoNamesStatus === 'success'" class="row">
       <BFormGroup class="col-xl-4" label-for="githubRepoOwners">
         <template #label>
           <span class="d-flex justify-content-between">
@@ -24,7 +24,6 @@
         <BFormGroup v-if="activeOwners.length !== 0" label="Repositories:" label-for="githubRepositories">
           <BFormSelect
             id="githubRepositories"
-            @change="addRepo"
             v-model="currentRepo"
             :options="repoOptions"
             :style="{
@@ -32,6 +31,7 @@
               borderBottomRightRadius: activeOwners.length !== 0 ? 0 : undefined,
               borderBottom: activeOwners.length !== 0 ? 0 : undefined,
             }"
+            @change="addRepo"
           ></BFormSelect>
         </BFormGroup>
 

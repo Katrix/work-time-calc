@@ -11,20 +11,20 @@
     <div class="card-body">
       <div class="card-text">
         <BFormGroup label="Arrived:">
-          <CalcInputFrom :precision="calcInfo.calc.precision" v-model="item.from" />
+          <CalcInputFrom v-model="item.from" :precision="calcInfo.calc.precision" />
         </BFormGroup>
 
         <BFormGroup label="Left:" class="mb-2">
           <CalcInputTo
-            :precision="calcInfo.calc.precision"
             v-model:to="item.to"
             v-model:is-tracking="item.isTracking"
+            :precision="calcInfo.calc.precision"
           />
         </BFormGroup>
 
         <!-- FIXME: This causes a hydration error if it's not client only -->
         <ClientOnly>
-          <dl class="row" v-if="calcInfo.computedCalc?.entries?.[index]">
+          <dl v-if="calcInfo.computedCalc?.entries?.[index]" class="row">
             <dt class="col-5">Worked time:</dt>
             <dd class="col-7">{{ calcInfo.computedCalc.entries[index].workedTime }}</dd>
             <dt class="col-5">Extra time:</dt>
@@ -63,7 +63,7 @@
       <button class="btn btn-secondary" @click="calcInfo.addRowAfter(index)">
         <FontAwesomeIcon :icon="['fas', 'plus']" />
       </button>
-      <button class="btn btn-secondary" v-if="calcInfo.calc.entries.length > 1" @click="calcInfo.removeRow(index)">
+      <button v-if="calcInfo.calc.entries.length > 1" class="btn btn-secondary" @click="calcInfo.removeRow(index)">
         <FontAwesomeIcon :icon="['fas', 'minus']" />
       </button>
     </div>

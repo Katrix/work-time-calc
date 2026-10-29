@@ -1,6 +1,6 @@
 <template>
   <ul class="nav nav-tabs" role="tablist">
-    <li class="nav-item" role="presentation" v-for="id in calcStore.calcOrder" :key="id">
+    <li v-for="id in calcStore.calcOrder" :key="id" class="nav-item" role="presentation">
       <NuxtLink class="nav-link" :to="{ name: 'calculation', params: { calculation: id } }" active-class="active">
         {{ calcStore.allCalcs.get(id)?.name }}
         <BButton variant="danger" size="sm" @click.prevent="calcStore.closeCalc(id)">

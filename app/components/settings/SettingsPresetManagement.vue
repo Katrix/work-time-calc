@@ -1,9 +1,9 @@
 <template>
   <BFormGroup label="New preset">
     <BInputGroup>
-      <BFormInput type="text" v-model="newPresetName" :state="newPresetNameValid ? null : false" />
+      <BFormInput v-model="newPresetName" type="text" :state="newPresetNameValid ? null : false" />
       <template #append>
-        <button type="button" class="btn btn-secondary" @click="newPreset" :disabled="!newPresetNameValid">
+        <button type="button" class="btn btn-secondary" :disabled="!newPresetNameValid" @click="newPreset">
           Create
           <FontAwesomeIcon v-if="presetStore.newPreset.isPending" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
         </button>
@@ -27,8 +27,8 @@
       <BFormGroup v-if="presetStore.currentPresetId !== 'Default'" label="Name">
         <BInputGroup>
           <BFormInput
-            type="text"
             v-model="renamePresetName"
+            type="text"
             :state="isValidPresetName(renamePresetName) ? null : false"
           />
           <template #append>

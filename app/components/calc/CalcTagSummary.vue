@@ -1,9 +1,9 @@
 <template>
-  <div class="card" v-if="hasTagSummary">
+  <div v-if="hasTagSummary" class="card">
     <div class="card-header">Summary</div>
 
     <ul class="list-group list-group-flush">
-      <li class="list-group-item" v-for="(summary, tag) in tagSummaries" :key="tag">
+      <li v-for="(summary, tag) in tagSummaries" :key="tag" class="list-group-item">
         <TagBadge :tag="tag" :calc-info="calcInfo" :hide-delete="true" />
         Worked time: {{ summary.time }} Entries: {{ summary.names.join(', ') }} Notes: {{ summary.notes.join(', ') }}
       </li>

@@ -1,7 +1,7 @@
 <template>
   <ul class="directory">
     <slot />
-    <li v-for="item in items">
+    <li v-for="(item, index) in items" :key="index">
       <SidebarDirectoryItem v-if="'text' in item" :icon="item.icon" :to="item.to">
         <span class="expanded-only">{{ item.text }}</span>
       </SidebarDirectoryItem>

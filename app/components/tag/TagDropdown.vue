@@ -1,5 +1,5 @@
 <template>
-  <BDropdown style="display: inline; margin-left: 0.2rem" no-caret auto-close="outside" size="sm" ref="dropdown">
+  <BDropdown ref="dropdown" style="display: inline; margin-left: 0.2rem" no-caret auto-close="outside" size="sm">
     <template #button-content>
       <FontAwesomeIcon :icon="['fas', 'plus']" />
     </template>

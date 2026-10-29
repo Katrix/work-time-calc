@@ -1,6 +1,6 @@
 import z from 'zod'
-import { strToMinutes } from '../utils/ComputeWorkTime'
 import { generateNKeysBetween } from 'fractional-indexing'
+import { strToMinutes } from '../utils/ComputeWorkTime'
 
 export const currentCalcVersion = 2
 

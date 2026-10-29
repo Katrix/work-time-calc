@@ -1,7 +1,7 @@
 // @ts-check
-import withNuxt from './.nuxt/eslint.config.mjs'
 import neostandard from 'neostandard'
 import pluginSecurity from 'eslint-plugin-security'
+import withNuxt from './.nuxt/eslint.config.mjs'
 
 export default withNuxt(
   ...(neostandard({

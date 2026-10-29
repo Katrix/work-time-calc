@@ -1,4 +1,4 @@
-import { type H3Event } from 'h3'
+import type { H3Event } from 'h3'
 
 export function setPresetsUpdatedNow(event: H3Event, userId: number) {
   return usePrisma(event).user.update({ where: { id: userId }, data: { lastUpdatedPresets: new Date() } })

@@ -1,16 +1,16 @@
 <template>
   <BFormInput v-if="mode === 'hours'" v-model="name"></BFormInput>
-  <div v-else style="position: relative" ref="wrapper">
+  <div v-else ref="wrapper" style="position: relative">
     <BFormInput
-      ref="entryName"
       id="entryName"
+      ref="entryName"
+      v-model="name"
       tabindex="2"
       :style="{
         borderBottomLeftRadius: dropdownVisible && autocompleteOptions.length > 0 ? 0 : undefined,
         borderBottomRightRadius: dropdownVisible && autocompleteOptions.length > 0 ? 0 : undefined,
         borderBottom: dropdownVisible && autocompleteOptions.length > 0 ? 0 : undefined,
       }"
-      v-model="name"
       @input="hasEdited = true"
       @focus="onFocus"
       @blur="onBlur"
@@ -20,8 +20,8 @@
     />
     <ul
       v-if="dropdownVisible"
-      class="list-group"
       ref="listElem"
+      class="list-group"
       role="listbox"
       :aria-activedescendant="
         selectedDropdown !== null && searchOptionElems !== null && searchOptionElems
@@ -44,8 +44,8 @@
       <CalcInputSearchOption
         v-for="(item, idx) in autocompleteOptions"
         ref="searchOptionElem"
-        :tabindex="3 + idx"
         :key="idx"
+        :tabindex="3 + idx"
         :selected="idx === selectedDropdown"
         :is-first="idx === 0"
         :text="item.text"
@@ -59,8 +59,8 @@
 
 <script setup lang="ts">
 import { useQuery } from '@tanstack/vue-query'
-import CalcInputSearchOption from '~/components/calc/input/CalcInputSearchOption.vue'
 import type { InternalApi } from 'nitropack/types'
+import CalcInputSearchOption from '~/components/calc/input/CalcInputSearchOption.vue'
 
 const presetStore = usePresetStore()
 const auth = useUserSession()

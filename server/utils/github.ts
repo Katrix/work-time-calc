@@ -1,4 +1,4 @@
-import { type H3Event } from 'h3'
+import type { H3Event } from 'h3'
 import { Octokit } from '@octokit/core'
 import { createOAuthUserAuth, type GitHubAppAuthenticationWithExpiration } from '@octokit/auth-oauth-user'
 import { type Api, restEndpointMethods } from '@octokit/plugin-rest-endpoint-methods'
@@ -6,7 +6,7 @@ import { type PaginateInterface, paginateRest } from '@octokit/plugin-paginate-r
 
 export async function useOctokit(event: H3Event) {
   const session = await requireUserSession(event)
-  let accessToken = session.secure?.githubAccessToken
+  const accessToken = session.secure?.githubAccessToken
   if (!accessToken) {
     throw createError({ statusCode: 401, statusMessage: 'Unauthorized' })
   }

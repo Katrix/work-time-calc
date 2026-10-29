@@ -3,8 +3,8 @@
     <legend>Holidays</legend>
 
     <BFormCheckboxGroup
-      stacked
       v-model="checkedHolidays"
+      stacked
       :options="namedOptions"
       name="holidays"
       @change="markHolidaysUpdates"

@@ -256,9 +256,9 @@ describe('currentTime', () => {
 
   it('throws on invalid precision (not integer, <= 0)', () => {
     vi.setSystemTime(new Date(2020, 0, 1, 9, 0, 0))
-    expect(() => currentTime(0 as any)).toThrow()
-    expect(() => currentTime(-5 as any)).toThrow()
-    expect(() => currentTime(4.5 as any)).toThrow()
-    expect(() => currentTime(Number.NaN as any)).toThrow()
+    expect(() => currentTime(0)).toThrow()
+    expect(() => currentTime(-5)).toThrow()
+    expect(() => currentTime(4.5)).toThrow()
+    expect(() => currentTime(Number.NaN)).toThrow()
   })
 })

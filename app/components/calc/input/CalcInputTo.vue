@@ -2,17 +2,17 @@
   <BInputGroup>
     <CalcInputDuration
       :model-value="isTracking ? dateToMinutesRounded(now, precision) : to"
-      @update:model-value="(v) => (to = v)"
       :disabled="isTracking"
       :required="false"
+      @update:model-value="(v) => (to = v)"
     />
     <template #append>
       <button class="btn btn-secondary" @click="to = currentTime(precision)">
         <FontAwesomeIcon :icon="['fas', 'clock']" />
       </button>
       <button
-        class="btn btn-secondary"
         v-if="!isTracking && (to ?? '') === ''"
+        class="btn btn-secondary"
         @click="
           () => {
             to = currentTime(precision)
@@ -23,8 +23,8 @@
         <FontAwesomeIcon :icon="['fas', 'hourglass-start']" />
       </button>
       <button
-        class="btn btn-primary"
         v-else-if="isTracking"
+        class="btn btn-primary"
         @click="
           () => {
             to = currentTime(precision)
@@ -34,7 +34,7 @@
       >
         <FontAwesomeIcon :icon="['fas', 'hourglass-half']" />
       </button>
-      <button class="btn btn-secondary" v-else disabled>
+      <button v-else class="btn btn-secondary" disabled>
         <FontAwesomeIcon :icon="['fas', 'hourglass-end']" />
       </button>
     </template>

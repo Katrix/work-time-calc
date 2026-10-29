@@ -1,11 +1,12 @@
 import { describe, it, expect } from 'vitest'
 import { mount } from '@vue/test-utils'
+import { BFormInput } from 'bootstrap-vue-next'
 import CalcInputParsed from '../../app/components/calc/input/CalcInputParsed.vue'
 import { strToMinutesSafe, strFromMinutes } from '../../shared/utils/ComputeWorkTime'
-import { BFormInput } from 'bootstrap-vue-next'
 
 describe('CalcInputParsed.vue', () => {
   it('emits parsed values and formats modelValue updates', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wrapper = mount(CalcInputParsed as any, {
       props: {
         modelValue: null,
@@ -25,6 +26,7 @@ describe('CalcInputParsed.vue', () => {
   })
 
   it('handles required flag and invalid inputs (whitespace/plus)', async () => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     const wrapper = mount(CalcInputParsed as any, {
       props: {
         modelValue: null,
@@ -45,7 +47,7 @@ describe('CalcInputParsed.vue', () => {
       return emitted![emitted!.length - 1]
     }
 
-    let emitted = wrapper.emitted<(number | null | undefined)[]>('update:modelValue')
+    const emitted = wrapper.emitted<(number | null | undefined)[]>('update:modelValue')
     expect(emitted).toBeUndefined()
 
     const bForm = wrapper.findComponent(BFormInput)

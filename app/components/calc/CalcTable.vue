@@ -23,7 +23,7 @@
       </tr>
     </thead>
     <tbody>
-      <tr v-for="(item, index) in calcInfo.calc.entries" :class="trClasses(item)">
+      <tr v-for="(item, index) in calcInfo.calc.entries" :key="item.rank" :class="trClasses(item)">
         <td>
           <CalcInputName
             v-model="item.name"
@@ -32,12 +32,12 @@
           />
         </td>
 
-        <td><CalcInputFrom :precision="calcInfo.calc.precision" v-model="item.from" /></td>
+        <td><CalcInputFrom v-model="item.from" :precision="calcInfo.calc.precision" /></td>
         <td>
           <CalcInputTo
-            :precision="calcInfo.calc.precision"
             v-model:to="item.to"
             v-model:is-tracking="item.isTracking"
+            :precision="calcInfo.calc.precision"
           />
         </td>
 
@@ -68,14 +68,14 @@
           />
         </td>
 
-        <td><BFormInput v-model="calcInfo.calc.entries[index].notes" /></td>
+        <td><BFormInput v-model="item.notes" /></td>
 
         <!-- Add/Remove row -->
         <td>
           <button class="btn btn-secondary" @click="calcInfo.addRowAfter(index)">
             <FontAwesomeIcon :icon="['fas', 'plus']" />
           </button>
-          <button class="btn btn-secondary" v-if="calcInfo.calc.entries.length > 1" @click="calcInfo.removeRow(index)">
+          <button v-if="calcInfo.calc.entries.length > 1" class="btn btn-secondary" @click="calcInfo.removeRow(index)">
             <FontAwesomeIcon :icon="['fas', 'minus']" />
           </button>
         </td>

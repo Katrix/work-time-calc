@@ -3,7 +3,7 @@
     <div :class="{ 'hours-settings': mode === 'hours', 'tasks-settings': mode === 'tasks' }">
       <label style="grid-area: name-description" for="nameInput">Name:</label>
       <div style="grid-area: name-content">
-        <BFormInput id="nameInput" v-model="calcInfo.calc.name"></BFormInput>
+        <BFormInput id="nameInput" v-model="calc.name"></BFormInput>
       </div>
 
       <div :key="'modeSwitch'" style="grid-area: mode-switch" class="d-flex">
@@ -16,7 +16,7 @@
         Saved up time:
       </label>
       <div v-if="mode === 'hours'" style="grid-area: saved-up-time-content">
-        <CalcInputDuration id="savedUpTimeInput" v-model="calcInfo.calc.savedUpTime" />
+        <CalcInputDuration id="savedUpTimeInput" v-model="calc.savedUpTime" />
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: saved-up-vacation-description" for="savedUpVacationInput">
@@ -25,7 +25,7 @@
       <div v-if="mode === 'hours'" style="grid-area: saved-up-vacation-content">
         <CalcInputParsed
           id="savedUpVacationInput"
-          v-model="calcInfo.calc.savedUpVacation"
+          v-model="calc.savedUpVacation"
           :parse="(s) => Number(s.replaceAll(',', '.'))"
           :format="(v) => v.toLocaleString('en-US')"
         />
@@ -33,21 +33,21 @@
 
       <label v-if="mode === 'hours'" style="grid-area: work-time-description" for="workTimeInput">Work time:</label>
       <div v-if="mode === 'hours'" style="grid-area: work-time-content">
-        <CalcInputDuration id="workTimeInput" v-model="calcInfo.calc.workTime" />
+        <CalcInputDuration id="workTimeInput" v-model="calc.workTime" />
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: default-work-from-description" for="defaultWorkFromInput">
         Default work from:
       </label>
       <div v-if="mode === 'hours'" style="grid-area: default-work-from-content">
-        <CalcInputDuration id="defaultWorkFromInput" v-model="calcInfo.calc.defaultFrom" />
+        <CalcInputDuration id="defaultWorkFromInput" v-model="calc.defaultFrom" />
       </div>
 
       <label v-if="mode === 'hours'" style="grid-area: default-work-to-description" for="defaultWorkToInput">
         Default work to:
       </label>
       <div v-if="mode === 'hours'" style="grid-area: default-work-to-content">
-        <CalcInputDuration id="defaultWorkToInput" v-model="calcInfo.calc.defaultTo" />
+        <CalcInputDuration id="defaultWorkToInput" v-model="calc.defaultTo" />
       </div>
 
       <label class="visually-hidden" for="inputFile">Input:</label>
@@ -59,7 +59,7 @@
             <button
               class="btn btn-secondary"
               type="button"
-              :disabled="!saveFile && !calcInfo.calc.name"
+              :disabled="!saveFile && !calc.name"
               @click="save()"
             >
               Save
@@ -67,7 +67,7 @@
             <button
               class="btn btn-secondary"
               type="button"
-              :disabled="!saveFile && !calcInfo.calc.name"
+              :disabled="!saveFile && !calc.name"
               @click="saveCSV()"
             >
               Save CSV
@@ -78,7 +78,7 @@
 
       <label style="grid-area: precision-description" for="precisionInput">Precision (minutes)</label>
       <div style="grid-area: precision-content">
-        <BFormInput id="precisionInput" v-model.number="calcInfo.calc.precision" type="number" />
+        <BFormInput id="precisionInput" v-model.number="calc.precision" type="number" />
       </div>
 
       <span class="visually-hidden">Actions:</span>
@@ -86,12 +86,12 @@
         <div class="btn-toolbar" role="toolbar">
           <div class="btn-group" role="group" aria-label="Actions">
             <button class="btn btn-secondary" type="button" variant="danger" @click="calcInfo.clear()">Clear</button>
-            <button class="btn btn-danger" v-if="mode === 'hours'" type="button" @click="calcInfo.fillWorkdays()">
+            <button v-if="mode === 'hours'" class="btn btn-danger" type="button" @click="calcInfo.fillWorkdays()">
               Fill workdays
             </button>
             <button
-              class="btn btn-secondary"
               v-if="mode === 'hours'"
+              class="btn btn-secondary"
               type="button"
               @click="calcInfo.fillRemainingWorkdays()"
             >
@@ -107,7 +107,7 @@
     </div>
 
     <BModal v-model="deleteModal" title="Delete calc?">
-      Do you want to delete the calc "{{ calcInfo.calc.name }}"?
+      Do you want to delete the calc "{{ calc.name }}"?
 
       <template #ok>
         <BButton variant="danger" :disabled="deleting" @click="deleteCalc()">
@@ -127,7 +127,8 @@ const calcStore = useCalcStore()
 const deleteModal = ref(false)
 const deleting = ref(false)
 
-const mode = computed(() => props.calcInfo.calc.mode)
+const calc = computed(() => props.calcInfo.calc)
+const mode = computed(() => calc.value.mode)
 
 const saveFile = ref<File | null>(null)
 

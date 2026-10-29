@@ -1,7 +1,7 @@
 import { PrismaD1 } from '@prisma/adapter-d1'
-import { PrismaClient } from '../generated/prisma/client'
-import { type H3Event } from 'h3'
+import type { H3Event } from 'h3'
 import type { D1Database } from '@cloudflare/workers-types'
+import { PrismaClient } from '../generated/prisma/client'
 
 export function usePrisma(event: H3Event): PrismaClient {
   const adapter = new PrismaD1(event.context.cloudflare.env.DB as D1Database)
