@@ -35,21 +35,24 @@ if (session.loggedIn.value) {
   await callOnce('fetchCalcData', async () => await calcStore.fetchData())
 }
 
-const trackedIntervalId = ref<number>()
-const now = useNow()
+const now = useTickedNow()
 const toast = useToast()
 
-onMounted(async () => {
-  trackedIntervalId.value = setInterval(() => {
+useIntervalFn(
+  () => {
     now.value = new Date()
-  }, 1000) as unknown as number
+  },
+  1000,
+  { immediate: true },
+)
 
+onMounted(async () => {
   presetStore.fetchLocalData(toast)
   await calcStore.fetchLocalData()
 })
-onUnmounted(() => clearInterval(trackedIntervalId.value))
 
 const updateEventFilter = debounceFilter(1_500)
+useFlushOnHidden(updateEventFilter)
 watchWithFilter(
   computed(() => presetStore.updates),
   () => {
@@ -58,14 +61,5 @@ watchWithFilter(
     }
   },
   { deep: true, eventFilter: updateEventFilter },
-)
-
-const visibility = useDocumentVisibility()
-watch(
-  visibility,
-  (v) => {
-    if (v === 'hidden') updateEventFilter.flush()
-  },
-  { flush: 'sync' },
 )
 </script>

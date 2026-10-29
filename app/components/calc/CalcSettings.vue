@@ -120,7 +120,6 @@
 
 <script setup lang="ts">
 import { stringify as csvStringify } from 'csv-stringify/browser/esm/sync'
-import type { InternalApi } from 'nitropack/types'
 
 const props = defineProps<{ calcInfo: CalcInfo }>()
 const calcStore = useCalcStore()
@@ -146,18 +145,7 @@ async function load() {
 }
 
 function save() {
-  // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
-  const blob = new Blob([encodeCalcToString(props.calcInfo.calc)], { type: 'application/json' })
-  const a = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  a.href = url
-  a.download = fileName('json')
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 0)
+  downloadFile(new Blob([encodeCalcToString(props.calcInfo.calc)], { type: 'application/json' }), fileName('json'))
 }
 
 function saveCSV() {
@@ -189,19 +177,7 @@ function saveCSV() {
   }
 
   const str = csvStringify(computedWorkDays, { header: true })
-
-  // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
-  const blob = new Blob([str], { type: 'text/csv' })
-  const a = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  a.href = url
-  a.download = fileName('csv')
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 0)
+  downloadFile(new Blob([str], { type: 'text/csv' }), fileName('csv'))
 }
 
 async function deleteCalc() {

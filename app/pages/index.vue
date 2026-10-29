@@ -19,7 +19,7 @@
         New calculation
         <FontAwesomeIcon v-if="loadingNew" :icon="['fas', 'spinner']" spin></FontAwesomeIcon>
       </button>
-      <button class="btn btn-primary" @click="loadFromFile">
+      <button class="btn btn-primary" @click="loadFromFile()">
         Load existing
         <FontAwesomeIcon v-if="loadingFile" :icon="['fas', 'spinner']" spin></FontAwesomeIcon>
       </button>
@@ -40,20 +40,18 @@ async function addCalc() {
   loadingNew.value = false
 }
 
-async function loadFromFile() {
-  loadingFile.value = true
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.json'
-  input.onchange = async (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0]
-    if (file) {
+const { open: loadFromFile, onChange } = useFileDialog({ accept: '.json', reset: true })
+onChange(async (fileList) => {
+  if (fileList && fileList.length > 0) {
+    try {
+      loadingFile.value = true
+      const file = fileList[0]
       const id = await calcStore.addCalc()
       const info = await useCalcsInfo(computed(() => id))
       await info.loadFromFile(file)
+    } finally {
+      loadingFile.value = false
     }
-    loadingFile.value = false
   }
-  input.click()
-}
+})
 </script>

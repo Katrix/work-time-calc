@@ -1,6 +1,6 @@
 <template>
   <BFormInput v-if="mode === 'hours'" v-model="name"></BFormInput>
-  <div v-else style="position: relative">
+  <div v-else style="position: relative" ref="wrapper">
     <BFormInput
       ref="entryName"
       id="entryName"
@@ -70,10 +70,7 @@ const formInput = useTemplateRef<HTMLInputElement>('entryName')
 const listElem = useTemplateRef<HTMLUListElement>('listElem')
 const searchOptionElems = useTemplateRef<InstanceType<typeof CalcInputSearchOption>[]>('searchOptionElem')
 
-const isVisible = ref(false)
-useIntersectionObserver(formInput, ([entry]) => {
-  isVisible.value = entry?.isIntersecting ?? false
-})
+const isVisible = useElementVisibility(formInput)
 
 const dropdownVisible = ref(false)
 const selectedDropdown = ref<number | null>(null)
@@ -135,7 +132,7 @@ const { data: currentIssues } = useQuery({
   staleTime: 1000 * 60 * 5,
   retry: computed(() => false),
   refetchOnWindowFocus: false,
-  refetchOnReconnect: false
+  refetchOnReconnect: false,
 })
 
 function onFocus() {

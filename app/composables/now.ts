@@ -1,1 +1,0 @@
-export const useNow = () => useState('now', () => new Date())

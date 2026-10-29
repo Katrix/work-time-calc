@@ -10,7 +10,7 @@ import { debounceFilter } from '@vueuse/core'
 import { klona } from 'klona/full'
 
 export function computedCalc(calc: CalcWithEntries) {
-  const now = useNow()
+  const now = useTickedNow()
   const workDaysObj: WorkDays = {}
   if (calc.mode === 'tasks') {
     workDaysObj[calc.name] = calc.entries
@@ -44,7 +44,7 @@ export function computedCalc(calc: CalcWithEntries) {
 }
 
 export function useComputedCalc(entry: Ref<CalcWithEntries>) {
-  const now = useNow()
+  const now = useTickedNow()
   const computedRef = ref<ComputedWorkTime>({ entries: [], summaryByTag: {} })
 
   function doCompute() {
@@ -146,6 +146,7 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
 
   const session = useUserSession()
   const saveEventFilter = debounceFilter(1000)
+  useFlushOnHidden(saveEventFilter)
 
   let prev = klona(toRaw(calc.value))
   const { pause, resume } = watchWithFilter(
@@ -229,15 +230,6 @@ function useServerPersister(id: Ref<string>, calc: Ref<CalcWithEntries>, queryCl
       eventFilter: saveEventFilter,
       deep: true,
     },
-  )
-
-  const visibility = useDocumentVisibility()
-  watch(
-    visibility,
-    (v) => {
-      if (v === 'hidden') saveEventFilter.flush()
-    },
-    { flush: 'sync' },
   )
 }
 

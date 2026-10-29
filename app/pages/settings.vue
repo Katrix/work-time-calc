@@ -16,7 +16,7 @@
     <hr />
 
     <!-- <button type="button" class="btn btn-secondary mt-3 me-2" @click="exportAll">Export all as zip</button> -->
-    <button type="button" class="btn btn-secondary mt-3 me-2" :disabled="importing" @click="importFiles">
+    <button type="button" class="btn btn-secondary mt-3 me-2" :disabled="importing" @click="importFiles()">
       Import calcs
       <FontAwesomeIcon v-if="importing" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
     </button>
@@ -42,30 +42,23 @@ const toast = useToast()
 
 const importing = ref(false)
 
-function importFiles() {
-  const input = document.createElement('input')
-  input.type = 'file'
-  input.accept = '.json'
-  input.multiple = true
-  input.onchange = async (e) => {
-    const files = [...((e.target as HTMLInputElement).files ?? [])]
-    if (!files.length) {
-      return
-    }
-
-    importing.value = true
-    try {
-      const { imported, failed } = await calcStore.importCalcs(files)
-      toast.create({ body: `Imported ${imported} calc${imported === 1 ? '' : 's'}`, variant: 'success' })
-      if (failed.length) {
-        toast.create({ body: `Failed to import ${failed.join(', ')}`, variant: 'danger' })
-      }
-    } finally {
-      importing.value = false
-    }
+const { open: importFiles, onChange } = useFileDialog({ accept: '.json', multiple: true, reset: true })
+onChange(async (files) => {
+  if (!files || files.length === 0) {
+    return
   }
-  input.click()
-}
+
+  importing.value = true
+  try {
+    const { imported, failed } = await calcStore.importCalcs([...files])
+    toast.create({ body: `Imported ${imported} calc${imported === 1 ? '' : 's'}`, variant: 'success' })
+    if (failed.length) {
+      toast.create({ body: `Failed to import ${failed.join(', ')}`, variant: 'danger' })
+    }
+  } finally {
+    importing.value = false
+  }
+})
 
 /* TODO: Reimplement later
 function exportAll() {
@@ -81,18 +74,7 @@ function exportAll() {
     files[name] = strToU8(encodeCalcToString(calc))
   }
 
-  // https://stackoverflow.com/questions/13405129/create-and-save-a-file-with-javascript
-  const blob = new Blob([zipSync(files)], { type: 'application/zip' })
-  const a = document.createElement('a')
-  const url = URL.createObjectURL(blob)
-  a.href = url
-  a.download = 'work-time-calcs.zip'
-  document.body.appendChild(a)
-  a.click()
-  setTimeout(() => {
-    document.body.removeChild(a)
-    URL.revokeObjectURL(url)
-  }, 0)
+  downloadFile(new Blob([zipSync(files)], { type: 'application/zip' }), 'work-time-calcs.zip')
 }
 */
 </script>

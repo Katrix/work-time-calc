@@ -45,5 +45,5 @@
 const to = defineModel<number | undefined | null>('to', { required: true })
 const isTracking = defineModel<boolean | undefined>('isTracking', { required: true })
 defineProps<{ precision: number }>()
-const now = useNow()
+const now = useTickedNow()
 </script>
