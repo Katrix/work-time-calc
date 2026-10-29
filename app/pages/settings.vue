@@ -15,7 +15,7 @@
 
     <hr />
 
-    <!-- <button type="button" class="btn btn-secondary mt-3 me-2" @click="exportAll">Export all as zip</button> -->
+    <button type="button" class="btn btn-secondary mt-3 me-2" href="/api/calc/exportAll">Export all as zip</button>
     <button type="button" class="btn btn-secondary mt-3 me-2" :disabled="importing" @click="importFiles()">
       Import calcs
       <FontAwesomeIcon v-if="importing" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
@@ -34,8 +34,6 @@
 </template>
 
 <script setup lang="ts">
-// import { strToU8, zipSync } from 'fflate'
-
 const presetStore = usePresetStore()
 const calcStore = useCalcStore()
 const toast = useToast()
@@ -59,22 +57,4 @@ onChange(async (files) => {
     importing.value = false
   }
 })
-
-/* TODO: Reimplement later
-function exportAll() {
-  const files: Record<string, Uint8Array> = {}
-  // Iterate over all calcs, not just calcOrder, so that closed calcs are included
-  for (const [idx, [calcId, { entry }]] of [...calcStore.calcs.entries()].entries()) {
-    const calc = entry.value
-    const baseName = calcStore.calcName(calcId, idx).replace(/[/\\]/g, '_')
-    let name = `${baseName}.json`
-    for (let i = 2; name in files; i++) {
-      name = `${baseName} (${i}).json`
-    }
-    files[name] = strToU8(encodeCalcToString(calc))
-  }
-
-  downloadFile(new Blob([zipSync(files)], { type: 'application/zip' }), 'work-time-calcs.zip')
-}
-*/
 </script>
