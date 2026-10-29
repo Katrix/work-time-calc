@@ -15,7 +15,7 @@
 
     <hr />
 
-    <button type="button" class="btn btn-secondary mt-3 me-2" href="/api/calc/exportAll">Export all as zip</button>
+    <a class="btn btn-secondary mt-3 me-2" href="/api/calc/exportAll">Export all as zip</a>
     <button type="button" class="btn btn-secondary mt-3 me-2" :disabled="importing" @click="importFiles()">
       Import calcs
       <FontAwesomeIcon v-if="importing" :icon="['fa', 'spinner']" spin></FontAwesomeIcon>
