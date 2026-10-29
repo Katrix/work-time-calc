@@ -4,30 +4,32 @@ export default defineEventHandler(async (event) => {
   const session = await requireUserSession(event)
   const githubId = session.user.githubId
 
-  const dbCalcs = await usePrisma(event).calc.findMany({
-    include: {
-      entries: {
-        include: {
-          tags: true,
-        },
-        orderBy: {
-          rank: 'asc',
-        },
-      },
-      tags: true,
-    },
-    where: {
-      createdById: githubId,
-    },
-  })
+  // Fetch each table separately using relation filters instead of `include`. Prisma resolves
+  // `include` with `IN (...)` queries binding one parameter per parent row, which exceeds D1's
+  // 100 bound parameter limit for users with many entries.
+  const prisma = usePrisma(event)
+  const [dbCalcs, dbCalcTags, dbEntries, dbEntryTags] = await Promise.all([
+    prisma.calc.findMany({ where: { createdById: githubId } }),
+    prisma.calcTag.findMany({ where: { calc: { createdById: githubId } } }),
+    prisma.calcEntry.findMany({ where: { calc: { createdById: githubId } }, orderBy: { rank: 'asc' } }),
+    prisma.calcEntryTag.findMany({ where: { entry: { calc: { createdById: githubId } } } }),
+  ])
+
+  const tagsByEntry = Map.groupBy(dbEntryTags, (t) => t.entryId)
+  const entriesByCalc = Map.groupBy(dbEntries, (e) => e.calcId)
+  const tagsByCalc = Map.groupBy(dbCalcTags, (t) => t.calcId)
 
   const encoded = dbCalcs.map((calc) => ({
     name: calc.name,
     encodedCalc: encodeCalcToString({
       ...calc,
       version: currentCalcVersion,
-      entries: calc.entries.map((e) => ({ ...e, notes: e.notes ?? undefined, tags: e.tags.map((t) => t.tag) })),
-      tags: new Map(calc.tags.map((t) => [t.tag, t.color])),
+      entries: (entriesByCalc.get(calc.id) ?? []).map((e) => ({
+        ...e,
+        notes: e.notes ?? undefined,
+        tags: (tagsByEntry.get(e.id) ?? []).map((t) => t.tag),
+      })),
+      tags: new Map((tagsByCalc.get(calc.id) ?? []).map((t) => [t.tag, t.color])),
     }),
   }))
 
