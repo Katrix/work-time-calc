@@ -15,7 +15,7 @@ import {
   faFolderTree,
   faFolder,
   faFile,
-  faCalendar
+  faCalendar,
 } from '@fortawesome/free-solid-svg-icons'
 
 config.autoAddCss = false
@@ -35,7 +35,7 @@ library.add(
   faFolderTree,
   faFolder,
   faFile,
-  faCalendar
+  faCalendar,
 )
 
 export default defineNuxtPlugin((nuxtApp) => {

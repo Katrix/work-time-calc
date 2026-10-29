@@ -26,7 +26,11 @@
     <div class="col-6">
       <BFormGroup v-if="presetStore.currentPresetId !== 'Default'" label="Name">
         <BInputGroup>
-          <BFormInput type="text" v-model="renamePresetName" :state="isValidPresetName(renamePresetName) ? null : false" />
+          <BFormInput
+            type="text"
+            v-model="renamePresetName"
+            :state="isValidPresetName(renamePresetName) ? null : false"
+          />
           <template #append>
             <button
               type="button"
@@ -65,7 +69,7 @@ function newPreset() {
     onSuccess() {
       newPresetName.value = ''
       resetPresetName()
-    }
+    },
   })
 }
 </script>

@@ -101,8 +101,7 @@ export const usePresetStore = defineStore('presetStore', () => {
             })
           }
         })
-      }
-      else if (presetsObj.error) {
+      } else if (presetsObj.error) {
         toast.create({ body: 'Failed to parse presets', variant: 'danger' })
         console.error('Error parsing presets', presetsObj.error)
       }

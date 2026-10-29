@@ -39,16 +39,16 @@ export default defineEventHandler(async (event) => {
           where: {
             calcId_tag: {
               calcId: calcId.id,
-              tag
-            }
+              tag,
+            },
           },
           update: {
             color,
           },
           create: {
             tag,
-            color
-          }
+            color,
+          },
         })),
       },
     },

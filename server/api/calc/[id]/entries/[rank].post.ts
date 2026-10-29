@@ -19,12 +19,12 @@ export default defineEventHandler(async (event) => {
       id: true,
       entries: {
         where: {
-          rank
+          rank,
         },
         select: {
-          id: true
-        }
-      }
+          id: true,
+        },
+      },
     },
   })
   if (!calcId || calcId.entries.length === 0) {

@@ -20,8 +20,8 @@ export default defineEventHandler(async (event) => {
           tags: true,
         },
         orderBy: {
-          rank: 'asc'
-        }
+          rank: 'asc',
+        },
       },
       tags: true,
     },

@@ -42,7 +42,7 @@ export default defineEventHandler(async (event) => {
               create: {
                 calcId: calcId.id,
                 tag,
-                color: randomColor()
+                color: randomColor(),
               },
             },
           },

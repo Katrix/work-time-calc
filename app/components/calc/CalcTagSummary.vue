@@ -15,4 +15,3 @@
 const props = defineProps<{ calcInfo: CalcInfo; tagSummaries: Record<string, TagSummary> }>()
 const hasTagSummary = computed(() => Object.entries(props.tagSummaries).length > 0)
 </script>
-

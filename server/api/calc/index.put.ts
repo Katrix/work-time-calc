@@ -25,7 +25,7 @@ export default defineEventHandler(async (event) => {
     : await prisma.calc.findUnique({
         select: {
           id: true,
-          updatedAt: true
+          updatedAt: true,
         },
         where: {
           publicId: c.publicId,
@@ -69,8 +69,8 @@ export default defineEventHandler(async (event) => {
             id: true,
           },
           orderBy: {
-            rank: 'asc'
-          }
+            rank: 'asc',
+          },
         },
       },
     })
@@ -119,8 +119,8 @@ export default defineEventHandler(async (event) => {
             id: true,
           },
           orderBy: {
-            rank: 'asc'
-          }
+            rank: 'asc',
+          },
         },
       },
     })

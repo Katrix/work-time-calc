@@ -34,7 +34,11 @@
 
         <td><CalcInputFrom :precision="calcInfo.calc.precision" v-model="item.from" /></td>
         <td>
-          <CalcInputTo :precision="calcInfo.calc.precision" v-model:to="item.to" v-model:is-tracking="item.isTracking" />
+          <CalcInputTo
+            :precision="calcInfo.calc.precision"
+            v-model:to="item.to"
+            v-model:is-tracking="item.isTracking"
+          />
         </td>
 
         <td>
@@ -57,7 +61,11 @@
             :calc-info="calcInfo"
             @delete-tag="calcInfo.removeTag(index, tag)"
           />
-          <TagDropdown :calc-info="calcInfo" :existing-tags="item.tags ?? []" @new-tag="(tag) => calcInfo.addTag(index, tag)" />
+          <TagDropdown
+            :calc-info="calcInfo"
+            :existing-tags="item.tags ?? []"
+            @new-tag="(tag) => calcInfo.addTag(index, tag)"
+          />
         </td>
 
         <td><BFormInput v-model="calcInfo.calc.entries[index].notes" /></td>

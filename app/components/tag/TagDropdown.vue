@@ -27,7 +27,9 @@ const emits = defineEmits<{
 
 const newTag = ref('')
 
-const applicableTags = computed(() => [...props.calcInfo.calc.tags.keys()].filter((t) => !props.existingTags.includes(t)))
+const applicableTags = computed(() =>
+  [...props.calcInfo.calc.tags.keys()].filter((t) => !props.existingTags.includes(t)),
+)
 
 const dropdown = useTemplateRef('dropdown')
 

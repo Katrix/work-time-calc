@@ -90,7 +90,7 @@ export function computeWorkTime(
   for (const [, entries] of Object.entries(workDays)) {
     const preEntries = entries.map((entry, idx) => {
       const from = entry.from ?? defaultFrom
-      const to = entry.isTracking ? nowMinutes : entry.to ?? defaultTo ?? nowMinutes
+      const to = entry.isTracking ? nowMinutes : (entry.to ?? defaultTo ?? nowMinutes)
       return {
         from,
         to,
