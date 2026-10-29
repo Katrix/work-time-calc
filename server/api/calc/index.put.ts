@@ -133,7 +133,7 @@ export default defineEventHandler(async (event) => {
 
     return { publicId: c.publicId }
   } else {
-    setResponseStatus(event, 201)
+    setResponseStatus(event, 204)
     return
   }
 })

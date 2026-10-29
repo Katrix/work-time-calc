@@ -15,11 +15,6 @@ export default defineEventHandler(async (event) => {
   const p = await readValidatedBody(event, presetV2Schema.parse)
   const prisma = usePrisma(event)
 
-  const allTags = [
-    ...[...p.hours.tags.entries()].map(([name, tag]) => ({ name, mode: 'hours' as const, color: tag })),
-    ...[...p.tasks.tags.entries()].map(([name, tag]) => ({ name, mode: 'tasks' as const, color: tag })),
-  ]
-
   const presetIdObj = await usePrisma(event).preset.findUnique({
     select: { id: true },
     where: {
@@ -71,13 +66,6 @@ export default defineEventHandler(async (event) => {
               autocompleteWithoutRepository: repoData.autocompleteWithoutRepository,
             })),
           ),
-        },
-        tags: {
-          create: allTags.map(({ name, mode, color }) => ({
-            presetMode: mode,
-            name,
-            color,
-          })),
         },
       },
     })
@@ -186,37 +174,6 @@ export default defineEventHandler(async (event) => {
               },
             })),
           ),
-        },
-        tags: {
-          deleteMany: [
-            {
-              presetMode: 'hours',
-              name: { notIn: [...p.hours.tags.keys()].map((name) => name) },
-            },
-            {
-              presetMode: 'tasks',
-              name: { notIn: [...p.tasks.tags.keys()].map((name) => name) },
-            },
-          ],
-          upsert: allTags.map(({ name, mode, color }) => ({
-            where: {
-              presetId_presetMode_name: {
-                presetId,
-                presetMode: mode,
-                name,
-              },
-            },
-            create: {
-              presetMode: mode,
-              name,
-              color,
-            },
-            update: {
-              presetMode: mode,
-              name,
-              color,
-            },
-          })),
         },
       },
     })

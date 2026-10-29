@@ -21,6 +21,7 @@ model User {
   presets       Preset[]     @relation(name: "preset_opened_by")
   calcs         Calc[]
   openedCalcs   OpenedCalc[]
+  sharedTags    SharedTag[]
 
   @@map("user")
 }
@@ -45,7 +46,6 @@ model Preset {
 
   createdBy         User                 @relation(name: "preset_opened_by", fields: [createdById], references: [id], onDelete: Cascade)
   currentlyOpenedBy User[]               @relation(name: "current_preset")
-  tags              PresetPartTag[]
   githubOwners      PresetGithubOwner[]
   githubRepos       PresetGithubRepo[]
   fixedHolidays     PresetFixedHoliday[]
@@ -57,18 +57,6 @@ model Preset {
 enum CalcMode {
   hours
   tasks
-}
-
-model PresetPartTag {
-  presetId   Int      @map("preset_id")
-  presetMode CalcMode @map("preset_mode")
-  name       String
-  color      String
-
-  preset Preset @relation(fields: [presetId], references: [id], onDelete: Cascade)
-
-  @@id([presetId, presetMode, name])
-  @@map("preset_part_tag")
 }
 
 model PresetGithubOwner {
@@ -108,6 +96,20 @@ model PresetFixedHoliday {
   @@map("preset_fixed_holiday")
 }
 
+model SharedTag {
+  id          Int    @id @default(autoincrement())
+  publicId    String @unique @map("public_id")
+  createdById Int    @map("created_by_id")
+  name        String
+  color       String
+
+  createdBy User      @relation(fields: [createdById], references: [id], onDelete: Cascade)
+  calcTags  CalcTag[]
+
+  @@unique([createdById, name])
+  @@map("shared_tag")
+}
+
 model Calc {
   id          Int      @id @default(autoincrement())
   publicId    String   @unique @map("public_id")
@@ -133,14 +135,17 @@ model Calc {
 }
 
 model CalcTag {
-  calcId Int    @map("calc_id")
-  tag    String
-  color  String
+  calcId      Int    @map("calc_id")
+  tag         String
+  color       String
+  sharedTagId Int?   @map("shared_tag_id")
 
   calc      Calc           @relation(fields: [calcId], references: [id], onDelete: Cascade)
+  sharedTag SharedTag?     @relation(fields: [sharedTagId], references: [id], onDelete: SetNull, onUpdate: Cascade)
   entryTags CalcEntryTag[]
 
   @@id([calcId, tag])
+  @@index([sharedTagId])
   @@map("calc_tag")
 }
 
@@ -169,7 +174,7 @@ model CalcEntryTag {
   entryId Int    @map("entry_id")
 
   entry   CalcEntry @relation(fields: [entryId], references: [id], onDelete: Cascade)
-  calcTag CalcTag   @relation(fields: [calcId, tag], references: [calcId, tag], onDelete: Cascade)
+  calcTag CalcTag   @relation(fields: [calcId, tag], references: [calcId, tag], onDelete: Cascade, onUpdate: Cascade)
 
   @@id([entryId, tag])
   @@map("calc_entry_tag")

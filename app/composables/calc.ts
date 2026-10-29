@@ -271,7 +271,7 @@ export function makeNewCalc(mode: 'hours' | 'tasks', preset: Preset): CalcWithEn
     defaultFrom: defaultVal.defaultFrom,
     defaultTo: defaultVal.defaultTo,
     precision: defaultVal.precision,
-    tags: new Map([...defaultVal.tags.entries()]),
+    tags: new Map(),
     entries: [
       {
         name: defaultEntryName(mode),
@@ -300,7 +300,7 @@ export interface CalcInfo {
   removeRow(idx: number): void
 
   addTag(index: number, tag: string): void
-  deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }): void
+  deleteTag(tagName: string): void
   removeTag(index: number, tag: string): void
   getTagColor(tag: string): string
 }
@@ -518,11 +518,7 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
             entry.tags.push(tag)
           }
         },
-        deleteTag(tagName: string, { deleteConfigured }: { deleteConfigured: boolean }) {
-          const tag = calc.value.tags.get(tagName)
-          if (tag && presetStore.currentPreset[calc.value.mode].tags.has(tagName) && !deleteConfigured) {
-            return
-          }
+        deleteTag(tagName: string) {
           calc.value.tags.delete(tagName)
         },
         removeTag(index: number, tag: string) {
@@ -530,7 +526,7 @@ export async function useCalcsInfo(id: ComputedRef<string>): Promise<Reactive<Ca
           entry?.tags?.splice(entry.tags?.indexOf(tag), 1)
 
           if (calc.value.entries.every((e) => !e.tags?.includes(tag))) {
-            this.deleteTag(tag, { deleteConfigured: false })
+            this.deleteTag(tag)
           }
         },
         fillWorkdays() {
