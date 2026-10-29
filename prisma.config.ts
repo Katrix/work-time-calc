@@ -4,7 +4,8 @@ import { listLocalDatabases } from '@prisma/adapter-d1'
 function localDatasourceUrl(): string | undefined {
   let localDbs: string[]
   try {
-    localDbs = listLocalDatabases()
+    // Miniflare keeps its own metadata.sqlite next to the actual databases
+    localDbs = listLocalDatabases().filter((p) => !p.endsWith('/metadata.sqlite'))
   } catch {
     return undefined
   }

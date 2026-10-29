@@ -6,7 +6,8 @@ export default defineEventHandler(async (event) => {
     where: {
       id: githubId,
     },
-    include: {
+    select: {
+      lastUpatedOpenedCalcs: true,
       openedCalcs: {
         select: {
           calc: {

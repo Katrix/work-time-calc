@@ -28,7 +28,7 @@ export const presetPartSchema = z.object({
   defaultFrom: z.int(),
   defaultTo: z.int().nullable(),
   precision: z.int(),
-  tags: recordMap(z.string()).or(z.map(z.string(), z.string())),
+  tags: recordMap(z.string()).or(z.map(z.string(), z.string())).optional(),
 })
 export type PresetPart = z.infer<typeof presetPartSchema>
 
